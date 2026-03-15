@@ -1,53 +1,22 @@
 package org.example.service;
 
-import org.example.domain.AdminUser;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Optional;
-import java.util.Properties;
+import org.example.repository.AdminRepository;
 
 public class AdminAuthService {
 
-    private static final String RESOURCE = "/admin.properties";
-    private final AdminUser adminUser;
+    private final AdminRepository adminRepository;
 
-    public AdminAuthService() {
-        this.adminUser = loadFromResource()
-                .orElseGet(() -> new AdminUser("admin", "admin"));
-    }
-
-    Optional<AdminUser> loadFromResource() {
-
-        Properties p = new Properties();
-
-        try (InputStream in =
-                     AdminAuthService.class.getResourceAsStream(RESOURCE)) {
-
-            if (in == null)
-                return Optional.empty();
-
-            p.load(in);
-
-            String user = p.getProperty("admin.username");
-            String pass = p.getProperty("admin.password");
-
-            if (user == null || pass == null)
-                return Optional.empty();
-
-            return Optional.of(new AdminUser(user.trim(), pass.trim()));
-
-        } catch (IOException e) {
-            return Optional.empty();
-        }
+    public AdminAuthService(AdminRepository adminRepository) {
+        this.adminRepository = adminRepository;
     }
 
     public boolean authenticate(String username, String password) {
-
-        if (username == null || password == null)
+        if (username == null || password == null) {
             return false;
+        }
 
-        return adminUser.getUsername().equals(username)
-                && adminUser.getPassword().equals(password);
+        return adminRepository.findByUsername(username)
+                .map(admin -> admin.getPassword().equals(password))
+                .orElse(false);
     }
 }
