@@ -2,9 +2,11 @@ package org.example.presentation;
 
 import org.example.domain.Credentials;
 import org.example.service.AdminAuthService;
+import org.example.service.LoginAttemptTracker;
 import org.example.service.LoginStatus;
 
 import java.io.Console;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -14,19 +16,31 @@ import java.util.Scanner;
 public class ConsoleLogin {
     private final AdminAuthService authService;
     private final int maxAttempts;
+    private final LoginAttemptTracker attemptTracker;
     private String authenticatedUsername;
 
     public ConsoleLogin(AdminAuthService authService) {
-        this(authService, 3);
+        this(authService, 3, Duration.ofSeconds(30));
     }
 
     public ConsoleLogin(AdminAuthService authService, int maxAttempts) {
+        this(authService, maxAttempts, Duration.ofSeconds(30));
+    }
+
+    public ConsoleLogin(AdminAuthService authService, int maxAttempts, Duration lockDuration) {
         this.authService = authService;
         this.maxAttempts = maxAttempts;
+        this.attemptTracker = new LoginAttemptTracker(maxAttempts, lockDuration);
     }
 
     public boolean prompt(Scanner scanner) {
         authenticatedUsername = null;
+
+        if (attemptTracker.isLocked()) {
+            System.out.println("Login is temporarily locked. Try again in "
+                    + attemptTracker.getRemainingLockSeconds() + " seconds.");
+            return false;
+        }
 
         Console console = System.console();
         if (console == null) {
@@ -55,14 +69,23 @@ public class ConsoleLogin {
             LoginStatus status = authService.authenticateWithStatus(credentials);
             if (status == LoginStatus.SUCCESS) {
                 authenticatedUsername = user.trim();
+                attemptTracker.recordSuccess();
                 System.out.println("Administrator login successful.");
                 return true;
             }
+
+            attemptTracker.recordFailure();
 
             if (status == LoginStatus.BLANK_INPUT) {
                 System.out.println("Username and password cannot be blank.");
             } else {
                 System.out.println("Invalid username or password.");
+            }
+
+            if (attemptTracker.isLocked()) {
+                System.out.println("Too many failed attempts. Login locked for "
+                        + attemptTracker.getRemainingLockSeconds() + " seconds.");
+                return false;
             }
 
             System.out.println("Attempts left: " + (maxAttempts - attempt));
