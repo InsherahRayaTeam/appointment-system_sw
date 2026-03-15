@@ -1,4 +1,10 @@
 package org.example.repository;
 
-public class AdminRepository {
+import org.example.domain.AdminUser;
+import java.util.Optional;
+
+public interface AdminRepository {
+
+    Optional<AdminUser> findByUsername(String username);
+
 }
