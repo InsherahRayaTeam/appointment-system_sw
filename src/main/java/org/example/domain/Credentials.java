@@ -1,5 +1,6 @@
 package org.example.domain;
 
+@SuppressWarnings("unused")
 public class Credentials {
 
     private final String username;

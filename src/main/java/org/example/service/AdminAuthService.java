@@ -1,5 +1,6 @@
 package org.example.service;
 
+import org.example.domain.Credentials;
 import org.example.repository.AdminRepository;
 
 public class AdminAuthService {
@@ -14,10 +15,17 @@ public class AdminAuthService {
      * Backward-compatible boolean authentication API.
      */
     public boolean authenticate(String username, String password) {
-        return authenticateWithStatus(username, password) == LoginStatus.SUCCESS;
+        return authenticateWithStatus(new Credentials(username, password)) == LoginStatus.SUCCESS;
     }
 
-    public LoginStatus authenticateWithStatus(String username, String password) {
+    public LoginStatus authenticateWithStatus(Credentials credentials) {
+        if (credentials == null) {
+            return LoginStatus.BLANK_INPUT;
+        }
+
+        String username = credentials.getUsername();
+        String password = credentials.getPassword();
+
         if (isBlank(username) || isBlank(password)) {
             return LoginStatus.BLANK_INPUT;
         }
@@ -29,6 +37,10 @@ public class AdminAuthService {
                 .orElse(false);
 
         return authenticated ? LoginStatus.SUCCESS : LoginStatus.INVALID_CREDENTIALS;
+    }
+
+    public LoginStatus authenticateWithStatus(String username, String password) {
+        return authenticateWithStatus(new Credentials(username, password));
     }
 
     private boolean isBlank(String value) {

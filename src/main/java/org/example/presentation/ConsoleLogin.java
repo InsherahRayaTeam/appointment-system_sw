@@ -1,5 +1,6 @@
 package org.example.presentation;
 
+import org.example.domain.Credentials;
 import org.example.service.AdminAuthService;
 import org.example.service.LoginStatus;
 
@@ -22,13 +23,6 @@ public class ConsoleLogin {
     public ConsoleLogin(AdminAuthService authService, int maxAttempts) {
         this.authService = authService;
         this.maxAttempts = maxAttempts;
-    }
-
-    /**
-     * Backward-compatible prompt API.
-     */
-    public boolean prompt() {
-        return prompt(new Scanner(System.in));
     }
 
     public boolean prompt(Scanner scanner) {
@@ -57,7 +51,8 @@ public class ConsoleLogin {
                 pass = scanner.nextLine();
             }
 
-            LoginStatus status = authService.authenticateWithStatus(user, pass);
+            Credentials credentials = new Credentials(user, pass);
+            LoginStatus status = authService.authenticateWithStatus(credentials);
             if (status == LoginStatus.SUCCESS) {
                 authenticatedUsername = user.trim();
                 System.out.println("Administrator login successful.");
