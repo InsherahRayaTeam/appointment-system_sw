@@ -3,6 +3,7 @@ package org.example;
 import org.example.domain.AdminUser;
 import org.example.repository.AdminRepository;
 import org.example.service.AdminAuthService;
+import org.example.service.LoginStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -10,8 +11,12 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 public class AdminAuthServiceTest {
 
@@ -27,68 +32,80 @@ public class AdminAuthServiceTest {
     }
 
     @Test
-    void authenticate_ValidCredentials_ReturnsTrue() {
-        // Arrange
+    void authenticate_ValidCredentials_ReturnsSuccess() {
         String username = "admin";
         String password = "admin";
         AdminUser adminUser = new AdminUser(username, password);
         when(adminRepository.findByUsername(username)).thenReturn(Optional.of(adminUser));
 
-        // Act
-        boolean result = adminAuthService.authenticate(username, password);
+        LoginStatus result = adminAuthService.authenticateWithStatus(username, password);
 
-        // Assert
-        assertTrue(result);
+        assertEquals(LoginStatus.SUCCESS, result);
         verify(adminRepository).findByUsername(username);
     }
 
     @Test
-    void authenticate_InvalidPassword_ReturnsFalse() {
-        // Arrange
+    void authenticate_TrimmedUsername_ValidCredentials_ReturnsSuccess() {
+        String username = "admin";
+        String password = "admin";
+        AdminUser adminUser = new AdminUser(username, password);
+        when(adminRepository.findByUsername(username)).thenReturn(Optional.of(adminUser));
+
+        LoginStatus result = adminAuthService.authenticateWithStatus("  admin  ", password);
+
+        assertEquals(LoginStatus.SUCCESS, result);
+        verify(adminRepository).findByUsername(username);
+    }
+
+    @Test
+    void authenticate_BlankInput_ReturnsBlankInputStatus() {
+        LoginStatus result = adminAuthService.authenticateWithStatus("   ", "password");
+
+        assertEquals(LoginStatus.BLANK_INPUT, result);
+        verifyNoInteractions(adminRepository);
+    }
+
+    @Test
+    void authenticate_InvalidPassword_ReturnsInvalidCredentials() {
         String username = "admin";
         String password = "wrong";
         AdminUser adminUser = new AdminUser(username, "admin");
         when(adminRepository.findByUsername(username)).thenReturn(Optional.of(adminUser));
 
-        // Act
-        boolean result = adminAuthService.authenticate(username, password);
+        LoginStatus result = adminAuthService.authenticateWithStatus(username, password);
 
-        // Assert
-        assertFalse(result);
+        assertEquals(LoginStatus.INVALID_CREDENTIALS, result);
         verify(adminRepository).findByUsername(username);
     }
 
     @Test
-    void authenticate_UserNotFound_ReturnsFalse() {
-        // Arrange
+    void authenticate_UserNotFound_ReturnsInvalidCredentials() {
         String username = "unknown";
         String password = "admin";
         when(adminRepository.findByUsername(username)).thenReturn(Optional.empty());
 
-        // Act
-        boolean result = adminAuthService.authenticate(username, password);
+        LoginStatus result = adminAuthService.authenticateWithStatus(username, password);
 
-        // Assert
-        assertFalse(result);
+        assertEquals(LoginStatus.INVALID_CREDENTIALS, result);
         verify(adminRepository).findByUsername(username);
     }
 
     @Test
-    void authenticate_NullUsername_ReturnsFalse() {
-        // Act
-        boolean result = adminAuthService.authenticate(null, "password");
+    void authenticate_BackwardCompatibleBooleanApi_ReturnsTrueForSuccess() {
+        String username = "admin";
+        String password = "admin";
+        AdminUser adminUser = new AdminUser(username, password);
+        when(adminRepository.findByUsername(username)).thenReturn(Optional.of(adminUser));
 
-        // Assert
-        assertFalse(result);
-        verifyNoInteractions(adminRepository);
+        boolean result = adminAuthService.authenticate(username, password);
+
+        assertTrue(result);
     }
 
     @Test
-    void authenticate_NullPassword_ReturnsFalse() {
-        // Act
-        boolean result = adminAuthService.authenticate("admin", null);
+    void authenticate_BackwardCompatibleBooleanApi_ReturnsFalseForBlankInput() {
+        boolean result = adminAuthService.authenticate("   ", "   ");
 
-        // Assert
         assertFalse(result);
         verifyNoInteractions(adminRepository);
     }
