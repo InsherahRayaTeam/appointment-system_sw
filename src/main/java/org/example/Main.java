@@ -32,6 +32,16 @@ public class Main {
                     return;
                 }
 
+                if (loginResult.getStatus() == LoginPromptStatus.LOCKED) {
+                    System.out.print("Login is locked. Press Enter to retry later or type q to quit: ");
+                    String lockChoice = scanner.nextLine();
+                    if ("q".equalsIgnoreCase(lockChoice.trim())) {
+                        System.out.println("Exiting application.");
+                        return;
+                    }
+                    continue;
+                }
+
                 if (!loginResult.isSuccess()) {
                     authEventLogger.logLoginFailure(loginResult.getUsername());
                     continue;

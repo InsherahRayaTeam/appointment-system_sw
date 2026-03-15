@@ -19,14 +19,9 @@ public class ConsoleLogin {
     private final AdminAuthService authService;
     private final int maxAttempts;
     private final LoginAttemptTracker attemptTracker;
-    private String authenticatedUsername;
 
     public ConsoleLogin(AdminAuthService authService) {
         this(authService, 3, Duration.ofSeconds(30));
-    }
-
-    public ConsoleLogin(AdminAuthService authService, int maxAttempts) {
-        this(authService, maxAttempts, Duration.ofSeconds(30));
     }
 
     public ConsoleLogin(AdminAuthService authService, int maxAttempts, Duration lockDuration) {
@@ -40,12 +35,10 @@ public class ConsoleLogin {
     }
 
     public LoginPromptResult promptForResult(Scanner scanner) {
-        authenticatedUsername = null;
-
         if (attemptTracker.isLocked()) {
             System.out.println("Login is temporarily locked. Try again in "
                     + attemptTracker.getRemainingLockSeconds() + " seconds.");
-
+            return new LoginPromptResult(LoginPromptStatus.LOCKED, null);
         }
 
         Console console = System.console();
@@ -53,7 +46,7 @@ public class ConsoleLogin {
             System.out.println("Console not available; falling back to plain input (password will be visible).");
         }
 
-        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+        while (true) {
             String user;
             String pass;
 
@@ -79,7 +72,7 @@ public class ConsoleLogin {
             Credentials credentials = new Credentials(user, pass);
             LoginStatus status = authService.authenticateWithStatus(credentials);
             if (status == LoginStatus.SUCCESS) {
-                authenticatedUsername = user.trim();
+                String authenticatedUsername = sanitizeUsername(user);
                 attemptTracker.recordSuccess();
                 System.out.println("Administrator login successful.");
                 return new LoginPromptResult(LoginPromptStatus.SUCCESS, authenticatedUsername);
@@ -96,14 +89,12 @@ public class ConsoleLogin {
             if (attemptTracker.isLocked()) {
                 System.out.println("Too many failed attempts. Login locked for "
                         + attemptTracker.getRemainingLockSeconds() + " seconds.");
-
+                return new LoginPromptResult(LoginPromptStatus.LOCKED, null);
             }
 
-            System.out.println("Attempts left: " + (maxAttempts - attempt));
+            int attemptsLeft = maxAttempts - attemptTracker.getFailedAttempts();
+            System.out.println("Attempts left: " + Math.max(0, attemptsLeft));
         }
-
-        System.out.println("Maximum login attempts exceeded.");
-        return new LoginPromptResult(LoginPromptStatus.FAILED, null);
     }
 
 
@@ -113,9 +104,5 @@ public class ConsoleLogin {
 
     private String sanitizeUsername(String username) {
         return username == null ? null : username.trim();
-    }
-
-    public String getAuthenticatedUsername() {
-        return authenticatedUsername;
     }
 }
