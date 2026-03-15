@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -52,6 +53,18 @@ public class ConsoleLoginTest {
         assertEquals(LoginPromptStatus.CANCELLED, result.getStatus());
     }
 
+
+    @Test
+    void prompt_WhenLocked_ReturnsFalse() {
+        when(adminRepository.findByUsername(anyString())).thenReturn(Optional.empty());
+
+        ConsoleLogin login = new ConsoleLogin(adminAuthService, 1, Duration.ofSeconds(30));
+        login.promptForResult(new Scanner("admin\nwrong\n"));
+
+        boolean promptResult = login.prompt(new Scanner("admin\nadmin\n"));
+
+        assertFalse(promptResult);
+    }
     @Test
     void promptForResult_ExceedsAttempts_ReturnsLockedThenRemainsLocked() {
         when(adminRepository.findByUsername(anyString())).thenReturn(Optional.empty());
