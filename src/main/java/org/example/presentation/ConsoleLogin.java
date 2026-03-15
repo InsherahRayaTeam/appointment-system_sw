@@ -3,6 +3,7 @@ package org.example.presentation;
 import org.example.service.AdminAuthService;
 
 import java.io.Console;
+import java.util.Arrays;
 import java.util.Scanner;
 
 /**
@@ -22,21 +23,25 @@ public class ConsoleLogin {
     }
 
     public boolean prompt() {
+
         Console console = System.console();
         Scanner scanner = null;
+
         if (console == null) {
-            // Running inside IDE or without a console; use Scanner as fallback (password not masked)
             scanner = new Scanner(System.in);
             System.out.println("Console not available; falling back to plain input (password will be visible).");
         }
 
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+
             String user;
             String pass;
+
             if (console != null) {
                 user = console.readLine("Administrator username: ");
                 char[] pwd = console.readPassword("Password: ");
                 pass = pwd == null ? null : new String(pwd);
+                Arrays.fill(pwd, ' ');
             } else {
                 System.out.print("Administrator username: ");
                 user = scanner.nextLine();
@@ -45,7 +50,12 @@ public class ConsoleLogin {
             }
 
             if (authService.authenticate(user, pass)) {
-                System.out.println("Login successful.");
+                System.out.println("Administrator login successful.");
+
+                if(scanner != null){
+                    scanner.close();
+                }
+
                 return true;
             } else {
                 System.out.println("Invalid credentials. Attempts left: " + (maxAttempts - attempt));
@@ -53,6 +63,11 @@ public class ConsoleLogin {
         }
 
         System.out.println("Maximum login attempts exceeded. Exiting.");
+
+        if(scanner != null){
+            scanner.close();
+        }
+
         return false;
     }
 }
