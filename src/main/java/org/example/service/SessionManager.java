@@ -9,8 +9,12 @@ public class SessionManager {
     private LocalDateTime loginTime;
 
     public void login(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("username cannot be blank");
+        }
+
         loggedIn = true;
-        currentUsername = username;
+        currentUsername = username.trim();
         loginTime = LocalDateTime.now();
     }
 

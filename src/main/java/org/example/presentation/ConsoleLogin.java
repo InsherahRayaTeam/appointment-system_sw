@@ -14,6 +14,8 @@ import java.util.Scanner;
  * Simple console-based login prompt. Limits attempts to 3 by default.
  */
 public class ConsoleLogin {
+    private static final String CANCEL_INPUT = "q";
+
     private final AdminAuthService authService;
     private final int maxAttempts;
     private final LoginAttemptTracker attemptTracker;
@@ -34,12 +36,16 @@ public class ConsoleLogin {
     }
 
     public boolean prompt(Scanner scanner) {
+        return promptForResult(scanner).isSuccess();
+    }
+
+    public LoginPromptResult promptForResult(Scanner scanner) {
         authenticatedUsername = null;
 
         if (attemptTracker.isLocked()) {
             System.out.println("Login is temporarily locked. Try again in "
                     + attemptTracker.getRemainingLockSeconds() + " seconds.");
-            return false;
+
         }
 
         Console console = System.console();
@@ -65,13 +71,18 @@ public class ConsoleLogin {
                 pass = scanner.nextLine();
             }
 
+            if (isCancelInput(user)) {
+                System.out.println("Login cancelled.");
+                return new LoginPromptResult(LoginPromptStatus.CANCELLED, null);
+            }
+
             Credentials credentials = new Credentials(user, pass);
             LoginStatus status = authService.authenticateWithStatus(credentials);
             if (status == LoginStatus.SUCCESS) {
                 authenticatedUsername = user.trim();
                 attemptTracker.recordSuccess();
                 System.out.println("Administrator login successful.");
-                return true;
+                return new LoginPromptResult(LoginPromptStatus.SUCCESS, authenticatedUsername);
             }
 
             attemptTracker.recordFailure();
@@ -85,14 +96,23 @@ public class ConsoleLogin {
             if (attemptTracker.isLocked()) {
                 System.out.println("Too many failed attempts. Login locked for "
                         + attemptTracker.getRemainingLockSeconds() + " seconds.");
-                return false;
+
             }
 
             System.out.println("Attempts left: " + (maxAttempts - attempt));
         }
 
         System.out.println("Maximum login attempts exceeded.");
-        return false;
+        return new LoginPromptResult(LoginPromptStatus.FAILED, null);
+    }
+
+
+    private boolean isCancelInput(String username) {
+        return username != null && CANCEL_INPUT.equalsIgnoreCase(username.trim());
+    }
+
+    private String sanitizeUsername(String username) {
+        return username == null ? null : username.trim();
     }
 
     public String getAuthenticatedUsername() {
