@@ -45,7 +45,7 @@ public class ConsoleLogin {
         if (attemptTracker.isLocked()) {
             System.out.println("Login is temporarily locked. Try again in "
                     + attemptTracker.getRemainingLockSeconds() + " seconds.");
-            return new LoginPromptResult(LoginPromptStatus.LOCKED, null);
+
         }
 
         Console console = System.console();
@@ -96,7 +96,7 @@ public class ConsoleLogin {
             if (attemptTracker.isLocked()) {
                 System.out.println("Too many failed attempts. Login locked for "
                         + attemptTracker.getRemainingLockSeconds() + " seconds.");
-                return new LoginPromptResult(LoginPromptStatus.LOCKED, sanitizeUsername(user));
+
             }
 
             System.out.println("Attempts left: " + (maxAttempts - attempt));
