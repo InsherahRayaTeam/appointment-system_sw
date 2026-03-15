@@ -2,6 +2,8 @@ package org.example;
 
 import org.example.presentation.ConsoleLogin;
 import org.example.presentation.ConsoleViewSlots;
+import org.example.presentation.LoginPromptResult;
+import org.example.presentation.LoginPromptStatus;
 import org.example.repository.AdminRepository;
 import org.example.repository.InMemoryAdminRepository;
 import org.example.service.AdminAuthService;
@@ -23,14 +25,19 @@ public class Main {
 
         try (Scanner scanner = new Scanner(System.in)) {
             while (true) {
-                boolean authenticated = login.prompt(scanner);
-                String username = login.getAuthenticatedUsername();
+                LoginPromptResult loginResult = login.promptForResult(scanner);
 
-                if (!authenticated || username == null) {
-                    authEventLogger.logLoginFailure(username);
+                if (loginResult.getStatus() == LoginPromptStatus.CANCELLED) {
+                    System.out.println("Exiting application.");
                     return;
                 }
 
+                if (!loginResult.isSuccess()) {
+                    authEventLogger.logLoginFailure(loginResult.getUsername());
+                    continue;
+                }
+
+                String username = loginResult.getUsername();
                 sessionManager.login(username);
                 authEventLogger.logLoginSuccess(username);
                 runAdminMenu(scanner, sessionManager, viewSlots, authEventLogger);

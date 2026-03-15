@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SessionManagerTest {
@@ -33,6 +34,17 @@ public class SessionManagerTest {
         assertTrue("admin".equals(sessionManager.getCurrentUsername()));
     }
 
+    @Test
+    void login_TrimmedUsername_SetsNormalizedSessionUser() {
+        sessionManager.login(" admin ");
+
+        assertTrue("admin".equals(sessionManager.getCurrentUsername()));
+    }
+
+    @Test
+    void login_BlankUsername_ThrowsException() {
+        assertThrows(IllegalArgumentException.class, () -> sessionManager.login("   "));
+    }
 
     @Test
     void login_BackwardCompatibleNoArgLogin_SetsLoggedIn() {
