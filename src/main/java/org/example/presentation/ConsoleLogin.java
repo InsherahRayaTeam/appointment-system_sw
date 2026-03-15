@@ -2,9 +2,11 @@ package org.example.presentation;
 
 import org.example.domain.Credentials;
 import org.example.service.AdminAuthService;
+import org.example.service.LoginAttemptTracker;
 import org.example.service.LoginStatus;
 
 import java.io.Console;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -12,28 +14,39 @@ import java.util.Scanner;
  * Simple console-based login prompt. Limits attempts to 3 by default.
  */
 public class ConsoleLogin {
+    private static final String CANCEL_INPUT = "q";
+
     private final AdminAuthService authService;
     private final int maxAttempts;
-    private String authenticatedUsername;
+    private final LoginAttemptTracker attemptTracker;
 
     public ConsoleLogin(AdminAuthService authService) {
-        this(authService, 3);
+        this(authService, 3, Duration.ofSeconds(30));
     }
 
-    public ConsoleLogin(AdminAuthService authService, int maxAttempts) {
+    public ConsoleLogin(AdminAuthService authService, int maxAttempts, Duration lockDuration) {
         this.authService = authService;
         this.maxAttempts = maxAttempts;
+        this.attemptTracker = new LoginAttemptTracker(maxAttempts, lockDuration);
     }
 
     public boolean prompt(Scanner scanner) {
-        authenticatedUsername = null;
+        return promptForResult(scanner).isSuccess();
+    }
+
+    public LoginPromptResult promptForResult(Scanner scanner) {
+        if (attemptTracker.isLocked()) {
+            System.out.println("Login is temporarily locked. Try again in "
+                    + attemptTracker.getRemainingLockSeconds() + " seconds.");
+            return new LoginPromptResult(LoginPromptStatus.LOCKED, null);
+        }
 
         Console console = System.console();
         if (console == null) {
             System.out.println("Console not available; falling back to plain input (password will be visible).");
         }
 
-        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+        while (true) {
             String user;
             String pass;
 
@@ -51,13 +64,21 @@ public class ConsoleLogin {
                 pass = scanner.nextLine();
             }
 
+            if (isCancelInput(user)) {
+                System.out.println("Login cancelled.");
+                return new LoginPromptResult(LoginPromptStatus.CANCELLED, null);
+            }
+
             Credentials credentials = new Credentials(user, pass);
             LoginStatus status = authService.authenticateWithStatus(credentials);
             if (status == LoginStatus.SUCCESS) {
-                authenticatedUsername = user.trim();
+                String authenticatedUsername = sanitizeUsername(user);
+                attemptTracker.recordSuccess();
                 System.out.println("Administrator login successful.");
-                return true;
+                return new LoginPromptResult(LoginPromptStatus.SUCCESS, authenticatedUsername);
             }
+
+            attemptTracker.recordFailure();
 
             if (status == LoginStatus.BLANK_INPUT) {
                 System.out.println("Username and password cannot be blank.");
@@ -65,14 +86,23 @@ public class ConsoleLogin {
                 System.out.println("Invalid username or password.");
             }
 
-            System.out.println("Attempts left: " + (maxAttempts - attempt));
-        }
+            if (attemptTracker.isLocked()) {
+                System.out.println("Too many failed attempts. Login locked for "
+                        + attemptTracker.getRemainingLockSeconds() + " seconds.");
+                return new LoginPromptResult(LoginPromptStatus.LOCKED, null);
+            }
 
-        System.out.println("Maximum login attempts exceeded.");
-        return false;
+            int attemptsLeft = maxAttempts - attemptTracker.getFailedAttempts();
+            System.out.println("Attempts left: " + Math.max(0, attemptsLeft));
+        }
     }
 
-    public String getAuthenticatedUsername() {
-        return authenticatedUsername;
+
+    private boolean isCancelInput(String username) {
+        return username != null && CANCEL_INPUT.equalsIgnoreCase(username.trim());
+    }
+
+    private String sanitizeUsername(String username) {
+        return username == null ? null : username.trim();
     }
 }
