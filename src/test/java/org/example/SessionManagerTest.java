@@ -4,7 +4,9 @@ import org.example.service.SessionManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SessionManagerTest {
 
@@ -17,37 +19,46 @@ public class SessionManagerTest {
 
     @Test
     void initialState_NotLoggedIn() {
-        // Assert
         assertFalse(sessionManager.isLoggedIn());
+        assertNull(sessionManager.getCurrentUsername());
+        assertNull(sessionManager.getLoginTime());
     }
 
     @Test
-    void login_SetsLoggedIn() {
-        // Act
-        sessionManager.login();
+    void login_SetsSessionData() {
+        sessionManager.login("admin");
 
-        // Assert
         assertTrue(sessionManager.isLoggedIn());
+        assertTrue(sessionManager.getLoginTime() != null);
+        assertTrue("admin".equals(sessionManager.getCurrentUsername()));
+    }
+
+
+    @Test
+    void login_BackwardCompatibleNoArgLogin_SetsLoggedIn() {
+        sessionManager.login();
+
+        assertTrue(sessionManager.isLoggedIn());
+        assertTrue("admin".equals(sessionManager.getCurrentUsername()));
     }
 
     @Test
-    void logout_SetsNotLoggedIn() {
-        // Arrange
-        sessionManager.login();
+    void logout_ClearsSessionData() {
+        sessionManager.login("admin");
 
-        // Act
         sessionManager.logout();
 
-        // Assert
         assertFalse(sessionManager.isLoggedIn());
+        assertNull(sessionManager.getCurrentUsername());
+        assertNull(sessionManager.getLoginTime());
     }
 
     @Test
     void logout_WhenNotLoggedIn_DoesNothing() {
-        // Act
         sessionManager.logout();
 
-        // Assert
         assertFalse(sessionManager.isLoggedIn());
+        assertNull(sessionManager.getCurrentUsername());
+        assertNull(sessionManager.getLoginTime());
     }
 }
