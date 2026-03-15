@@ -1,39 +1,58 @@
 package org.example.presentation;
 
 import org.example.service.AdminAuthService;
+import org.example.service.LoginAttemptService;
+import org.example.service.LoginStatus;
 
 import java.io.Console;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Scanner;
 
 /**
- * Simple console-based login prompt. Limits attempts to 3 by default.
+ * Simple console-based login prompt.
  */
 public class ConsoleLogin {
+    private static final Duration DEFAULT_LOCK_DURATION = Duration.ofSeconds(30);
+
     private final AdminAuthService authService;
-    private final int maxAttempts;
+    private final LoginAttemptService attemptService;
+    private String authenticatedUsername;
 
     public ConsoleLogin(AdminAuthService authService) {
-        this(authService, 3);
+        this(authService, new LoginAttemptService());
     }
 
     public ConsoleLogin(AdminAuthService authService, int maxAttempts) {
-        this.authService = authService;
-        this.maxAttempts = maxAttempts;
+        this(authService, new LoginAttemptService(maxAttempts, DEFAULT_LOCK_DURATION));
     }
 
+    public ConsoleLogin(AdminAuthService authService, LoginAttemptService attemptService) {
+        this.authService = authService;
+        this.attemptService = attemptService;
+    }
+
+    /**
+     * Backward-compatible prompt API.
+     */
     public boolean prompt() {
+        return prompt(new Scanner(System.in));
+    }
+
+    public boolean prompt(Scanner scanner) {
+        authenticatedUsername = null;
+
+        if (attemptService.isLocked()) {
+            System.out.println("Too many failed attempts. Try again in " + attemptService.getRemainingLockSeconds() + " seconds.");
+            return false;
+        }
 
         Console console = System.console();
-        Scanner scanner = null;
-
         if (console == null) {
-            scanner = new Scanner(System.in);
             System.out.println("Console not available; falling back to plain input (password will be visible).");
         }
 
-        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-
+        while (attemptService.getRemainingAttempts() > 0) {
             String user;
             String pass;
 
@@ -41,7 +60,9 @@ public class ConsoleLogin {
                 user = console.readLine("Administrator username: ");
                 char[] pwd = console.readPassword("Password: ");
                 pass = pwd == null ? null : new String(pwd);
-                Arrays.fill(pwd, ' ');
+                if (pwd != null) {
+                    Arrays.fill(pwd, ' ');
+                }
             } else {
                 System.out.print("Administrator username: ");
                 user = scanner.nextLine();
@@ -49,25 +70,33 @@ public class ConsoleLogin {
                 pass = scanner.nextLine();
             }
 
-            if (authService.authenticate(user, pass)) {
+            LoginStatus status = authService.authenticateWithStatus(user, pass);
+            if (status == LoginStatus.SUCCESS) {
+                authenticatedUsername = user.trim();
+                attemptService.recordSuccess();
                 System.out.println("Administrator login successful.");
-
-                if(scanner != null){
-                    scanner.close();
-                }
-
                 return true;
-            } else {
-                System.out.println("Invalid credentials. Attempts left: " + (maxAttempts - attempt));
             }
-        }
 
-        System.out.println("Maximum login attempts exceeded. Exiting.");
+            if (status == LoginStatus.BLANK_INPUT) {
+                System.out.println("Username and password cannot be blank.");
+                continue;
+            }
 
-        if(scanner != null){
-            scanner.close();
+            attemptService.recordFailure();
+            if (attemptService.isLocked()) {
+                System.out.println("Too many failed attempts. Login locked for " + attemptService.getRemainingLockSeconds() + " seconds.");
+                return false;
+            }
+
+            System.out.println("Invalid username or password.");
+            System.out.println("Attempts left: " + attemptService.getRemainingAttempts());
         }
 
         return false;
+    }
+
+    public String getAuthenticatedUsername() {
+        return authenticatedUsername;
     }
 }
