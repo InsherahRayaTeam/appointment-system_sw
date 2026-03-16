@@ -73,4 +73,8 @@ public class SessionManagerTest {
         assertNull(sessionManager.getCurrentUsername());
         assertNull(sessionManager.getLoginTime());
     }
+    @Test
+    void login_NullUsername_ThrowsException() {
+        assertThrows(IllegalArgumentException.class, () -> sessionManager.login(null));
+    }
 }
