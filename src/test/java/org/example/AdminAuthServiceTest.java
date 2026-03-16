@@ -1,6 +1,7 @@
 package org.example;
 
 import org.example.domain.AdminUser;
+import org.example.domain.Credentials;
 import org.example.repository.AdminRepository;
 import org.example.service.AdminAuthService;
 import org.example.service.LoginStatus;
@@ -29,6 +30,34 @@ public class AdminAuthServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         adminAuthService = new AdminAuthService(adminRepository);
+    }
+
+    @Test
+    void authenticateWithStatus_CredentialsObject_Success_ReturnsSuccess() {
+        String username = "admin";
+        String password = "admin";
+        when(adminRepository.findByUsername(username)).thenReturn(Optional.of(new AdminUser(username, password)));
+
+        LoginStatus result = adminAuthService.authenticateWithStatus(new Credentials(" admin ", password));
+
+        assertEquals(LoginStatus.SUCCESS, result);
+        verify(adminRepository).findByUsername(username);
+    }
+
+    @Test
+    void authenticateWithStatus_BlankPassword_ReturnsBlankInputStatus() {
+        LoginStatus result = adminAuthService.authenticateWithStatus("admin", "   ");
+
+        assertEquals(LoginStatus.BLANK_INPUT, result);
+        verifyNoInteractions(adminRepository);
+    }
+
+    @Test
+    void authenticateWithStatus_NullCredentials_ReturnsBlankInputStatus() {
+        LoginStatus result = adminAuthService.authenticateWithStatus((Credentials) null);
+
+        assertEquals(LoginStatus.BLANK_INPUT, result);
+        verifyNoInteractions(adminRepository);
     }
 
     @Test

@@ -12,12 +12,22 @@ public class AdminAuthService {
     }
 
     /**
-     * Backward-compatible boolean authentication API.
+     * Convenience boolean wrapper around {@link #authenticateWithStatus(Credentials)}.
+     * Returns true only when credentials are valid; all other cases (blank input,
+     * unknown user, wrong password) return false.
      */
     public boolean authenticate(String username, String password) {
         return authenticateWithStatus(new Credentials(username, password)) == LoginStatus.SUCCESS;
     }
 
+    /**
+     * Authenticates an administrator using the provided credentials.
+     *
+     * @param credentials the login credentials containing username and password
+     * @return LoginStatus.SUCCESS if credentials are valid,
+     *         LoginStatus.BLANK_INPUT if username or password is blank,
+     *         LoginStatus.INVALID_CREDENTIALS if authentication fails
+     */
     public LoginStatus authenticateWithStatus(Credentials credentials) {
         if (credentials == null) {
             return LoginStatus.BLANK_INPUT;

@@ -1,5 +1,6 @@
 package org.example;
 
+import org.example.notification.LoginNotifier;
 import org.example.presentation.ConsoleLogin;
 import org.example.presentation.ConsoleViewSlots;
 import org.example.presentation.LoginPromptResult;
@@ -20,6 +21,7 @@ public class Main {
         SessionManager sessionManager = new SessionManager();
         ConsoleLogin login = new ConsoleLogin(authService);
         AuthEventLogger authEventLogger = new AuthEventLogger();
+        LoginNotifier loginNotifier = new LoginNotifier();
         AppointmentService appointmentService = new AppointmentService();
         ConsoleViewSlots viewSlots = new ConsoleViewSlots(appointmentService);
 
@@ -44,13 +46,15 @@ public class Main {
 
                 if (!loginResult.isSuccess()) {
                     authEventLogger.logLoginFailure(loginResult.getUsername());
+                    loginNotifier.notifyLoginFailure(loginResult.getUsername());
                     continue;
                 }
 
                 String username = loginResult.getUsername();
                 sessionManager.login(username);
                 authEventLogger.logLoginSuccess(username);
-                runAdminMenu(scanner, sessionManager, viewSlots, authEventLogger);
+                loginNotifier.notifyLoginSuccess(username);
+                runAdminMenu(scanner, sessionManager, viewSlots, authEventLogger, loginNotifier);
             }
         }
     }
@@ -59,7 +63,8 @@ public class Main {
             Scanner scanner,
             SessionManager sessionManager,
             ConsoleViewSlots viewSlots,
-            AuthEventLogger authEventLogger
+            AuthEventLogger authEventLogger,
+            LoginNotifier loginNotifier
     ) {
         boolean active = true;
 
@@ -67,7 +72,8 @@ public class Main {
             System.out.println();
             System.out.println("Admin menu");
             System.out.println("1. View slots");
-            System.out.println("2. Logout");
+            System.out.println("2. Book slot");
+            System.out.println("3. Logout");
             System.out.print("Choose an option: ");
 
             String choice = scanner.nextLine();
@@ -80,13 +86,21 @@ public class Main {
                 }
                 viewSlots.show();
             } else if ("2".equals(choice)) {
+                if (!sessionManager.isLoggedIn()) {
+                    System.out.println("Access denied. Please log in again.");
+                    active = false;
+                    continue;
+                }
+                viewSlots.bookSlot(scanner);
+            } else if ("3".equals(choice)) {
                 String username = sessionManager.getCurrentUsername();
                 sessionManager.logout();
                 authEventLogger.logLogout(username);
+                loginNotifier.notifyLogout(username);
                 System.out.println("You have been logged out successfully.");
                 active = false;
             } else {
-                System.out.println("Invalid option. Please choose 1 or 2.");
+                System.out.println("Invalid option. Please choose 1, 2, or 3.");
             }
         }
     }
