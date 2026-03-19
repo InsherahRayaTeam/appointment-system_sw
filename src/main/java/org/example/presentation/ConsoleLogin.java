@@ -36,14 +36,15 @@ public class ConsoleLogin {
 
     public LoginPromptResult promptForResult(Scanner scanner) {
         if (attemptTracker.isLocked()) {
-            System.out.println("Login is temporarily locked. Try again in "
-                    + attemptTracker.getRemainingLockSeconds() + " seconds.");
+            long remainingSeconds = attemptTracker.getRemainingLockSeconds();
+            System.out.println("\n⚠️  Too many failed login attempts.");
+            System.out.println("   Please try again in " + remainingSeconds + " second(s).\n");
             return new LoginPromptResult(LoginPromptStatus.LOCKED, null);
         }
 
         Console console = System.console();
         if (console == null) {
-            System.out.println("Console not available; falling back to plain input (password will be visible).");
+            System.out.println("Note: Password input will be visible. For security, use a terminal that supports System.console().\n");
         }
 
         while (true) {
@@ -52,7 +53,7 @@ public class ConsoleLogin {
 
             if (console != null) {
                 user = console.readLine("Administrator username: ");
-                char[] pwd = console.readPassword("Password: ");
+                char[] pwd = console.readPassword("Administrator password: ");
                 pass = pwd == null ? null : new String(pwd);
                 if (pwd != null) {
                     Arrays.fill(pwd, ' ');
@@ -60,12 +61,12 @@ public class ConsoleLogin {
             } else {
                 System.out.print("Administrator username: ");
                 user = scanner.nextLine();
-                System.out.print("Password: ");
+                System.out.print("Administrator password: ");
                 pass = scanner.nextLine();
             }
 
             if (isCancelInput(user)) {
-                System.out.println("Login cancelled.");
+                System.out.println("\n✓ Login cancelled.\n");
                 return new LoginPromptResult(LoginPromptStatus.CANCELLED, null);
             }
 
@@ -74,26 +75,26 @@ public class ConsoleLogin {
             if (status == LoginStatus.SUCCESS) {
                 String authenticatedUsername = sanitizeUsername(user);
                 attemptTracker.recordSuccess();
-                System.out.println("Administrator login successful.");
                 return new LoginPromptResult(LoginPromptStatus.SUCCESS, authenticatedUsername);
             }
 
             attemptTracker.recordFailure();
 
             if (status == LoginStatus.BLANK_INPUT) {
-                System.out.println("Username and password cannot be blank.");
+                System.out.println("❌ Username and password are required. Please try again.\n");
             } else {
-                System.out.println("Invalid username or password.");
+                System.out.println("❌ Invalid username or password. Please try again.\n");
             }
 
             if (attemptTracker.isLocked()) {
-                System.out.println("Too many failed attempts. Login locked for "
-                        + attemptTracker.getRemainingLockSeconds() + " seconds.");
+                long remainingSeconds = attemptTracker.getRemainingLockSeconds();
+                System.out.println("⚠️  Account locked due to too many failed attempts.");
+                System.out.println("   Please try again in " + remainingSeconds + " second(s).\n");
                 return new LoginPromptResult(LoginPromptStatus.LOCKED, null);
             }
 
             int attemptsLeft = maxAttempts - attemptTracker.getFailedAttempts();
-            System.out.println("Attempts left: " + Math.max(0, attemptsLeft));
+            System.out.println("Attempts remaining: " + Math.max(0, attemptsLeft) + "\n");
         }
     }
 
