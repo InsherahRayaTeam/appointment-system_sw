@@ -71,9 +71,8 @@ public class Main {
         while (active) {
             System.out.println();
             System.out.println("Admin menu");
-            System.out.println("1. View slots");
-            System.out.println("2. Book slot");
-            System.out.println("3. Logout");
+            System.out.println("1. View available slots");
+            System.out.println("2. Logout");
             System.out.print("Choose an option: ");
 
             String choice = scanner.nextLine();
@@ -86,13 +85,6 @@ public class Main {
                 }
                 viewSlots.show();
             } else if ("2".equals(choice)) {
-                if (!sessionManager.isLoggedIn()) {
-                    System.out.println("Access denied. Please log in again.");
-                    active = false;
-                    continue;
-                }
-                viewSlots.bookSlot(scanner);
-            } else if ("3".equals(choice)) {
                 String username = sessionManager.getCurrentUsername();
                 sessionManager.logout();
                 authEventLogger.logLogout(username);
@@ -100,7 +92,7 @@ public class Main {
                 System.out.println("You have been logged out successfully.");
                 active = false;
             } else {
-                System.out.println("Invalid option. Please choose 1, 2, or 3.");
+                System.out.println("Invalid option. Please choose 1 or 2.");
             }
         }
     }

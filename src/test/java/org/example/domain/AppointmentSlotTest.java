@@ -31,6 +31,13 @@ public class AppointmentSlotTest {
     }
 
     @Test
+    void isAvailable_InitiallyReturnsTrue() {
+        AppointmentSlot slot = new AppointmentSlot("10:00");
+
+        assertTrue(slot.isAvailable());
+    }
+
+    @Test
     void book_ChangesBookedStatusToTrue() {
         AppointmentSlot slot = new AppointmentSlot("10:00");
 
@@ -47,6 +54,16 @@ public class AppointmentSlotTest {
         slot.book();
 
         assertTrue(slot.isBooked());
+    }
+
+    @Test
+    void isAvailable_ReturnsFalseAfterBooking() {
+        AppointmentSlot slot = new AppointmentSlot("11:00");
+        assertTrue(slot.isAvailable());
+
+        slot.book();
+
+        assertFalse(slot.isAvailable());
     }
 }
 

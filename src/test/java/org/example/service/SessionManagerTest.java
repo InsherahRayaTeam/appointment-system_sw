@@ -66,6 +66,15 @@ public class SessionManagerTest {
     }
 
     @Test
+    void logout_UserIsNoLongerAuthenticated() {
+        sessionManager.login("admin");
+
+        sessionManager.logout();
+
+        assertFalse(sessionManager.isLoggedIn());
+    }
+
+    @Test
     void logout_WhenNotLoggedIn_DoesNothing() {
         sessionManager.logout();
 
