@@ -1,24 +1,29 @@
 package org.example.service;
 
 import org.example.domain.AppointmentSlot;
+import org.example.repository.AppointmentRepository;
+import org.example.repository.InMemoryAppointmentRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class AppointmentService {
 
-    private final List<AppointmentSlot> slots = new ArrayList<>();
+    private final AppointmentRepository appointmentRepository;
 
     public AppointmentService() {
-        slots.add(new AppointmentSlot("10:00"));
-        slots.add(new AppointmentSlot("11:00"));
-        slots.add(new AppointmentSlot("12:00"));
+        this(new InMemoryAppointmentRepository());
+    }
+
+    public AppointmentService(AppointmentRepository appointmentRepository) {
+        this.appointmentRepository = Objects.requireNonNull(appointmentRepository, "appointmentRepository cannot be null");
     }
 
     public List<AppointmentSlot> getAvailableSlots() {
         List<AppointmentSlot> available = new ArrayList<>();
-        for (AppointmentSlot slot : slots) {
-            if (!slot.isBooked()) {
+        for (AppointmentSlot slot : appointmentRepository.findAll()) {
+            if (slot.isAvailable()) {
                 available.add(slot);
             }
         }
@@ -34,8 +39,8 @@ public class AppointmentService {
             return false;
         }
         String normalizedTime = time.trim();
-        for (AppointmentSlot slot : slots) {
-            if (slot.getTime().equals(normalizedTime) && !slot.isBooked()) {
+        for (AppointmentSlot slot : appointmentRepository.findAll()) {
+            if (slot.getTime().equals(normalizedTime) && slot.isAvailable()) {
                 slot.book();
                 return true;
             }
