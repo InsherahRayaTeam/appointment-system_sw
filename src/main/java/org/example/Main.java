@@ -6,8 +6,13 @@ import org.example.presentation.ConsoleViewSlots;
 import org.example.presentation.LoginPromptResult;
 import org.example.presentation.LoginPromptStatus;
 import org.example.repository.AdminRepository;
+import org.example.repository.AppointmentBookingRepository;
+import org.example.repository.AppointmentRepository;
 import org.example.repository.InMemoryAdminRepository;
+import org.example.repository.InMemoryAppointmentBookingRepository;
+import org.example.repository.InMemoryAppointmentRepository;
 import org.example.service.AdminAuthService;
+import org.example.service.AppointmentBookingService;
 import org.example.service.AppointmentService;
 import org.example.service.AuthEventLogger;
 import org.example.service.SessionManager;
@@ -31,8 +36,14 @@ public class Main {
         ConsoleLogin login = new ConsoleLogin(authService);
         AuthEventLogger authEventLogger = new AuthEventLogger();
         LoginNotifier loginNotifier = new LoginNotifier();
-        AppointmentService appointmentService = new AppointmentService();
-        ConsoleViewSlots viewSlots = new ConsoleViewSlots(appointmentService);
+        AppointmentRepository appointmentRepository = new InMemoryAppointmentRepository();
+        AppointmentBookingRepository appointmentBookingRepository = new InMemoryAppointmentBookingRepository();
+        AppointmentService appointmentService = new AppointmentService(appointmentRepository);
+        AppointmentBookingService appointmentBookingService = new AppointmentBookingService(
+                appointmentRepository,
+                appointmentBookingRepository
+        );
+        ConsoleViewSlots viewSlots = new ConsoleViewSlots(appointmentService, appointmentBookingService);
 
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.println("========================================");
@@ -82,7 +93,8 @@ public class Main {
     }
 
     /**
-     * Displays the admin menu with options to view available slots or logout.
+     * Displays the admin menu with options to view available slots, book appointments, or logout.
+     * This method only orchestrates user flow and delegates business operations.
      *
      * @param scanner       the input scanner for reading user choices
      * @param sessionManager the session manager for tracking login state
@@ -103,16 +115,16 @@ public class Main {
             System.out.println("========================================");
             System.out.println("            Admin Menu");
             System.out.println("========================================");
-            System.out.println("1) View available slots");
-            System.out.println("2) Logout");
+            System.out.println("1. View available slots");
+            System.out.println("2. Book appointment");
+            System.out.println("3. Logout");
             System.out.println("----------------------------------------");
-            System.out.print("Please select an option (1-2): ");
+            System.out.print("Please select an option (1-3): ");
 
             String choice = scanner.nextLine().trim();
 
             if ("1".equals(choice)) {
-                if (!sessionManager.isLoggedIn()) {
-                    System.out.println("\n❌ Session expired. Please log in again.\n");
+                if (isSessionExpired(sessionManager)) {
                     active = false;
                     continue;
                 }
@@ -120,15 +132,37 @@ public class Main {
                 viewSlots.show();
                 System.out.println();
             } else if ("2".equals(choice)) {
+                if (isSessionExpired(sessionManager)) {
+                    active = false;
+                    continue;
+                }
+                System.out.println();
+                viewSlots.bookAppointment(scanner);
+                System.out.println();
+            } else if ("3".equals(choice)) {
                 String username = sessionManager.getCurrentUsername();
                 sessionManager.logout();
                 authEventLogger.logLogout(username);
                 loginNotifier.notifyLogout(username);
-                System.out.println("\n✓ You have been successfully logged out.\n");
+                System.out.println("\nYou have been logged out successfully.\n");
                 active = false;
             } else {
-                System.out.println("\n❌ Invalid option. Please enter 1 or 2.\n");
+                System.out.println("\n❌ Invalid option. Please enter 1, 2, or 3.\n");
             }
         }
+    }
+
+    /**
+     * Checks whether the admin session is expired before handling menu actions.
+     *
+     * @param sessionManager the session manager tracking login state
+     * @return true when session is expired, otherwise false
+     */
+    private static boolean isSessionExpired(SessionManager sessionManager) {
+        if (!sessionManager.isLoggedIn()) {
+            System.out.println("\n❌ Session expired. Please log in again.\n");
+            return true;
+        }
+        return false;
     }
 }

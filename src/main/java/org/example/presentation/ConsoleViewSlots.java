@@ -1,9 +1,12 @@
 package org.example.presentation;
 
 import org.example.service.AppointmentService;
+import org.example.service.AppointmentBookingService;
+import org.example.service.BookingStatus;
 import org.example.domain.AppointmentSlot;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 
 /**
@@ -13,6 +16,7 @@ import java.util.Scanner;
 public class ConsoleViewSlots {
 
     private final AppointmentService service;
+    private final AppointmentBookingService bookingService;
 
     /**
      * Creates a console view for appointment slots.
@@ -20,7 +24,18 @@ public class ConsoleViewSlots {
      * @param service the appointment service providing slot data
      */
     public ConsoleViewSlots(AppointmentService service) {
-        this.service = service;
+        this(service, null);
+    }
+
+    /**
+     * Creates a console view for appointment slots and booking workflow.
+     *
+     * @param service the appointment service providing slot data
+     * @param bookingService the booking service for creating appointments
+     */
+    public ConsoleViewSlots(AppointmentService service, AppointmentBookingService bookingService) {
+        this.service = Objects.requireNonNull(service, "service cannot be null");
+        this.bookingService = bookingService;
     }
 
     /**
@@ -69,6 +84,71 @@ public class ConsoleViewSlots {
             System.out.println("Slot " + time.trim() + " booked successfully.");
         } else {
             System.out.println("Could not book slot '" + time.trim() + "'. It may not exist or is already booked.");
+        }
+    }
+
+    /**
+     * Interactively collects booking details and attempts to book an appointment.
+     * Delegates booking validation and decision logic to {@link AppointmentBookingService}
+     * and prints user-facing feedback based on the returned booking status.
+     *
+     * @param scanner the input scanner for reading user input
+     */
+    public void bookAppointment(Scanner scanner) {
+        if (bookingService == null) {
+            System.out.println("Booking is not available in this context.");
+            return;
+        }
+
+        System.out.println("========================================");
+        System.out.println("           Book Appointment");
+        System.out.println("========================================");
+        System.out.print("Customer name: ");
+        String customerName = scanner.nextLine();
+
+        System.out.print("Slot time (for example, 10:00): ");
+        String slotTime = scanner.nextLine();
+
+        System.out.print("Duration in minutes: ");
+        String durationMinutes = scanner.nextLine();
+
+        System.out.print("Participant count: ");
+        String participantCount = scanner.nextLine();
+
+        BookingStatus status = bookingService.bookAppointment(
+                customerName,
+                slotTime,
+                durationMinutes,
+                participantCount
+        );
+
+        System.out.println(messageFor(status));
+    }
+
+    /**
+     * Maps booking outcomes to user-friendly console messages.
+     *
+     * @param status the booking outcome status returned by the service layer
+     * @return the message to display to the user
+     */
+    private String messageFor(BookingStatus status) {
+        switch (status) {
+            case SUCCESS:
+                return "Booking confirmed successfully.";
+            case BLANK_CUSTOMER_NAME:
+                return "Booking failed: customer name cannot be blank.";
+            case BLANK_SLOT_TIME:
+                return "Booking failed: slot time cannot be blank.";
+            case INVALID_DURATION:
+                return "Booking failed: duration exceeds the allowed maximum (120 minutes).";
+            case INVALID_PARTICIPANT_COUNT:
+                return "Booking failed: participant count exceeds the allowed maximum (5).";
+            case SLOT_NOT_FOUND:
+                return "Booking failed: selected slot does not exist.";
+            case SLOT_ALREADY_BOOKED:
+                return "Booking failed: selected slot is already booked.";
+            default:
+                return "Booking failed: unexpected booking status.";
         }
     }
 }

@@ -30,7 +30,7 @@ public class MainLogoutFlowTest {
         ConsoleViewSlots viewSlots = new ConsoleViewSlots(new AppointmentService());
         AuthEventLogger authEventLogger = new AuthEventLogger();
         LoginNotifier loginNotifier = new LoginNotifier();
-        Scanner scanner = new Scanner("2\n");
+        Scanner scanner = new Scanner("3\n");
 
         PrintStream originalOut = System.out;
         ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -78,7 +78,7 @@ public class MainLogoutFlowTest {
         ConsoleViewSlots viewSlots = new ConsoleViewSlots(appointmentService);
         AuthEventLogger authEventLogger = new AuthEventLogger();
         LoginNotifier loginNotifier = new LoginNotifier();
-        Scanner scanner = new Scanner("1\n2\n");
+        Scanner scanner = new Scanner("1\n3\n");
 
         PrintStream originalOut = System.out;
         ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -103,7 +103,7 @@ public class MainLogoutFlowTest {
 
         String printed = output.toString(StandardCharsets.UTF_8);
 
-        assertTrue(printed.contains("Available appointment slots:"));
+        assertTrue(printed.contains("Available Appointment Slots"));
         assertTrue(printed.contains("11:00"));
         assertTrue(printed.contains("12:00"));
         assertFalse(printed.contains("10:00"));
