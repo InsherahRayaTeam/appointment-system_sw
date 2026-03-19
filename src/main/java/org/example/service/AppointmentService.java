@@ -20,14 +20,14 @@ public class AppointmentService {
         this.appointmentRepository = Objects.requireNonNull(appointmentRepository, "appointmentRepository cannot be null");
     }
 
+    /**
+     * Retrieves all available appointment slots from the repository.
+     * Only returns slots that have not been booked.
+     *
+     * @return a list of available appointment slots
+     */
     public List<AppointmentSlot> getAvailableSlots() {
-        List<AppointmentSlot> available = new ArrayList<>();
-        for (AppointmentSlot slot : appointmentRepository.findAll()) {
-            if (slot.isAvailable()) {
-                available.add(slot);
-            }
-        }
-        return available;
+        return appointmentRepository.findAvailable();
     }
 
     /**

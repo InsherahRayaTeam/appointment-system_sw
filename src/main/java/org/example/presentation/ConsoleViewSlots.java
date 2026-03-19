@@ -6,21 +6,49 @@ import org.example.domain.AppointmentSlot;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * Handles console-based display and interaction for appointment slots.
+ * Displays available slots and manages slot booking through user input.
+ */
 public class ConsoleViewSlots {
 
     private final AppointmentService service;
 
+    /**
+     * Creates a console view for appointment slots.
+     *
+     * @param service the appointment service providing slot data
+     */
     public ConsoleViewSlots(AppointmentService service) {
         this.service = service;
     }
 
+    /**
+     * Displays all available appointment slots to the console.
+     */
     public void show() {
-        System.out.println("Available appointment slots:");
-        for (AppointmentSlot slot : service.getAvailableSlots()) {
-            System.out.println("  " + slot.getTime());
+        List<AppointmentSlot> slots = service.getAvailableSlots();
+        
+        System.out.println("========================================");
+        System.out.println("     Available Appointment Slots");
+        System.out.println("========================================");
+        
+        if (slots.isEmpty()) {
+            System.out.println("No appointment slots currently available.");
+        } else {
+            for (AppointmentSlot slot : slots) {
+                System.out.println("  • " + slot.getTime());
+            }
         }
+        System.out.println("========================================");
     }
 
+    /**
+     * Interactively books an appointment slot selected by the user.
+     * Displays available slots and prompts for a selection.
+     *
+     * @param scanner the input scanner for reading user input
+     */
     public void bookSlot(Scanner scanner) {
         List<AppointmentSlot> available = service.getAvailableSlots();
         if (available.isEmpty()) {
