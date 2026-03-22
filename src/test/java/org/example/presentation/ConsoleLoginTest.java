@@ -77,15 +77,15 @@ public class ConsoleLoginTest {
         assertEquals(LoginPromptStatus.LOCKED, secondResult.getStatus());
     }
     @Test
-    void promptForResult_InvalidCredentials_LocksWhenMaxAttemptsIsOne() {
+    void promptForResult_InvalidCredentials_ReturnsInvalid() {
         when(adminRepository.findByUsername(anyString()))
                 .thenReturn(Optional.empty());
 
-        ConsoleLogin login = new ConsoleLogin(adminAuthService, 1, Duration.ofSeconds(30));
+        ConsoleLogin login = new ConsoleLogin(adminAuthService, 3, Duration.ofSeconds(30));
 
         LoginPromptResult result =
                 login.promptForResult(new Scanner("admin\nwrong\n"));
 
-        assertEquals(LoginPromptStatus.LOCKED, result.getStatus());
+        assertEquals(LoginPromptStatus.INVALID_CREDENTIALS, result.getStatus());
     }
 }

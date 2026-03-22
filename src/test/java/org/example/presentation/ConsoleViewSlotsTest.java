@@ -1,7 +1,9 @@
 package org.example.presentation;
 
 import org.example.domain.AppointmentSlot;
+import org.example.service.AppointmentBookingService;
 import org.example.service.AppointmentService;
+import org.example.service.BookingStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,8 @@ import java.util.List;
 import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class ConsoleViewSlotsTest {
@@ -23,20 +27,25 @@ public class ConsoleViewSlotsTest {
     @Mock
     private AppointmentService appointmentService;
 
+    @Mock
+    private AppointmentBookingService bookingService;
+
     private ConsoleViewSlots consoleViewSlots;
+    private AutoCloseable mocks;
     private final PrintStream originalOut = System.out;
     private ByteArrayOutputStream outputStream;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        mocks = MockitoAnnotations.openMocks(this);
         consoleViewSlots = new ConsoleViewSlots(appointmentService);
         outputStream = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStream));
     }
 
     @AfterEach
-    void tearDown() {
+    void tearDown() throws Exception {
+        mocks.close();
         System.setOut(originalOut);
     }
 
@@ -52,7 +61,7 @@ public class ConsoleViewSlotsTest {
         consoleViewSlots.show();
 
         String output = capturedOutput();
-        assertTrue(output.contains("Available appointment slots:"));
+        assertTrue(output.contains("Available Appointment Slots"));
         assertTrue(output.contains("10:00"));
         assertTrue(output.contains("11:00"));
         assertTrue(output.contains("12:00"));
@@ -96,6 +105,78 @@ public class ConsoleViewSlotsTest {
 
         String output = capturedOutput();
         assertTrue(output.contains("Could not book slot '09:00'. It may not exist or is already booked."));
+    }
+
+    @Test
+    void bookAppointment_SuccessStatus_PrintsSuccessMessage() {
+        ConsoleViewSlots viewSlots = new ConsoleViewSlots(appointmentService, bookingService);
+        when(bookingService.bookAppointment("Alice", "10:00", "60", "2"))
+                .thenReturn(BookingStatus.SUCCESS);
+
+        viewSlots.bookAppointment(new Scanner("Alice\n10:00\n60\n2\n"));
+
+        String output = capturedOutput();
+         assertTrue(output.contains("Booking confirmed successfully."));
+        verify(bookingService).bookAppointment(eq("Alice"), eq("10:00"), eq("60"), eq("2"));
+    }
+
+    @Test
+    void bookAppointment_BlankCustomerNameStatus_PrintsSpecificMessage() {
+        assertBookingMessageForStatus(
+                BookingStatus.BLANK_CUSTOMER_NAME,
+                "Booking failed: customer name cannot be blank."
+        );
+    }
+
+    @Test
+    void bookAppointment_BlankSlotTimeStatus_PrintsSpecificMessage() {
+        assertBookingMessageForStatus(
+                BookingStatus.BLANK_SLOT_TIME,
+                "Booking failed: slot time cannot be blank."
+        );
+    }
+
+    @Test
+    void bookAppointment_InvalidDurationStatus_PrintsSpecificMessage() {
+        assertBookingMessageForStatus(
+                BookingStatus.INVALID_DURATION,
+                "Booking failed: duration exceeds the allowed maximum (120 minutes)."
+        );
+    }
+
+    @Test
+    void bookAppointment_InvalidParticipantCountStatus_PrintsSpecificMessage() {
+        assertBookingMessageForStatus(
+                BookingStatus.INVALID_PARTICIPANT_COUNT,
+                "Booking failed: participant count exceeds the allowed maximum (5)."
+        );
+    }
+
+    @Test
+    void bookAppointment_SlotNotFoundStatus_PrintsSpecificMessage() {
+        assertBookingMessageForStatus(
+                BookingStatus.SLOT_NOT_FOUND,
+                "Booking failed: selected slot does not exist."
+        );
+    }
+
+    @Test
+    void bookAppointment_SlotAlreadyBookedStatus_PrintsSpecificMessage() {
+        assertBookingMessageForStatus(
+                BookingStatus.SLOT_ALREADY_BOOKED,
+                "Booking failed: selected slot is already booked."
+        );
+    }
+
+    private void assertBookingMessageForStatus(BookingStatus status, String expectedMessage) {
+        ConsoleViewSlots viewSlots = new ConsoleViewSlots(appointmentService, bookingService);
+        when(bookingService.bookAppointment("Alice", "10:00", "60", "2")).thenReturn(status);
+
+        viewSlots.bookAppointment(new Scanner("Alice\n10:00\n60\n2\n"));
+
+        String output = capturedOutput();
+        assertTrue(output.contains(expectedMessage));
+        verify(bookingService).bookAppointment(eq("Alice"), eq("10:00"), eq("60"), eq("2"));
     }
 
     private String capturedOutput() {

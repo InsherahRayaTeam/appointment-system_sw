@@ -4,6 +4,10 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 
+/**
+ * Tracks failed login attempts and enforces temporary account lockout.
+ * After a maximum number of consecutive failures, the account is locked for a specified duration.
+ */
 public class LoginAttemptTracker {
 
     private final int maxFailedAttempts;
@@ -13,6 +17,13 @@ public class LoginAttemptTracker {
     private int failedAttempts;
     private Instant lockedUntil;
 
+    /**
+     * Creates a login attempt tracker with the specified limits.
+     *
+     * @param maxFailedAttempts the maximum number of failed attempts before lockout
+     * @param lockDuration      the duration to lock the account after exceeding max attempts
+     * @throws IllegalArgumentException if maxFailedAttempts is less than 1 or lockDuration is not positive
+     */
     public LoginAttemptTracker(int maxFailedAttempts, Duration lockDuration) {
         this(maxFailedAttempts, lockDuration, Clock.systemUTC());
     }
@@ -29,10 +40,20 @@ public class LoginAttemptTracker {
         this.clock = clock;
     }
 
+    /**
+     * Checks if the account is currently locked.
+     *
+     * @return true if locked and lock duration has not expired, false otherwise
+     */
     public boolean isLocked() {
         return lockedUntil != null && Instant.now(clock).isBefore(lockedUntil);
     }
 
+    /**
+     * Returns the remaining seconds until the lock expires.
+     *
+     * @return remaining lock duration in seconds, or 0 if not locked
+     */
     public long getRemainingLockSeconds() {
         if (!isLocked()) {
             return 0;
@@ -40,6 +61,10 @@ public class LoginAttemptTracker {
         return Duration.between(Instant.now(clock), lockedUntil).toSeconds() + 1;
     }
 
+    /**
+     * Records a failed login attempt.
+     * If max attempts exceeded, triggers account lockout.
+     */
     public void recordFailure() {
         if (isLocked()) {
             return;
@@ -52,11 +77,20 @@ public class LoginAttemptTracker {
         }
     }
 
+    /**
+     * Records a successful login attempt.
+     * Resets failed attempt counter and clears any active lockout.
+     */
     public void recordSuccess() {
         failedAttempts = 0;
         lockedUntil = null;
     }
 
+    /**
+     * Returns the current count of failed login attempts.
+     *
+     * @return the number of consecutive failed attempts
+     */
     public int getFailedAttempts() {
         return failedAttempts;
     }
