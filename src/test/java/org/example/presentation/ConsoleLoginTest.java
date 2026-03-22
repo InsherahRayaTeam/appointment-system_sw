@@ -77,7 +77,7 @@ public class ConsoleLoginTest {
         assertEquals(LoginPromptStatus.LOCKED, secondResult.getStatus());
     }
     @Test
-    void promptForResult_InvalidCredentials_WhenMaxAttemptsIsOne_ReturnsLocked() {
+    void promptForResult_InvalidCredentials_LocksWhenMaxAttemptsIsOne() {
         when(adminRepository.findByUsername(anyString()))
                 .thenReturn(Optional.empty());
 

@@ -10,24 +10,28 @@ import java.util.Objects;
 
 public class AppointmentService {
 
-    private final AppointmentRepository appointmentRepository;
+    private final List<AppointmentSlot> slots = new ArrayList<>();
 
     public AppointmentService() {
         this(new InMemoryAppointmentRepository());
     }
 
     public AppointmentService(AppointmentRepository appointmentRepository) {
-        this.appointmentRepository = Objects.requireNonNull(appointmentRepository, "appointmentRepository cannot be null");
+        AppointmentRepository repository = Objects.requireNonNull(
+                appointmentRepository,
+                "appointmentRepository cannot be null"
+        );
+        this.slots.addAll(repository.findAll());
     }
 
-    /**
-     * Retrieves all available appointment slots from the repository.
-     * Only returns slots that have not been booked.
-     *
-     * @return a list of available appointment slots
-     */
     public List<AppointmentSlot> getAvailableSlots() {
-        return appointmentRepository.findAvailable();
+        List<AppointmentSlot> available = new ArrayList<>();
+        for (AppointmentSlot slot : slots) {
+            if (!slot.isBooked()) {
+                available.add(slot);
+            }
+        }
+        return available;
     }
 
     /**
@@ -39,8 +43,8 @@ public class AppointmentService {
             return false;
         }
         String normalizedTime = time.trim();
-        for (AppointmentSlot slot : appointmentRepository.findAll()) {
-            if (slot.getTime().equals(normalizedTime) && slot.isAvailable()) {
+        for (AppointmentSlot slot : slots) {
+            if (slot.getTime().equals(normalizedTime) && !slot.isBooked()) {
                 slot.book();
                 return true;
             }

@@ -1,81 +1,113 @@
 package org.example.domain;
 
-/**
- * Represents a confirmed booking for a specific appointment slot.
- */
-public final class Appointment {
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
+import java.util.Locale;
+
+public class Appointment {
+
+    private final String id;
+    private final LocalDateTime startTime;
+    private final int duration;
+    private final int participants;
+
+    // Optional fields used by booking workflow compatibility.
     private final String customerName;
-    private final String slotTime;
-    private final int durationMinutes;
-    private final int participantCount;
     private final AppointmentStatus status;
 
+    public Appointment(String id, LocalDateTime startTime, int duration, int participants) {
+        this.id = id;
+        this.startTime = startTime;
+        this.duration = duration;
+        this.participants = participants;
+        this.customerName = null;
+        this.status = null;
+    }
+
     /**
-     * Creates an appointment with all required booking details.
-     *
-     * @param customerName the customer name associated with the booking
-     * @param slotTime the time label of the booked slot
-     * @param durationMinutes the appointment duration in minutes
-     * @param participantCount the number of participants in the appointment
-     * @param status the current status of the appointment
+     * Backward-compatible constructor used by booking flow (enum status).
      */
-    public Appointment(
-            String customerName,
-            String slotTime,
-            int durationMinutes,
-            int participantCount,
-            AppointmentStatus status
-    ) {
+    public Appointment(String customerName, String slotTime, int duration, int participants, AppointmentStatus status) {
+        this.id = null;
+        this.startTime = parseSlotTime(slotTime);
+        this.duration = duration;
+        this.participants = participants;
         this.customerName = customerName;
-        this.slotTime = slotTime;
-        this.durationMinutes = durationMinutes;
-        this.participantCount = participantCount;
         this.status = status;
     }
 
     /**
-     * Returns the customer name associated with this appointment.
-     *
-     * @return the customer name
+     * Backward-compatible constructor used by legacy callers (String status).
      */
+    public Appointment(String customerName, String slotTime, int duration, int participants, String status) {
+        this(customerName, slotTime, duration, participants, parseStatus(status));
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public int getParticipants() {
+        return participants;
+    }
+
+    public int getDurationMinutes() {
+        return duration;
+    }
+
+    public int getParticipantCount() {
+        return participants;
+    }
+
+    public String getSlotTime() {
+        return startTime != null ? startTime.toLocalTime().toString() : null;
+    }
+
     public String getCustomerName() {
         return customerName;
     }
 
-    /**
-     * Returns the time label of the booked slot.
-     *
-     * @return the slot time
-     */
-    public String getSlotTime() {
-        return slotTime;
-    }
-
-    /**
-     * Returns the duration of the appointment in minutes.
-     *
-     * @return the duration in minutes
-     */
-    public int getDurationMinutes() {
-        return durationMinutes;
-    }
-
-    /**
-     * Returns the participant count for this appointment.
-     *
-     * @return the participant count
-     */
-    public int getParticipantCount() {
-        return participantCount;
-    }
-
-    /**
-     * Returns the current appointment status.
-     *
-     * @return the appointment status
-     */
     public AppointmentStatus getStatus() {
         return status;
     }
-}
 
+    /**
+     * Legacy helper that returns the status as text when needed.
+     */
+    public String getStatusValue() {
+        return status == null ? null : status.name();
+    }
+
+    private static LocalDateTime parseSlotTime(String slotTime) {
+        if (slotTime == null || slotTime.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            LocalTime parsedTime = LocalTime.parse(slotTime.trim());
+            return LocalDate.now().atTime(parsedTime);
+        } catch (DateTimeParseException ex) {
+            return null;
+        }
+    }
+
+    private static AppointmentStatus parseStatus(String status) {
+        if (status == null || status.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return AppointmentStatus.valueOf(status.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+}
