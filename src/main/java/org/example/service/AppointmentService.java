@@ -1,18 +1,27 @@
 package org.example.service;
 
 import org.example.domain.AppointmentSlot;
+import org.example.repository.AppointmentRepository;
+import org.example.repository.InMemoryAppointmentRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class AppointmentService {
 
     private final List<AppointmentSlot> slots = new ArrayList<>();
 
     public AppointmentService() {
-        slots.add(new AppointmentSlot("10:00"));
-        slots.add(new AppointmentSlot("11:00"));
-        slots.add(new AppointmentSlot("12:00"));
+        this(new InMemoryAppointmentRepository());
+    }
+
+    public AppointmentService(AppointmentRepository appointmentRepository) {
+        AppointmentRepository repository = Objects.requireNonNull(
+                appointmentRepository,
+                "appointmentRepository cannot be null"
+        );
+        this.slots.addAll(repository.findAll());
     }
 
     public List<AppointmentSlot> getAvailableSlots() {
