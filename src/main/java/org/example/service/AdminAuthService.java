@@ -2,20 +2,21 @@ package org.example.service;
 
 import org.example.domain.Credentials;
 import org.example.repository.AdminRepository;
-import org.example.notification.LoginNotifier;
+
+import java.util.Objects;
 
 public class AdminAuthService {
 
     private final AdminRepository adminRepository;
-
-    // 🟢 جديد: EventManager
-    private final EventManager eventManager = new EventManager();
+    private final EventManager eventManager;
 
     public AdminAuthService(AdminRepository adminRepository) {
-        this.adminRepository = adminRepository;
+        this(adminRepository, new EventManager());
+    }
 
-        // 🟢 subscribe notifier
-        eventManager.subscribe(new LoginNotifier());
+    public AdminAuthService(AdminRepository adminRepository, EventManager eventManager) {
+        this.adminRepository = Objects.requireNonNull(adminRepository, "adminRepository cannot be null");
+        this.eventManager = Objects.requireNonNull(eventManager, "eventManager cannot be null");
     }
 
     public boolean authenticate(String username, String password) {
@@ -40,12 +41,11 @@ public class AdminAuthService {
                 .map(admin -> admin.getPassword().equals(password))
                 .orElse(false);
 
-        // 🟢 هنا التعديل المهم
         if (authenticated) {
-            eventManager.notifyAllObservers("Admin logged in successfully");
+            eventManager.notifyObservers("Admin logged in successfully");
             return LoginStatus.SUCCESS;
         } else {
-            eventManager.notifyAllObservers("Failed login attempt");
+            eventManager.notifyObservers("Failed login attempt");
             return LoginStatus.INVALID_CREDENTIALS;
         }
     }

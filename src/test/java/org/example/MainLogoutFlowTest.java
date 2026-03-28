@@ -1,10 +1,11 @@
 package org.example;
 
-import org.example.notification.LoginNotifier;
 import org.example.domain.AppointmentSlot;
+import org.example.notification.Observer;
 import org.example.presentation.ConsoleViewSlots;
 import org.example.service.AppointmentService;
 import org.example.service.AuthEventLogger;
+import org.example.service.EventManager;
 import org.example.service.SessionManager;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +30,9 @@ public class MainLogoutFlowTest {
 
         ConsoleViewSlots viewSlots = new ConsoleViewSlots(new AppointmentService());
         AuthEventLogger authEventLogger = new AuthEventLogger();
-        LoginNotifier loginNotifier = new LoginNotifier();
+        EventManager eventManager = new EventManager();
+        Observer observer = org.mockito.Mockito.mock(Observer.class);
+        eventManager.subscribe(observer);
         Scanner scanner = new Scanner("3\n");
 
         PrintStream originalOut = System.out;
@@ -44,10 +47,10 @@ public class MainLogoutFlowTest {
                     SessionManager.class,
                     ConsoleViewSlots.class,
                     AuthEventLogger.class,
-                    LoginNotifier.class
+                    EventManager.class
             );
             runAdminMenu.setAccessible(true);
-            runAdminMenu.invoke(null, scanner, sessionManager, viewSlots, authEventLogger, loginNotifier);
+            runAdminMenu.invoke(null, scanner, sessionManager, viewSlots, authEventLogger, eventManager);
         } finally {
             System.setOut(originalOut);
             scanner.close();
@@ -58,6 +61,7 @@ public class MainLogoutFlowTest {
         assertFalse(sessionManager.isLoggedIn());
         assertNull(sessionManager.getCurrentUsername());
         assertTrue(printed.contains("You have been logged out successfully."));
+        org.mockito.Mockito.verify(observer).update("Goodbye, admin! You have been logged out.");
     }
 
     @Test
@@ -77,7 +81,7 @@ public class MainLogoutFlowTest {
 
         ConsoleViewSlots viewSlots = new ConsoleViewSlots(appointmentService);
         AuthEventLogger authEventLogger = new AuthEventLogger();
-        LoginNotifier loginNotifier = new LoginNotifier();
+        EventManager eventManager = new EventManager();
         Scanner scanner = new Scanner("1\n3\n");
 
         PrintStream originalOut = System.out;
@@ -92,10 +96,10 @@ public class MainLogoutFlowTest {
                     SessionManager.class,
                     ConsoleViewSlots.class,
                     AuthEventLogger.class,
-                    LoginNotifier.class
+                    EventManager.class
             );
             runAdminMenu.setAccessible(true);
-            runAdminMenu.invoke(null, scanner, sessionManager, viewSlots, authEventLogger, loginNotifier);
+            runAdminMenu.invoke(null, scanner, sessionManager, viewSlots, authEventLogger, eventManager);
         } finally {
             System.setOut(originalOut);
             scanner.close();
