@@ -4,7 +4,12 @@ package org.example.notification;
  * Sends user-facing notifications for login and logout events.
  * Complements AuthEventLogger (audit log) with friendly console messages.
  */
-public class LoginNotifier {
+public class LoginNotifier implements Observer {
+
+    @Override
+    public void update(String message) {
+        System.out.println("🔔 Notification: " + message);
+    }
 
     public void notifyLoginSuccess(String username) {
         System.out.println("[NOTIFY] Welcome, " + username + "! You are now logged in.");
@@ -20,4 +25,3 @@ public class LoginNotifier {
         System.out.println("[NOTIFY] Goodbye, " + displayUser + "! You have been logged out.");
     }
 }
-
