@@ -6,6 +6,9 @@ import java.time.format.DateTimeFormatter;
 /**
  * Logs authentication and session events to the console.
  * Provides audit trail for login/logout activities with timestamps.
+ *
+ * @author appointment-system
+ * @version 1.0
  */
 public class AuthEventLogger {
 

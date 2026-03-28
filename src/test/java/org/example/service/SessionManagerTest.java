@@ -1,13 +1,16 @@
-package org.example;
+package org.example.service;
 
-import org.example.service.SessionManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 public class SessionManagerTest {
 
@@ -15,7 +18,7 @@ public class SessionManagerTest {
 
     @BeforeEach
     void setUp() {
-        sessionManager = new SessionManager();
+        sessionManager = new SessionManager(mock(AuthEventLogger.class), mock(EventManager.class));
     }
 
     @Test
@@ -30,15 +33,15 @@ public class SessionManagerTest {
         sessionManager.login("admin");
 
         assertTrue(sessionManager.isLoggedIn());
-        assertTrue(sessionManager.getLoginTime() != null);
-        assertTrue("admin".equals(sessionManager.getCurrentUsername()));
+        assertNotNull(sessionManager.getLoginTime());
+        assertEquals("admin", sessionManager.getCurrentUsername());
     }
 
     @Test
     void login_TrimmedUsername_SetsNormalizedSessionUser() {
         sessionManager.login(" admin ");
 
-        assertTrue("admin".equals(sessionManager.getCurrentUsername()));
+        assertEquals("admin", sessionManager.getCurrentUsername());
     }
 
     @Test
@@ -51,7 +54,7 @@ public class SessionManagerTest {
         sessionManager.login();
 
         assertTrue(sessionManager.isLoggedIn());
-        assertTrue("admin".equals(sessionManager.getCurrentUsername()));
+        assertEquals("admin", sessionManager.getCurrentUsername());
     }
 
     @Test
@@ -85,5 +88,42 @@ public class SessionManagerTest {
     @Test
     void login_NullUsername_ThrowsException() {
         assertThrows(IllegalArgumentException.class, () -> sessionManager.login(null));
+    }
+
+    @Test
+    void logoutAndNotify_WithLoggedInUser_LogsAndNotifiesThroughServices() {
+        AuthEventLogger authEventLogger = mock(AuthEventLogger.class);
+        EventManager eventManager = mock(EventManager.class);
+        SessionManager managedSession = new SessionManager(authEventLogger, eventManager);
+        managedSession.login("admin");
+
+        managedSession.logoutAndNotify();
+
+        assertFalse(managedSession.isLoggedIn());
+        assertNull(managedSession.getCurrentUsername());
+        verify(authEventLogger).logLogout("admin");
+        verify(eventManager).notifyObservers("Goodbye, admin! You have been logged out.");
+    }
+
+    @Test
+    void logoutAndNotify_WithoutUser_UsesUnknownPlaceholder() {
+        AuthEventLogger authEventLogger = mock(AuthEventLogger.class);
+        EventManager eventManager = mock(EventManager.class);
+        SessionManager managedSession = new SessionManager(authEventLogger, eventManager);
+
+        managedSession.logoutAndNotify();
+
+        verify(authEventLogger).logLogout(null);
+        verify(eventManager).notifyObservers("Goodbye, <unknown>! You have been logged out.");
+    }
+
+    @Test
+    void constructor_NullLogger_ThrowsException() {
+        assertThrows(NullPointerException.class, () -> new SessionManager(null, mock(EventManager.class)));
+    }
+
+    @Test
+    void constructor_NullEventManager_ThrowsException() {
+        assertThrows(NullPointerException.class, () -> new SessionManager(mock(AuthEventLogger.class), null));
     }
 }

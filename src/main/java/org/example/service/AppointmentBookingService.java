@@ -6,18 +6,21 @@ import org.example.domain.AppointmentStatus;
 import org.example.repository.AppointmentBookingRepository;
 import org.example.repository.AppointmentRepository;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
  * Handles booking workflow validation and persistence for customer appointments.
+ *
+ * @author appointment-system
+ * @version 1.0
  */
 public class AppointmentBookingService {
 
-    private static final int MAX_DURATION_MINUTES = 120;
-    private static final int MAX_PARTICIPANT_COUNT = 5;
-
     private final AppointmentRepository appointmentRepository;
     private final AppointmentBookingRepository appointmentBookingRepository;
+    private final BookingRuleStrategy durationRule;
+    private final BookingRuleStrategy participantRule;
 
     /**
      * Creates a booking service using repository dependencies.
@@ -37,6 +40,8 @@ public class AppointmentBookingService {
                 appointmentBookingRepository,
                 "appointmentBookingRepository cannot be null"
         );
+        this.durationRule = new DurationRule();
+        this.participantRule = new ParticipantRule();
     }
 
     /**
@@ -98,10 +103,11 @@ public class AppointmentBookingService {
         if (slotTime == null || slotTime.trim().isEmpty()) {
             return BookingStatus.BLANK_SLOT_TIME;
         }
-        if (durationMinutes > MAX_DURATION_MINUTES) {
+        Appointment probe = validationProbe(durationMinutes, participantCount);
+        if (!durationRule.isValid(probe)) {
             return BookingStatus.INVALID_DURATION;
         }
-        if (participantCount > MAX_PARTICIPANT_COUNT) {
+        if (!participantRule.isValid(probe)) {
             return BookingStatus.INVALID_PARTICIPANT_COUNT;
         }
 
@@ -145,5 +151,8 @@ public class AppointmentBookingService {
             return null;
         }
     }
-}
 
+    private Appointment validationProbe(int durationMinutes, int participantCount) {
+        return new Appointment("validation", LocalDateTime.now(), durationMinutes, participantCount);
+    }
+}

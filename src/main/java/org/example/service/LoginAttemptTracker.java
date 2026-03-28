@@ -7,6 +7,9 @@ import java.time.Instant;
 /**
  * Tracks failed login attempts and enforces temporary account lockout.
  * After a maximum number of consecutive failures, the account is locked for a specified duration.
+ *
+ * @author appointment-system
+ * @version 1.0
  */
 public class LoginAttemptTracker {
 
@@ -93,5 +96,14 @@ public class LoginAttemptTracker {
      */
     public int getFailedAttempts() {
         return failedAttempts;
+    }
+
+    /**
+     * Returns the remaining failed-attempt count before lockout.
+     *
+     * @return remaining attempt count
+     */
+    public int getAttemptsRemaining() {
+        return Math.max(0, maxFailedAttempts - failedAttempts);
     }
 }

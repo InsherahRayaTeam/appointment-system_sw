@@ -9,11 +9,20 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
+/**
+ * In-memory admin repository backed by optional properties-file seed data.
+ *
+ * @author appointment-system
+ * @version 1.0
+ */
 public class InMemoryAdminRepository implements AdminRepository {
 
     private static final String RESOURCE = "/admin.properties";
     private final Map<String, AdminUser> admins = new HashMap<>();
 
+    /**
+     * Creates the repository and loads default/admin seed data.
+     */
     public InMemoryAdminRepository() {
         loadFromResource();
     }
@@ -40,6 +49,12 @@ public class InMemoryAdminRepository implements AdminRepository {
         }
     }
 
+    /**
+     * Finds an admin user by username.
+     *
+     * @param username username to look up
+     * @return optional admin user
+     */
     @Override
     public Optional<AdminUser> findByUsername(String username) {
         return Optional.ofNullable(admins.get(username));

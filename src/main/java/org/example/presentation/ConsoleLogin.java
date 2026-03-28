@@ -2,41 +2,53 @@ package org.example.presentation;
 
 import org.example.domain.Credentials;
 import org.example.service.AdminAuthService;
-import org.example.service.LoginAttemptTracker;
+import org.example.service.AuthenticationAttemptResult;
 import org.example.service.LoginStatus;
 
 import java.io.Console;
-import java.time.Duration;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Scanner;
 
 /**
- * Simple console-based login prompt. Limits attempts to 3 by default.
+ * Console-based login prompt that handles user input/output for authentication attempts.
+ *
+ * @author appointment-system
+ * @version 1.0
  */
 public class ConsoleLogin {
     private static final String CANCEL_INPUT = "q";
 
     private final AdminAuthService authService;
-    private final int maxAttempts;
-    private final LoginAttemptTracker attemptTracker;
 
+    /**
+     * Creates a login prompt bound to an authentication service.
+     *
+     * @param authService authentication service
+     */
     public ConsoleLogin(AdminAuthService authService) {
-        this(authService, 3, Duration.ofSeconds(30));
+        this.authService = Objects.requireNonNull(authService, "authService cannot be null");
     }
 
-    public ConsoleLogin(AdminAuthService authService, int maxAttempts, Duration lockDuration) {
-        this.authService = authService;
-        this.maxAttempts = maxAttempts;
-        this.attemptTracker = new LoginAttemptTracker(maxAttempts, lockDuration);
-    }
-
+    /**
+     * Prompts for credentials and returns whether login succeeded.
+     *
+     * @param scanner scanner used for console input
+     * @return true when login succeeds, otherwise false
+     */
     public boolean prompt(Scanner scanner) {
         return promptForResult(scanner).isSuccess();
     }
 
+    /**
+     * Prompts for credentials and returns the full prompt outcome.
+     *
+     * @param scanner scanner used for console input
+     * @return login prompt result containing outcome status and username when applicable
+     */
     public LoginPromptResult promptForResult(Scanner scanner) {
-        if (attemptTracker.isLocked()) {
-            long remainingSeconds = attemptTracker.getRemainingLockSeconds();
+        if (authService.isLocked()) {
+            long remainingSeconds = authService.getRemainingLockSeconds();
             System.out.println("\n⚠️  Too many failed login attempts.");
             System.out.println("   Please try again in " + remainingSeconds + " second(s).\n");
             return new LoginPromptResult(LoginPromptStatus.LOCKED, null);
@@ -70,15 +82,13 @@ public class ConsoleLogin {
                 return new LoginPromptResult(LoginPromptStatus.CANCELLED, null);
             }
 
-            Credentials credentials = new Credentials(user, pass);
-            LoginStatus status = authService.authenticateWithStatus(credentials);
-            if (status == LoginStatus.SUCCESS) {
+            AuthenticationAttemptResult result = authService.authenticateWithPolicy(new Credentials(user, pass));
+            if (result.isSuccess()) {
                 String authenticatedUsername = sanitizeUsername(user);
-                attemptTracker.recordSuccess();
                 return new LoginPromptResult(LoginPromptStatus.SUCCESS, authenticatedUsername);
             }
 
-            attemptTracker.recordFailure();
+            LoginStatus status = result.getStatus();
 
             if (status == LoginStatus.BLANK_INPUT) {
                 System.out.println("❌ Username and password are required. Please try again.\n");
@@ -86,15 +96,14 @@ public class ConsoleLogin {
                 System.out.println("❌ Invalid username or password. Please try again.\n");
             }
 
-            if (attemptTracker.isLocked()) {
-                long remainingSeconds = attemptTracker.getRemainingLockSeconds();
+            if (result.isLocked()) {
+                long remainingSeconds = result.getRemainingLockSeconds();
                 System.out.println("⚠️  Account locked due to too many failed attempts.");
                 System.out.println("   Please try again in " + remainingSeconds + " second(s).\n");
                 return new LoginPromptResult(LoginPromptStatus.LOCKED, null);
             }
 
-            int attemptsLeft = maxAttempts - attemptTracker.getFailedAttempts();
-            System.out.println("Attempts remaining: " + Math.max(0, attemptsLeft) + "\n");
+            System.out.println("Attempts remaining: " + result.getAttemptsRemaining() + "\n");
         }
     }
 

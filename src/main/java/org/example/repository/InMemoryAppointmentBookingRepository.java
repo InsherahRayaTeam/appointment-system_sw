@@ -7,6 +7,9 @@ import java.util.List;
 
 /**
  * In-memory repository implementation for booked appointments.
+ *
+ * @author appointment-system
+ * @version 1.0
  */
 public class InMemoryAppointmentBookingRepository implements AppointmentBookingRepository {
 

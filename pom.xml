@@ -27,13 +27,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Mockito (mocking) -->
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <version>5.11.0</version>
-            <scope>test</scope>
-        </dependency>
 
         <!-- Mockito + JUnit 5 integration (lets you use @ExtendWith(MockitoExtension.class)) -->
         <dependency>

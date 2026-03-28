@@ -9,6 +9,9 @@ package org.example.service;
  * INVALID_PARTICIPANT_COUNT: participant count input was invalid or outside allowed rules.
  * SLOT_NOT_FOUND: requested slot time does not exist.
  * SLOT_ALREADY_BOOKED: requested slot exists but is not available.
+ *
+ * @author appointment-system
+ * @version 1.0
  */
 public enum BookingStatus {
     SUCCESS,
@@ -19,4 +22,3 @@ public enum BookingStatus {
     SLOT_NOT_FOUND,
     SLOT_ALREADY_BOOKED
 }
-
