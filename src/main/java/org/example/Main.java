@@ -15,6 +15,7 @@ import org.example.service.AdminAuthService;
 import org.example.service.AppointmentBookingService;
 import org.example.service.AppointmentService;
 import org.example.service.AuthEventLogger;
+import org.example.service.EventManager;
 import org.example.service.SessionManager;
 
 import java.util.Scanner;
@@ -31,14 +32,16 @@ public class Main {
      */
     public static void main(String[] args) {
         AdminRepository adminRepository = new InMemoryAdminRepository();
-        AdminAuthService authService = new AdminAuthService(adminRepository);
         SessionManager sessionManager = new SessionManager();
-        ConsoleLogin login = new ConsoleLogin(authService);
         AuthEventLogger authEventLogger = new AuthEventLogger();
+        EventManager eventManager = new EventManager();
         LoginNotifier loginNotifier = new LoginNotifier();
+        eventManager.subscribe(loginNotifier);
+        AdminAuthService authService = new AdminAuthService(adminRepository, eventManager);
+        ConsoleLogin login = new ConsoleLogin(authService);
         AppointmentRepository appointmentRepository = new InMemoryAppointmentRepository();
         AppointmentBookingRepository appointmentBookingRepository = new InMemoryAppointmentBookingRepository();
-        AppointmentService appointmentService = new AppointmentService(appointmentRepository);
+        AppointmentService appointmentService = new AppointmentService(appointmentRepository, eventManager);
         AppointmentBookingService appointmentBookingService = new AppointmentBookingService(
                 appointmentRepository,
                 appointmentBookingRepository
@@ -76,7 +79,6 @@ public class Main {
 
                 if (!loginResult.isSuccess()) {
                     authEventLogger.logLoginFailure(loginResult.getUsername());
-                    loginNotifier.notifyLoginFailure(loginResult.getUsername());
                     System.out.println();
                     continue;
                 }
@@ -84,9 +86,8 @@ public class Main {
                 String username = loginResult.getUsername();
                 sessionManager.login(username);
                 authEventLogger.logLoginSuccess(username);
-                loginNotifier.notifyLoginSuccess(username);
                 System.out.println();
-                runAdminMenu(scanner, sessionManager, viewSlots, authEventLogger, loginNotifier);
+                runAdminMenu(scanner, sessionManager, viewSlots, authEventLogger, eventManager);
                 System.out.println();
             }
         }
@@ -100,14 +101,14 @@ public class Main {
      * @param sessionManager the session manager for tracking login state
      * @param viewSlots     the console view for displaying slots
      * @param authEventLogger the event logger for recording authentication events
-     * @param loginNotifier the notifier for user-facing login messages
+     * @param eventManager the notification dispatcher for observer updates
      */
     private static void runAdminMenu(
             Scanner scanner,
             SessionManager sessionManager,
             ConsoleViewSlots viewSlots,
             AuthEventLogger authEventLogger,
-            LoginNotifier loginNotifier
+            EventManager eventManager
     ) {
         boolean active = true;
 
@@ -143,7 +144,8 @@ public class Main {
                 String username = sessionManager.getCurrentUsername();
                 sessionManager.logout();
                 authEventLogger.logLogout(username);
-                loginNotifier.notifyLogout(username);
+                String displayUser = username == null ? "<unknown>" : username;
+                eventManager.notifyObservers("Goodbye, " + displayUser + "! You have been logged out.");
                 System.out.println("\nYou have been logged out successfully.\n");
                 active = false;
             } else {

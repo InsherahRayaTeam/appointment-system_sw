@@ -1,7 +1,7 @@
 package org.example;
 
 import org.example.domain.Appointment;
-import org.example.notification.LoginNotifier;
+import org.example.notification.Observer;
 import org.example.presentation.ConsoleViewSlots;
 import org.example.repository.AppointmentBookingRepository;
 import org.example.repository.AppointmentRepository;
@@ -9,6 +9,7 @@ import org.example.repository.InMemoryAppointmentRepository;
 import org.example.service.AppointmentBookingService;
 import org.example.service.AppointmentService;
 import org.example.service.AuthEventLogger;
+import org.example.service.EventManager;
 import org.example.service.SessionManager;
 import org.junit.jupiter.api.Test;
 
@@ -42,14 +43,14 @@ public class MainAdminMenuBookingFlowTest {
         );
         ConsoleViewSlots viewSlots = new ConsoleViewSlots(appointmentService, bookingService);
         AuthEventLogger authEventLogger = mock(AuthEventLogger.class);
-        LoginNotifier loginNotifier = mock(LoginNotifier.class);
+        EventManager eventManager = new EventManager();
 
         String printed = runMenuAndCaptureOutput(
                 "2\nAlice\n10:00\n60\n2\n3\n",
                 sessionManager,
                 viewSlots,
                 authEventLogger,
-                loginNotifier
+                eventManager
         );
 
         assertTrue(printed.contains("Booking confirmed successfully."));
@@ -70,14 +71,14 @@ public class MainAdminMenuBookingFlowTest {
         );
         ConsoleViewSlots viewSlots = new ConsoleViewSlots(appointmentService, bookingService);
         AuthEventLogger authEventLogger = mock(AuthEventLogger.class);
-        LoginNotifier loginNotifier = mock(LoginNotifier.class);
+        EventManager eventManager = new EventManager();
 
         String printed = runMenuAndCaptureOutput(
                 "2\n   \n   \n121\n6\n3\n",
                 sessionManager,
                 viewSlots,
                 authEventLogger,
-                loginNotifier
+                eventManager
         );
 
         assertTrue(printed.contains("Booking failed: customer name cannot be blank."));
@@ -98,14 +99,14 @@ public class MainAdminMenuBookingFlowTest {
         );
         ConsoleViewSlots viewSlots = new ConsoleViewSlots(appointmentService, bookingService);
         AuthEventLogger authEventLogger = mock(AuthEventLogger.class);
-        LoginNotifier loginNotifier = mock(LoginNotifier.class);
+        EventManager eventManager = new EventManager();
 
         String printed = runMenuAndCaptureOutput(
                 "2\nAlice\n   \n60\n2\n3\n",
                 sessionManager,
                 viewSlots,
                 authEventLogger,
-                loginNotifier
+                eventManager
         );
 
         assertTrue(printed.contains("Booking failed: slot time cannot be blank."));
@@ -126,14 +127,14 @@ public class MainAdminMenuBookingFlowTest {
         );
         ConsoleViewSlots viewSlots = new ConsoleViewSlots(appointmentService, bookingService);
         AuthEventLogger authEventLogger = mock(AuthEventLogger.class);
-        LoginNotifier loginNotifier = mock(LoginNotifier.class);
+        EventManager eventManager = new EventManager();
 
         String printed = runMenuAndCaptureOutput(
                 "2\nAlice\n10:00\n121\n2\n3\n",
                 sessionManager,
                 viewSlots,
                 authEventLogger,
-                loginNotifier
+                eventManager
         );
 
         assertTrue(printed.contains("Booking failed: duration exceeds the allowed maximum (120 minutes)."));
@@ -154,14 +155,14 @@ public class MainAdminMenuBookingFlowTest {
         );
         ConsoleViewSlots viewSlots = new ConsoleViewSlots(appointmentService, bookingService);
         AuthEventLogger authEventLogger = mock(AuthEventLogger.class);
-        LoginNotifier loginNotifier = mock(LoginNotifier.class);
+        EventManager eventManager = new EventManager();
 
         String printed = runMenuAndCaptureOutput(
                 "2\nAlice\n10:00\n60\n6\n3\n",
                 sessionManager,
                 viewSlots,
                 authEventLogger,
-                loginNotifier
+                eventManager
         );
 
         assertTrue(printed.contains("Booking failed: participant count exceeds the allowed maximum (5)."));
@@ -182,14 +183,14 @@ public class MainAdminMenuBookingFlowTest {
         );
         ConsoleViewSlots viewSlots = new ConsoleViewSlots(appointmentService, bookingService);
         AuthEventLogger authEventLogger = mock(AuthEventLogger.class);
-        LoginNotifier loginNotifier = mock(LoginNotifier.class);
+        EventManager eventManager = new EventManager();
 
         String printed = runMenuAndCaptureOutput(
                 "2\nAlice\n15:00\n60\n2\n3\n",
                 sessionManager,
                 viewSlots,
                 authEventLogger,
-                loginNotifier
+                eventManager
         );
 
         assertTrue(printed.contains("Booking failed: selected slot does not exist."));
@@ -216,14 +217,14 @@ public class MainAdminMenuBookingFlowTest {
         );
         ConsoleViewSlots viewSlots = new ConsoleViewSlots(appointmentService, bookingService);
         AuthEventLogger authEventLogger = mock(AuthEventLogger.class);
-        LoginNotifier loginNotifier = mock(LoginNotifier.class);
+        EventManager eventManager = new EventManager();
 
         String printed = runMenuAndCaptureOutput(
                 "2\nAlice\n10:00\n60\n2\n3\n",
                 sessionManager,
                 viewSlots,
                 authEventLogger,
-                loginNotifier
+                eventManager
         );
 
         assertTrue(printed.contains("Booking failed: selected slot is already booked."));
@@ -239,14 +240,16 @@ public class MainAdminMenuBookingFlowTest {
         AppointmentService appointmentService = new AppointmentService(appointmentRepository);
         ConsoleViewSlots viewSlots = new ConsoleViewSlots(appointmentService);
         AuthEventLogger authEventLogger = mock(AuthEventLogger.class);
-        LoginNotifier loginNotifier = mock(LoginNotifier.class);
+        EventManager eventManager = new EventManager();
+        Observer observer = mock(Observer.class);
+        eventManager.subscribe(observer);
 
         String printed = runMenuAndCaptureOutput(
                 "1\n3\n",
                 sessionManager,
                 viewSlots,
                 authEventLogger,
-                loginNotifier
+                eventManager
         );
 
         assertTrue(printed.contains("Available Appointment Slots"));
@@ -260,7 +263,7 @@ public class MainAdminMenuBookingFlowTest {
         assertFalse(sessionManager.isLoggedIn());
         assertNull(sessionManager.getCurrentUsername());
         verify(authEventLogger).logLogout("admin");
-        verify(loginNotifier).notifyLogout("admin");
+        verify(observer).update("Goodbye, admin! You have been logged out.");
     }
 
     private String runMenuAndCaptureOutput(
@@ -268,7 +271,7 @@ public class MainAdminMenuBookingFlowTest {
             SessionManager sessionManager,
             ConsoleViewSlots viewSlots,
             AuthEventLogger authEventLogger,
-            LoginNotifier loginNotifier
+            EventManager eventManager
     ) throws Exception {
         Scanner scanner = new Scanner(scannerInput);
         PrintStream originalOut = System.out;
@@ -283,10 +286,10 @@ public class MainAdminMenuBookingFlowTest {
                     SessionManager.class,
                     ConsoleViewSlots.class,
                     AuthEventLogger.class,
-                    LoginNotifier.class
+                    EventManager.class
             );
             runAdminMenu.setAccessible(true);
-            runAdminMenu.invoke(null, scanner, sessionManager, viewSlots, authEventLogger, loginNotifier);
+            runAdminMenu.invoke(null, scanner, sessionManager, viewSlots, authEventLogger, eventManager);
         } finally {
             System.setOut(originalOut);
             scanner.close();
