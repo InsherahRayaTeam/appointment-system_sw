@@ -2,32 +2,26 @@ package org.example.service;
 
 import org.example.domain.Credentials;
 import org.example.repository.AdminRepository;
+import org.example.notification.LoginNotifier;
 
 public class AdminAuthService {
 
     private final AdminRepository adminRepository;
 
+    // 🟢 جديد: EventManager
+    private final EventManager eventManager = new EventManager();
+
     public AdminAuthService(AdminRepository adminRepository) {
         this.adminRepository = adminRepository;
+
+        // 🟢 subscribe notifier
+        eventManager.subscribe(new LoginNotifier());
     }
 
-    /**
-     * Convenience boolean wrapper around {@link #authenticateWithStatus(Credentials)}.
-     * Returns true only when credentials are valid; all other cases (blank input,
-     * unknown user, wrong password) return false.
-     */
     public boolean authenticate(String username, String password) {
         return authenticateWithStatus(new Credentials(username, password)) == LoginStatus.SUCCESS;
     }
 
-    /**
-     * Authenticates an administrator using the provided credentials.
-     *
-     * @param credentials the login credentials containing username and password
-     * @return LoginStatus.SUCCESS if credentials are valid,
-     *         LoginStatus.BLANK_INPUT if username or password is blank,
-     *         LoginStatus.INVALID_CREDENTIALS if authentication fails
-     */
     public LoginStatus authenticateWithStatus(Credentials credentials) {
         if (credentials == null) {
             return LoginStatus.BLANK_INPUT;
@@ -46,7 +40,14 @@ public class AdminAuthService {
                 .map(admin -> admin.getPassword().equals(password))
                 .orElse(false);
 
-        return authenticated ? LoginStatus.SUCCESS : LoginStatus.INVALID_CREDENTIALS;
+        // 🟢 هنا التعديل المهم
+        if (authenticated) {
+            eventManager.notifyAllObservers("Admin logged in successfully");
+            return LoginStatus.SUCCESS;
+        } else {
+            eventManager.notifyAllObservers("Failed login attempt");
+            return LoginStatus.INVALID_CREDENTIALS;
+        }
     }
 
     public LoginStatus authenticateWithStatus(String username, String password) {
