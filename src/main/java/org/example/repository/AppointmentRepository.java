@@ -6,6 +6,9 @@ import java.util.List;
 
 /**
  * Repository interface for accessing appointment slot data.
+ *
+ * @author appointment-system
+ * @version 1.0
  */
 public interface AppointmentRepository {
 

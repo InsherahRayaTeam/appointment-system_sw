@@ -6,6 +6,9 @@ import java.util.List;
 
 /**
  * Repository interface for storing and retrieving booked appointments.
+ *
+ * @author appointment-system
+ * @version 1.0
  */
 public interface AppointmentBookingRepository {
 

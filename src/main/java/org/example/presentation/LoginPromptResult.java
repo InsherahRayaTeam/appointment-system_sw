@@ -3,6 +3,9 @@ package org.example.presentation;
 /**
  * Represents the result of a login prompt interaction.
  * Contains the terminal status and username (if applicable) of the login attempt.
+ *
+ * @author appointment-system
+ * @version 1.0
  */
 public class LoginPromptResult {
 

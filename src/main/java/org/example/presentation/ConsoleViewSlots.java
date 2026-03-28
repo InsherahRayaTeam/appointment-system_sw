@@ -12,6 +12,9 @@ import java.util.Scanner;
 /**
  * Handles console-based display and interaction for appointment slots.
  * Displays available slots and manages slot booking through user input.
+ *
+ * @author appointment-system
+ * @version 1.0
  */
 public class ConsoleViewSlots {
 
@@ -152,4 +155,3 @@ public class ConsoleViewSlots {
         }
     }
 }
-

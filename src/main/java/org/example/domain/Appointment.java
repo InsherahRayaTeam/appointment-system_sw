@@ -6,6 +6,12 @@ import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.Locale;
 
+/**
+ * Represents an appointment aggregate used by both legacy and booking workflows.
+ *
+ * @author appointment-system
+ * @version 1.0
+ */
 public class Appointment {
 
     private final String id;
@@ -17,6 +23,14 @@ public class Appointment {
     private final String customerName;
     private final AppointmentStatus status;
 
+    /**
+     * Creates an appointment with explicit identifier and start-time fields.
+     *
+     * @param id appointment identifier
+     * @param startTime appointment start timestamp
+     * @param duration appointment duration in minutes
+     * @param participants participant count
+     */
     public Appointment(String id, LocalDateTime startTime, int duration, int participants) {
         this.id = id;
         this.startTime = startTime;
@@ -28,6 +42,12 @@ public class Appointment {
 
     /**
      * Backward-compatible constructor used by booking flow (enum status).
+     *
+     * @param customerName customer name
+     * @param slotTime slot time text representation
+     * @param duration appointment duration in minutes
+     * @param participants participant count
+     * @param status appointment status
      */
     public Appointment(String customerName, String slotTime, int duration, int participants, AppointmentStatus status) {
         this.id = null;
@@ -40,49 +60,102 @@ public class Appointment {
 
     /**
      * Backward-compatible constructor used by legacy callers (String status).
+     *
+     * @param customerName customer name
+     * @param slotTime slot time text representation
+     * @param duration appointment duration in minutes
+     * @param participants participant count
+     * @param status status text representation
      */
     public Appointment(String customerName, String slotTime, int duration, int participants, String status) {
         this(customerName, slotTime, duration, participants, parseStatus(status));
     }
 
+    /**
+     * Returns appointment identifier.
+     *
+     * @return appointment identifier
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Returns start timestamp.
+     *
+     * @return appointment start time
+     */
     public LocalDateTime getStartTime() {
         return startTime;
     }
 
+    /**
+     * Returns duration in minutes.
+     *
+     * @return duration in minutes
+     */
     public int getDuration() {
         return duration;
     }
 
+    /**
+     * Returns participant count.
+     *
+     * @return participant count
+     */
     public int getParticipants() {
         return participants;
     }
 
+    /**
+     * Returns duration in minutes.
+     *
+     * @return duration in minutes
+     */
     public int getDurationMinutes() {
         return duration;
     }
 
+    /**
+     * Returns participant count.
+     *
+     * @return participant count
+     */
     public int getParticipantCount() {
         return participants;
     }
 
+    /**
+     * Returns slot time in local-time string format.
+     *
+     * @return slot time string or null when unavailable
+     */
     public String getSlotTime() {
         return startTime != null ? startTime.toLocalTime().toString() : null;
     }
 
+    /**
+     * Returns customer name for booking workflow.
+     *
+     * @return customer name
+     */
     public String getCustomerName() {
         return customerName;
     }
 
+    /**
+     * Returns status enum.
+     *
+     * @return appointment status
+     */
     public AppointmentStatus getStatus() {
         return status;
     }
 
     /**
      * Legacy helper that returns the status as text when needed.
+     *
+     * @return status value as text, or null when status is unavailable
      */
     public String getStatusValue() {
         return status == null ? null : status.name();

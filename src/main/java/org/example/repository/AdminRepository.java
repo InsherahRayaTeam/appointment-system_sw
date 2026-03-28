@@ -5,6 +5,9 @@ import java.util.Optional;
 
 /**
  * Repository interface for accessing administrator user data.
+ *
+ * @author appointment-system
+ * @version 1.0
  */
 public interface AdminRepository {
 

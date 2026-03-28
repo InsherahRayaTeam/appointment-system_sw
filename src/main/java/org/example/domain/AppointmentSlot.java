@@ -1,5 +1,11 @@
 package org.example.domain;
 
+/**
+ * Represents a bookable appointment slot.
+ *
+ * @author appointment-system
+ * @version 1.0
+ */
 public class AppointmentSlot {
 
     private String time;

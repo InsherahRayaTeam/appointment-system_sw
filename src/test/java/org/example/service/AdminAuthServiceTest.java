@@ -1,19 +1,23 @@
-package org.example;
+package org.example.service;
 
 import org.example.domain.AdminUser;
 import org.example.domain.Credentials;
 import org.example.repository.AdminRepository;
 import org.example.service.AdminAuthService;
+import org.example.service.EventManager;
+import org.example.service.LoginAttemptTracker;
 import org.example.service.LoginStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -21,18 +25,27 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.anyString;
 
+@ExtendWith(MockitoExtension.class)
 public class AdminAuthServiceTest {
 
     @Mock
     private AdminRepository adminRepository;
 
+    @Mock
+    private EventManager eventManager;
+
     private AdminAuthService adminAuthService;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-        adminAuthService = new AdminAuthService(adminRepository);
+        adminAuthService = new AdminAuthService(
+                adminRepository,
+                eventManager,
+                new LoginAttemptTracker(3, Duration.ofSeconds(30))
+        );
     }
 
     @Test
@@ -45,6 +58,7 @@ public class AdminAuthServiceTest {
 
         assertEquals(LoginStatus.SUCCESS, result);
         verify(adminRepository).findByUsername(username);
+        verify(eventManager).notifyObservers("Admin logged in successfully");
     }
 
     @Test
@@ -53,14 +67,17 @@ public class AdminAuthServiceTest {
 
         assertEquals(LoginStatus.BLANK_INPUT, result);
         verifyNoInteractions(adminRepository);
+        verify(eventManager, never()).notifyObservers(anyString());
     }
 
     @Test
     void authenticateWithStatus_NullCredentials_ReturnsBlankInputStatus() {
-        LoginStatus result = adminAuthService.authenticateWithStatus((Credentials) null);
+        Credentials credentials = null;
+        LoginStatus result = adminAuthService.authenticateWithStatus(credentials);
 
         assertEquals(LoginStatus.BLANK_INPUT, result);
         verifyNoInteractions(adminRepository);
+        verify(eventManager, never()).notifyObservers(anyString());
     }
 
     @Test
@@ -74,6 +91,7 @@ public class AdminAuthServiceTest {
 
         assertEquals(LoginStatus.SUCCESS, result);
         verify(adminRepository).findByUsername(username);
+        verify(eventManager).notifyObservers("Admin logged in successfully");
     }
 
     @Test
@@ -87,6 +105,7 @@ public class AdminAuthServiceTest {
 
         assertEquals(LoginStatus.SUCCESS, result);
         verify(adminRepository).findByUsername(username);
+        verify(eventManager).notifyObservers("Admin logged in successfully");
     }
 
     @Test
@@ -95,6 +114,7 @@ public class AdminAuthServiceTest {
 
         assertEquals(LoginStatus.BLANK_INPUT, result);
         verifyNoInteractions(adminRepository);
+        verify(eventManager, never()).notifyObservers(anyString());
     }
 
     @Test
@@ -108,6 +128,7 @@ public class AdminAuthServiceTest {
 
         assertEquals(LoginStatus.INVALID_CREDENTIALS, result);
         verify(adminRepository).findByUsername(username);
+        verify(eventManager).notifyObservers("Failed login attempt");
     }
 
     @Test
@@ -120,6 +141,7 @@ public class AdminAuthServiceTest {
 
         assertEquals(LoginStatus.INVALID_CREDENTIALS, result);
         verify(adminRepository).findByUsername(username);
+        verify(eventManager).notifyObservers("Failed login attempt");
     }
 
     @Test
