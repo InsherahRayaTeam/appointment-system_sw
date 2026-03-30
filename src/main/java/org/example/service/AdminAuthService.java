@@ -1,12 +1,15 @@
 package org.example.service;
 
 import org.example.domain.Credentials;
+import org.example.domain.UserRole;
+import org.example.domain.AdminUser;
 import org.example.repository.AdminRepository;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /**
- * Authenticates administrator credentials and applies login-attempt policy.
+ * Authenticates system users and applies login-attempt policy.
  *
  * @author appointment-system
  * @version 1.0
@@ -66,14 +69,16 @@ public class AdminAuthService {
             return LoginStatus.BLANK_INPUT;
         }
 
-        String normalizedUsername = username.trim();
 
-        boolean authenticated = adminRepository.findByUsername(normalizedUsername)
-                .map(admin -> admin.getPassword().equals(password))
-                .orElse(false);
+        Optional<AdminUser> authenticatedUser = resolveAuthenticatedUser(credentials);
+        boolean authenticated = authenticatedUser.isPresent();
 
         if (authenticated) {
-            eventManager.notifyObservers("Admin logged in successfully");
+            if (authenticatedUser.get().getRole() == UserRole.ADMIN) {
+                eventManager.notifyObservers("Admin logged in successfully");
+            } else {
+                eventManager.notifyObservers("User logged in successfully");
+            }
             return LoginStatus.SUCCESS;
         } else {
             eventManager.notifyObservers("Failed login attempt");
@@ -103,11 +108,24 @@ public class AdminAuthService {
             return AuthenticationAttemptResult.locked(loginAttemptTracker.getRemainingLockSeconds());
         }
 
-        LoginStatus status = authenticateWithStatus(credentials);
-        if (status == LoginStatus.SUCCESS) {
+        Optional<AdminUser> authenticatedUser = resolveAuthenticatedUser(credentials);
+        if (authenticatedUser.isPresent()) {
+            if (authenticatedUser.get().getRole() == UserRole.ADMIN) {
+                eventManager.notifyObservers("Admin logged in successfully");
+            } else {
+                eventManager.notifyObservers("User logged in successfully");
+            }
             loginAttemptTracker.recordSuccess();
-            return AuthenticationAttemptResult.success();
+            return AuthenticationAttemptResult.success(authenticatedUser.get());
         }
+
+        LoginStatus status = credentials == null
+                || isBlank(credentials.getUsername())
+                || isBlank(credentials.getPassword())
+                ? LoginStatus.BLANK_INPUT
+                : LoginStatus.INVALID_CREDENTIALS;
+
+        eventManager.notifyObservers("Failed login attempt");
 
         loginAttemptTracker.recordFailure();
         if (loginAttemptTracker.isLocked()) {
@@ -138,5 +156,17 @@ public class AdminAuthService {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private Optional<AdminUser> resolveAuthenticatedUser(Credentials credentials) {
+        if (credentials == null || isBlank(credentials.getUsername()) || isBlank(credentials.getPassword())) {
+            return Optional.empty();
+        }
+
+        String normalizedUsername = credentials.getUsername().trim();
+        String password = credentials.getPassword();
+
+        return adminRepository.findByUsername(normalizedUsername)
+                .filter(user -> user.getPassword().equals(password));
     }
 }

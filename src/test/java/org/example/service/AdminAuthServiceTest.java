@@ -2,11 +2,8 @@ package org.example.service;
 
 import org.example.domain.AdminUser;
 import org.example.domain.Credentials;
+import org.example.domain.UserRole;
 import org.example.repository.AdminRepository;
-import org.example.service.AdminAuthService;
-import org.example.service.EventManager;
-import org.example.service.LoginAttemptTracker;
-import org.example.service.LoginStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -59,6 +56,55 @@ public class AdminAuthServiceTest {
         assertEquals(LoginStatus.SUCCESS, result);
         verify(adminRepository).findByUsername(username);
         verify(eventManager).notifyObservers("Admin logged in successfully");
+    }
+
+    @Test
+    void authenticateWithStatus_RegularUserCredentials_ReturnsSuccess() {
+        String username = "user";
+        String password = "user123";
+        when(adminRepository.findByUsername(username)).thenReturn(
+                Optional.of(new AdminUser("user-1", username, password, UserRole.USER))
+        );
+
+        LoginStatus result = adminAuthService.authenticateWithStatus(username, password);
+
+        assertEquals(LoginStatus.SUCCESS, result);
+        verify(adminRepository).findByUsername(username);
+        verify(eventManager).notifyObservers("User logged in successfully");
+    }
+
+    @Test
+    void authenticateWithPolicy_AdminLogin_IncludesAuthenticatedRole() {
+        when(adminRepository.findByUsername("admin")).thenReturn(
+                Optional.of(new AdminUser("admin-1", "admin", "admin123", UserRole.ADMIN))
+        );
+
+        AuthenticationAttemptResult result = adminAuthService.authenticateWithPolicy(
+                new Credentials("admin", "admin123")
+        );
+
+        assertTrue(result.isSuccess());
+        assertEquals("admin", result.getAuthenticatedUsername());
+        assertEquals(UserRole.ADMIN, result.getAuthenticatedRole());
+        assertEquals("admin", result.getAuthenticatedUser().getUsername());
+        assertEquals(UserRole.ADMIN, result.getAuthenticatedUser().getRole());
+    }
+
+    @Test
+    void authenticateWithPolicy_UserLogin_IncludesAuthenticatedRole() {
+        when(adminRepository.findByUsername("user")).thenReturn(
+                Optional.of(new AdminUser("user-1", "user", "user123", UserRole.USER))
+        );
+
+        AuthenticationAttemptResult result = adminAuthService.authenticateWithPolicy(
+                new Credentials("user", "user123")
+        );
+
+        assertTrue(result.isSuccess());
+        assertEquals("user", result.getAuthenticatedUsername());
+        assertEquals(UserRole.USER, result.getAuthenticatedRole());
+        assertEquals("user", result.getAuthenticatedUser().getUsername());
+        assertEquals(UserRole.USER, result.getAuthenticatedUser().getRole());
     }
 
     @Test

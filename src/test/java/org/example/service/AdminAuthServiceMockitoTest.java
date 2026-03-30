@@ -1,6 +1,7 @@
 package org.example.service;
 
 import org.example.domain.AdminUser;
+import org.example.domain.UserRole;
 import org.example.repository.AdminRepository;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +16,7 @@ public class AdminAuthServiceMockitoTest {
     @Test
     void shouldAuthenticateSuccessfully() {
         AdminRepository mockRepo = mock(AdminRepository.class);
-        AdminUser admin = new AdminUser("admin", "1234");
+        AdminUser admin = new AdminUser("admin-1", "admin", "1234", UserRole.ADMIN);
         when(mockRepo.findByUsername("admin"))
                 .thenReturn(Optional.of(admin));
 
@@ -49,7 +50,9 @@ public class AdminAuthServiceMockitoTest {
     @Test
     void shouldNotifyObserverOnSuccessfulAuthentication() {
         AdminRepository mockRepo = mock(AdminRepository.class);
-        when(mockRepo.findByUsername("admin")).thenReturn(Optional.of(new AdminUser("admin", "1234")));
+        when(mockRepo.findByUsername("admin")).thenReturn(
+                Optional.of(new AdminUser("admin-1", "admin", "1234", UserRole.ADMIN))
+        );
 
         EventManager eventManager = mock(EventManager.class);
         LoginAttemptTracker loginAttemptTracker = new LoginAttemptTracker(3, Duration.ofSeconds(30));

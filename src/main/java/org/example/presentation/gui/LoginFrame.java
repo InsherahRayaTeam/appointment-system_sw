@@ -5,6 +5,8 @@ import org.example.service.AdminAuthService;
 import org.example.service.AuthenticationAttemptResult;
 import org.example.service.LoginStatus;
 import org.example.service.SessionManager;
+import org.example.domain.AdminUser;
+import org.example.domain.UserRole;
 
 import javax.swing.*;
 import java.awt.*;
@@ -54,10 +56,9 @@ public class LoginFrame extends JFrame {
     }
 
     private void initializeUI() {
-        setTitle("Appointment Scheduling System - Login");
+        setTitle("Appointment System - Login");
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        setMinimumSize(new Dimension(520, 380));
-        setLocationRelativeTo(null);
+        setMinimumSize(new Dimension(560, 420));
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -66,132 +67,160 @@ public class LoginFrame extends JFrame {
             }
         });
 
-        JPanel page = UiStyle.createPagePanel(new GridBagLayout());
+        JPanel page = UiStyle.createPagePanel(new BorderLayout(UiStyle.SPACE_MD, UiStyle.SPACE_MD));
+        page.setBorder(BorderFactory.createEmptyBorder(UiStyle.SPACE_MD, UiStyle.SPACE_MD, UiStyle.SPACE_MD, UiStyle.SPACE_MD));
 
-        JPanel card = new JPanel(new GridBagLayout());
-        card.setBackground(UiStyle.COLOR_CARD);
-        card.setBorder(UiStyle.createCardBorder());
-        card.setPreferredSize(new Dimension(420, 260));
+        JPanel headerPanel = buildHeaderPanel();
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        centerPanel.setOpaque(false);
+        JPanel card = buildFormCard();
+        centerPanel.add(card);
+
+        JPanel footerPanel = buildFooterPanel();
+
+        page.add(headerPanel, BorderLayout.NORTH);
+        page.add(centerPanel, BorderLayout.CENTER);
+        page.add(footerPanel, BorderLayout.SOUTH);
+        setContentPane(page);
+
+        getRootPane().setDefaultButton(loginButton);
+        pack();
+        setLocationRelativeTo(null);
+    }
+
+    private JPanel buildHeaderPanel() {
+        JPanel headerPanel = UiStyle.createCardPanel(new BorderLayout());
+
+        JPanel titleStack = new JPanel();
+        titleStack.setOpaque(false);
+        titleStack.setLayout(new BoxLayout(titleStack, BoxLayout.Y_AXIS));
+
+        JLabel titleLabel = new JLabel("Appointment System");
+        titleLabel.setFont(UiStyle.FONT_TITLE);
+
+        JLabel subtitleLabel = new JLabel("Sign in with your account");
+        subtitleLabel.setFont(UiStyle.FONT_BODY);
+        subtitleLabel.setForeground(Color.DARK_GRAY);
+
+        titleStack.add(titleLabel);
+        titleStack.add(Box.createVerticalStrut(4));
+        titleStack.add(subtitleLabel);
+
+        headerPanel.add(titleStack, BorderLayout.WEST);
+        return headerPanel;
+    }
+
+    private JPanel buildFormCard() {
+        JPanel card = UiStyle.createCardPanel(new GridBagLayout());
+        card.setPreferredSize(new Dimension(460, 200));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(6, 8, 6, 8);
+        gbc.insets = new Insets(UiStyle.SPACE_XS, UiStyle.SPACE_SM, UiStyle.SPACE_XS, UiStyle.SPACE_SM);
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
-        JLabel titleLabel = new JLabel("Administrator Login", SwingConstants.CENTER);
-        titleLabel.setFont(UiStyle.FONT_TITLE);
+        JLabel usernameLabel = UiStyle.createFieldLabel("Username");
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.CENTER;
-        card.add(titleLabel, gbc);
-
-        JLabel subtitleLabel = new JLabel("Sign in to manage appointment scheduling", SwingConstants.CENTER);
-        subtitleLabel.setFont(UiStyle.FONT_BODY);
-        subtitleLabel.setForeground(Color.DARK_GRAY);
-        gbc.gridy = 1;
-        gbc.insets = new Insets(0, 8, 14, 8);
-        card.add(subtitleLabel, gbc);
-
-        gbc.gridwidth = 1;
-        gbc.insets = new Insets(6, 8, 6, 8);
-        gbc.anchor = GridBagConstraints.WEST;
-
-        JLabel usernameLabel = new JLabel("Username");
-        usernameLabel.setFont(UiStyle.FONT_LABEL);
-        gbc.gridx = 0;
-        gbc.gridy = 2;
         gbc.weightx = 0;
         card.add(usernameLabel, gbc);
 
         usernameField = new JTextField();
-        usernameField.setFont(UiStyle.FONT_BODY);
+        UiStyle.styleTextComponent(usernameField);
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         card.add(usernameField, gbc);
 
-        JLabel passwordLabel = new JLabel("Password");
-        passwordLabel.setFont(UiStyle.FONT_LABEL);
+        JLabel passwordLabel = UiStyle.createFieldLabel("Password");
         gbc.gridx = 0;
-        gbc.gridy = 3;
+        gbc.gridy = 1;
         gbc.weightx = 0;
         card.add(passwordLabel, gbc);
 
         passwordField = new JPasswordField();
-        passwordField.setFont(UiStyle.FONT_BODY);
+        UiStyle.styleTextComponent(passwordField);
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         card.add(passwordField, gbc);
 
+        return card;
+    }
+
+    private JPanel buildFooterPanel() {
+        JPanel footer = UiStyle.createCardPanel(new BorderLayout(UiStyle.SPACE_SM, UiStyle.SPACE_SM));
+
         errorLabel = new JLabel(" ", SwingConstants.CENTER);
         errorLabel.setFont(UiStyle.FONT_BODY);
         errorLabel.setForeground(UiStyle.COLOR_ERROR);
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        gbc.gridwidth = 2;
-        gbc.insets = new Insets(8, 8, 8, 8);
-        card.add(errorLabel, gbc);
+        footer.add(errorLabel, BorderLayout.NORTH);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, UiStyle.SPACE_XS, 0));
         buttonPanel.setOpaque(false);
 
-        loginButton = new JButton("Login");
-        UiStyle.stylePrimaryButton(loginButton);
-        loginButton.addActionListener(this::onLogin);
+        loginButton = UiStyle.createPrimaryButton("Login", this::onLogin);
         buttonPanel.add(loginButton);
 
-        exitButton = new JButton("Exit");
-        UiStyle.styleSecondaryButton(exitButton);
-        exitButton.addActionListener(e -> onExit());
+        exitButton = UiStyle.createSecondaryButton("Exit", e -> onExit());
         buttonPanel.add(exitButton);
 
-        gbc.gridy = 5;
-        gbc.insets = new Insets(8, 8, 0, 8);
-        card.add(buttonPanel, gbc);
-
-        page.add(card);
-        setContentPane(page);
-
-        getRootPane().setDefaultButton(loginButton);
+        footer.add(buttonPanel, BorderLayout.SOUTH);
+        return footer;
     }
 
     private void onLogin(ActionEvent e) {
         clearError();
+        setAuthenticating(true);
 
         String username = usernameField.getText().trim();
         String password = new String(passwordField.getPassword());
 
         if (username.isEmpty() || password.isEmpty()) {
             setErrorMessage("Please enter both username and password.");
+            setAuthenticating(false);
             return;
         }
 
-        AuthenticationAttemptResult result = authService.authenticateWithPolicy(
-                new Credentials(username, password)
-        );
+        try {
+            AuthenticationAttemptResult result = authService.authenticateWithPolicy(
+                    new Credentials(username, password)
+            );
 
-        if (result.isLocked()) {
-            setErrorMessage("Too many failed attempts. Try again in "
-                    + result.getRemainingLockSeconds() + " second(s).");
-            passwordField.setText("");
-            return;
-        }
-
-        if (!result.isSuccess()) {
-            if (result.getStatus() == LoginStatus.BLANK_INPUT) {
-                setErrorMessage("Please enter both username and password.");
-            } else {
-                setErrorMessage("Invalid username or password. Attempts remaining: "
-                        + result.getAttemptsRemaining());
+            if (result.isLocked()) {
+                setErrorMessage("Too many failed attempts. Try again in "
+                        + result.getRemainingLockSeconds() + " second(s).");
+                passwordField.setText("");
+                return;
             }
-            passwordField.setText("");
-            return;
-        }
 
-        sessionManager.login(username);
-        clearFields();
-        onLoginSuccess.run();
+            if (!result.isSuccess()) {
+                if (result.getStatus() == LoginStatus.BLANK_INPUT) {
+                    setErrorMessage("Please enter both username and password.");
+                } else {
+                    setErrorMessage("Invalid username or password. Attempts remaining: "
+                            + result.getAttemptsRemaining());
+                }
+                passwordField.setText("");
+                return;
+            }
+
+            AdminUser authenticatedUser = result.getAuthenticatedUser();
+            if (authenticatedUser != null) {
+                sessionManager.login(authenticatedUser);
+            } else {
+                UserRole authenticatedRole = result.getAuthenticatedRole() == null
+                        ? UserRole.USER
+                        : result.getAuthenticatedRole();
+                String authenticatedUsername = result.getAuthenticatedUsername() == null
+                        ? username
+                        : result.getAuthenticatedUsername();
+                sessionManager.login(authenticatedUsername, authenticatedRole);
+            }
+            clearFields();
+            onLoginSuccess.run();
+        } finally {
+            setAuthenticating(false);
+        }
     }
 
     private void onExit() {
@@ -220,6 +249,10 @@ public class LoginFrame extends JFrame {
         usernameField.setText("");
         passwordField.setText("");
         clearError();
+    }
+
+    private void setAuthenticating(boolean authenticating) {
+        loginButton.setEnabled(!authenticating);
     }
 
     /**

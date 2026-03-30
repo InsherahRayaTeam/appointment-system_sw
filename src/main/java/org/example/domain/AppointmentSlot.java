@@ -54,4 +54,11 @@ public class AppointmentSlot {
     public void book() {
         booked = true;
     }
+
+    /**
+     * Marks this appointment slot as available again.
+     */
+    public void release() {
+        booked = false;
+    }
 }

@@ -65,5 +65,16 @@ public class AppointmentSlotTest {
 
         assertFalse(slot.isAvailable());
     }
+
+    @Test
+    void release_ShouldMakeBookedSlotAvailableAgain() {
+        AppointmentSlot slot = new AppointmentSlot("12:00");
+        slot.book();
+
+        slot.release();
+
+        assertTrue(slot.isAvailable());
+        assertFalse(slot.isBooked());
+    }
 }
 

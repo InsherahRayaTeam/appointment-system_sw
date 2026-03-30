@@ -1,5 +1,8 @@
 package org.example.service;
 
+import org.example.domain.UserRole;
+import org.example.domain.AdminUser;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -35,6 +38,31 @@ public class SessionManagerTest {
         assertTrue(sessionManager.isLoggedIn());
         assertNotNull(sessionManager.getLoginTime());
         assertEquals("admin", sessionManager.getCurrentUsername());
+        assertEquals(UserRole.ADMIN, sessionManager.getCurrentUserRole());
+        assertNotNull(sessionManager.getCurrentUser());
+    }
+
+    @Test
+    void login_WithRegularUserRole_SetsUserRoleState() {
+        sessionManager.login("user", UserRole.USER);
+
+        assertTrue(sessionManager.isLoggedIn());
+        assertTrue(sessionManager.isUser());
+        assertFalse(sessionManager.isAdmin());
+        assertEquals(UserRole.USER, sessionManager.getCurrentUserRole());
+        assertEquals("user", sessionManager.getCurrentUser().getUsername());
+    }
+
+    @Test
+    void login_WithUserObject_SetsCurrentUserDirectly() {
+        AdminUser user = new AdminUser("user-1", "user", "user123", UserRole.USER);
+
+        sessionManager.login(user);
+
+        assertTrue(sessionManager.isLoggedIn());
+        assertEquals("user", sessionManager.getCurrentUsername());
+        assertEquals(UserRole.USER, sessionManager.getCurrentUserRole());
+        assertEquals("user-1", sessionManager.getCurrentUser().getId());
     }
 
     @Test
@@ -64,7 +92,9 @@ public class SessionManagerTest {
         sessionManager.logout();
 
         assertFalse(sessionManager.isLoggedIn());
+        assertNull(sessionManager.getCurrentUser());
         assertNull(sessionManager.getCurrentUsername());
+        assertNull(sessionManager.getCurrentUserRole());
         assertNull(sessionManager.getLoginTime());
     }
 
@@ -88,6 +118,11 @@ public class SessionManagerTest {
     @Test
     void login_NullUsername_ThrowsException() {
         assertThrows(IllegalArgumentException.class, () -> sessionManager.login(null));
+    }
+
+    @Test
+    void login_NullRole_ThrowsException() {
+        assertThrows(IllegalArgumentException.class, () -> sessionManager.login("user", null));
     }
 
     @Test

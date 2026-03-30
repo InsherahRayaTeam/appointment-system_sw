@@ -27,5 +27,19 @@ public class AdminUserTest {
 
         assertEquals("admin123", adminUser.getPassword());
     }
+
+    @Test
+    void constructor_DefaultRoleIsAdmin() {
+        AdminUser adminUser = new AdminUser("admin", "admin123");
+
+        assertEquals(UserRole.ADMIN, adminUser.getRole());
+    }
+
+    @Test
+    void constructor_AssignsIdentifier() {
+        AdminUser adminUser = new AdminUser("admin", "admin123");
+
+        assertEquals("admin-id", adminUser.getId());
+    }
 }
 

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AppointmentTest {
 
@@ -50,6 +51,37 @@ public class AppointmentTest {
         assertNull(appointment.getStartTime());
         assertEquals(45, appointment.getDurationMinutes());
         assertEquals(2, appointment.getParticipants());
+    }
+
+    @Test
+    void isFutureComparedTo_ShouldReturnTrueForFutureStartTime() {
+        Appointment appointment = new Appointment(
+                "apt-future",
+                LocalDateTime.now().plusHours(2),
+                60,
+                1
+        );
+
+        boolean result = appointment.isFutureComparedTo(LocalDateTime.now());
+
+        assertTrue(result);
+    }
+
+    @Test
+    void withStatus_ShouldReturnCopyWithUpdatedStatus() {
+        Appointment appointment = new Appointment(
+                "apt-status",
+                "Alice",
+                LocalDateTime.now().plusHours(1),
+                60,
+                2,
+                AppointmentStatus.CONFIRMED
+        );
+
+        Appointment updated = appointment.withStatus(AppointmentStatus.CANCELLED);
+
+        assertEquals(AppointmentStatus.CANCELLED, updated.getStatus());
+        assertEquals("apt-status", updated.getId());
     }
 }
 
