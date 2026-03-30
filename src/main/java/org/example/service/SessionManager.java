@@ -1,5 +1,8 @@
 package org.example.service;
 
+import org.example.domain.UserRole;
+import org.example.domain.AdminUser;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -12,7 +15,9 @@ import java.util.Objects;
 public class SessionManager {
 
     private boolean loggedIn = false;
+    private AdminUser currentUser;
     private String currentUsername;
+    private UserRole currentUserRole;
     private LocalDateTime loginTime;
     private final AuthEventLogger authEventLogger;
     private final EventManager eventManager;
@@ -34,12 +39,44 @@ public class SessionManager {
      * @param username username to attach to the session
      */
     public void login(String username) {
+        login(username, UserRole.ADMIN);
+    }
+
+    /**
+     * Starts an authenticated session for a username and role.
+     *
+     * @param username username to attach to the session
+     * @param role authenticated role
+     */
+    public void login(String username, UserRole role) {
         if (username == null || username.trim().isEmpty()) {
             throw new IllegalArgumentException("username cannot be blank");
         }
+        if (role == null) {
+            throw new IllegalArgumentException("role cannot be null");
+        }
 
         loggedIn = true;
+        currentUser = new AdminUser(username.trim() + "-session", username.trim(), "", role);
         currentUsername = username.trim();
+        currentUserRole = role;
+        loginTime = LocalDateTime.now();
+    }
+
+    /**
+     * Starts an authenticated session for a user object.
+     *
+     * @param user authenticated user
+     */
+    public void login(AdminUser user) {
+        if (user == null || user.getUsername() == null || user.getUsername().trim().isEmpty()) {
+            throw new IllegalArgumentException("user cannot be null or blank");
+        }
+        UserRole role = user.getRole() == null ? UserRole.USER : user.getRole();
+        loggedIn = true;
+        currentUser = user;
+        currentUsername = user.getUsername().trim();
+        currentUserRole = role;
         loginTime = LocalDateTime.now();
     }
 
@@ -47,7 +84,7 @@ public class SessionManager {
      * Backward-compatible login API.
      */
     public void login() {
-        login("admin");
+        login("admin", UserRole.ADMIN);
     }
 
     /**
@@ -55,7 +92,9 @@ public class SessionManager {
      */
     public void logout() {
         loggedIn = false;
+        currentUser = null;
         currentUsername = null;
+        currentUserRole = null;
         loginTime = null;
     }
 
@@ -90,11 +129,47 @@ public class SessionManager {
     }
 
     /**
+     * Returns the current authenticated user.
+     *
+     * @return current user or null when logged out
+     */
+    public AdminUser getCurrentUser() {
+        return currentUser;
+    }
+
+    /**
      * Returns the timestamp when the current session started.
      *
      * @return session login timestamp, or null when logged out
      */
     public LocalDateTime getLoginTime() {
         return loginTime;
+    }
+
+    /**
+     * Returns the role for the current session.
+     *
+     * @return authenticated role or null when logged out
+     */
+    public UserRole getCurrentUserRole() {
+        return currentUserRole;
+    }
+
+    /**
+     * Indicates whether current session belongs to an administrator.
+     *
+     * @return true for admin session
+     */
+    public boolean isAdmin() {
+        return isLoggedIn() && currentUserRole == UserRole.ADMIN;
+    }
+
+    /**
+     * Indicates whether current session belongs to a regular user.
+     *
+     * @return true for regular user session
+     */
+    public boolean isUser() {
+        return isLoggedIn() && currentUserRole == UserRole.USER;
     }
 }

@@ -36,9 +36,9 @@ public class SlotsPanel extends JPanel {
     }
 
     private void initializeUI() {
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout(UiStyle.SPACE_SM, UiStyle.SPACE_SM));
         setBackground(UiStyle.COLOR_BACKGROUND);
-        setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
+        setBorder(BorderFactory.createEmptyBorder(UiStyle.SPACE_XS, UiStyle.SPACE_XS, UiStyle.SPACE_XS, UiStyle.SPACE_XS));
 
         JPanel top = new JPanel(new BorderLayout());
         top.setOpaque(false);
@@ -47,14 +47,10 @@ public class SlotsPanel extends JPanel {
         titleLabel.setFont(UiStyle.FONT_SUBTITLE);
         top.add(titleLabel, BorderLayout.WEST);
 
-        JButton refreshButton = new JButton("Refresh");
-        UiStyle.styleSecondaryButton(refreshButton);
-        refreshButton.addActionListener(e -> refresh());
+        JButton refreshButton = UiStyle.createSecondaryButton("Refresh", e -> refresh());
         top.add(refreshButton, BorderLayout.EAST);
 
-        JPanel card = new JPanel(new BorderLayout(8, 8));
-        card.setBackground(UiStyle.COLOR_CARD);
-        card.setBorder(UiStyle.createCardBorder());
+        JPanel card = UiStyle.createCardPanel(new BorderLayout(UiStyle.SPACE_XS, UiStyle.SPACE_XS));
 
         tableModel = new DefaultTableModel(new Object[]{"Time", "Duration", "Status"}, 0) {
             @Override
@@ -69,11 +65,12 @@ public class SlotsPanel extends JPanel {
         slotsTable.getTableHeader().setFont(UiStyle.FONT_LABEL);
         slotsTable.setFillsViewportHeight(true);
         slotsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        slotsTable.getTableHeader().setReorderingAllowed(false);
 
         JScrollPane scrollPane = new JScrollPane(slotsTable);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
-        emptyStateLabel = new JLabel("No available slots right now. Click Refresh to check again.", SwingConstants.CENTER);
+        emptyStateLabel = new JLabel("No available slots", SwingConstants.CENTER);
         emptyStateLabel.setFont(UiStyle.FONT_BODY);
         emptyStateLabel.setForeground(Color.DARK_GRAY);
 
@@ -83,9 +80,7 @@ public class SlotsPanel extends JPanel {
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         bottom.setOpaque(false);
 
-        JButton backButton = new JButton("Back to Dashboard");
-        UiStyle.styleSecondaryButton(backButton);
-        backButton.addActionListener(e -> onBack.run());
+        JButton backButton = UiStyle.createSecondaryButton("Back to Dashboard", e -> onBack.run());
         bottom.add(backButton);
 
         add(top, BorderLayout.NORTH);
@@ -101,11 +96,11 @@ public class SlotsPanel extends JPanel {
 
         tableModel.setRowCount(0);
         for (AppointmentSlot slot : slots) {
-            // Duration is not currently exposed by AppointmentSlot, so value stays blank.
+            // Duration is not currently exposed by the domain model.
             tableModel.addRow(new Object[]{
                     slot.getTime(),
-                    "",
-                    slot.isBooked() ? "Booked" : "Available"
+                    "N/A",
+                    slot.isAvailable() ? "Available" : "Booked"
             });
         }
 

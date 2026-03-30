@@ -1,9 +1,7 @@
 package org.example.presentation;
 
 import org.example.domain.AdminUser;
-import org.example.presentation.ConsoleLogin;
-import org.example.presentation.LoginPromptResult;
-import org.example.presentation.LoginPromptStatus;
+import org.example.domain.UserRole;
 import org.example.repository.AdminRepository;
 import org.example.service.AdminAuthService;
 import org.example.service.EventManager;
@@ -43,7 +41,7 @@ public class ConsoleLoginTest {
     @Test
     void promptForResult_Success_ReturnsNormalizedUsername() {
         when(adminRepository.findByUsername("admin"))
-                .thenReturn(Optional.of(new AdminUser("admin", "admin")));
+                .thenReturn(Optional.of(new AdminUser("admin-1", "admin", "admin", UserRole.ADMIN)));
 
         ConsoleLogin login = new ConsoleLogin(buildAuthService(3));
         LoginPromptResult result = login.promptForResult(new Scanner(" admin \nadmin\n"));

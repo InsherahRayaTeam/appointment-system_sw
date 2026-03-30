@@ -7,6 +7,8 @@ package org.example.domain;
  * @version 1.0
  */
 public enum AppointmentStatus {
-    CONFIRMED
+    CONFIRMED,
+    MODIFIED,
+    CANCELLED
 }
 

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.Locale;
+import java.util.UUID;
 
 /**
  * Represents an appointment aggregate used by both legacy and booking workflows.
@@ -32,12 +33,33 @@ public class Appointment {
      * @param participants participant count
      */
     public Appointment(String id, LocalDateTime startTime, int duration, int participants) {
+        this(id, null, startTime, duration, participants, null);
+    }
+
+    /**
+     * Creates a complete appointment object with all booking fields.
+     *
+     * @param id appointment identifier
+     * @param customerName customer name
+     * @param startTime appointment start timestamp
+     * @param duration appointment duration in minutes
+     * @param participants participant count
+     * @param status appointment status
+     */
+    public Appointment(
+            String id,
+            String customerName,
+            LocalDateTime startTime,
+            int duration,
+            int participants,
+            AppointmentStatus status
+    ) {
         this.id = id;
         this.startTime = startTime;
         this.duration = duration;
         this.participants = participants;
-        this.customerName = null;
-        this.status = null;
+        this.customerName = customerName;
+        this.status = status;
     }
 
     /**
@@ -50,12 +72,7 @@ public class Appointment {
      * @param status appointment status
      */
     public Appointment(String customerName, String slotTime, int duration, int participants, AppointmentStatus status) {
-        this.id = null;
-        this.startTime = parseSlotTime(slotTime);
-        this.duration = duration;
-        this.participants = participants;
-        this.customerName = customerName;
-        this.status = status;
+        this(UUID.randomUUID().toString(), customerName, parseSlotTime(slotTime), duration, participants, status);
     }
 
     /**
@@ -161,13 +178,58 @@ public class Appointment {
         return status == null ? null : status.name();
     }
 
+    /**
+     * Indicates whether the appointment starts after a given reference time.
+     *
+     * @param referenceTime timestamp used for comparison
+     * @return true when start time exists and is strictly after reference time
+     */
+    public boolean isFutureComparedTo(LocalDateTime referenceTime) {
+        return startTime != null
+                && referenceTime != null
+                && startTime.isAfter(referenceTime);
+    }
+
+    /**
+     * Returns a copy with a different status.
+     *
+     * @param newStatus replacement status
+     * @return copied appointment with updated status
+     */
+    public Appointment withStatus(AppointmentStatus newStatus) {
+        return new Appointment(id, customerName, startTime, duration, participants, newStatus);
+    }
+
+    /**
+     * Returns a copy with a different slot time and status.
+     *
+     * @param slotTime replacement slot time text
+     * @param newStatus replacement status
+     * @return copied appointment with updated start time and status
+     */
+    public Appointment withSlotTimeAndStatus(String slotTime, AppointmentStatus newStatus) {
+        return new Appointment(
+                id,
+                customerName,
+                parseSlotTime(slotTime),
+                duration,
+                participants,
+                newStatus
+        );
+    }
+
     private static LocalDateTime parseSlotTime(String slotTime) {
         if (slotTime == null || slotTime.trim().isEmpty()) {
             return null;
         }
         try {
             LocalTime parsedTime = LocalTime.parse(slotTime.trim());
-            return LocalDate.now().atTime(parsedTime);
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime candidate = LocalDate.now().atTime(parsedTime);
+            if (!candidate.isAfter(now)) {
+                candidate = candidate.plusDays(1);
+            }
+            return candidate;
         } catch (DateTimeParseException ex) {
             return null;
         }

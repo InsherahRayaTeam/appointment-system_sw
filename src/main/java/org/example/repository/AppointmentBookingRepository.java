@@ -3,6 +3,7 @@ package org.example.repository;
 import org.example.domain.Appointment;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Repository interface for storing and retrieving booked appointments.
@@ -25,5 +26,21 @@ public interface AppointmentBookingRepository {
      * @return a list of all booked appointments
      */
     List<Appointment> findAll();
+
+    /**
+     * Finds a booked appointment by identifier.
+     *
+     * @param appointmentId appointment identifier
+     * @return optional appointment when found
+     */
+    Optional<Appointment> findById(String appointmentId);
+
+    /**
+     * Replaces an existing appointment by id.
+     *
+     * @param appointment updated appointment state
+     * @return true when an existing appointment was updated
+     */
+    boolean update(Appointment appointment);
 }
 

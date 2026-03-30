@@ -3,10 +3,13 @@ package org.example;
 import org.example.notification.LoginNotifier;
 import org.example.presentation.gui.ApplicationController;
 import org.example.repository.AdminRepository;
+import org.example.repository.AppointmentBookingRepository;
 import org.example.repository.AppointmentRepository;
 import org.example.repository.InMemoryAdminRepository;
+import org.example.repository.InMemoryAppointmentBookingRepository;
 import org.example.repository.InMemoryAppointmentRepository;
 import org.example.service.AdminAuthService;
+import org.example.service.AppointmentBookingService;
 import org.example.service.AppointmentService;
 import org.example.service.AuthEventLogger;
 import org.example.service.EventManager;
@@ -20,16 +23,16 @@ import java.time.Duration;
  * Application bootstrap class that wires dependencies and launches GUI.
  * 
  * ARCHITECTURE:
- * - Presentation Layer (GUI): LoginFrame, MainDashboardFrame, SlotsPanel, BookingPanel
- * - Service Layer: AdminAuthService, AppointmentService, SessionManager, etc.
- * - Repository Layer: InMemoryAdminRepository, InMemoryAppointmentRepository
- * - Domain Layer: AdminUser, AppointmentSlot, Credentials, etc.
+ * - Presentation Layer (GUI): LoginFrame, MainDashboardFrame, SlotsPanel, BookingPanel, ReservationsPanel
+ * - Service Layer: AdminAuthService, AppointmentService, AppointmentBookingService, SessionManager, etc.
+ * - Repository Layer: InMemoryAdminRepository, InMemoryAppointmentRepository, InMemoryAppointmentBookingRepository
+ * - Domain Layer: AdminUser, AppointmentSlot, Appointment, Credentials, etc.
  *
  * GUI FLOW:
  * 1. Application Startup - LoginFrame shown first
  * 2. User logs in via GUI - AdminAuthService validates credentials
  * 3. Session created - SessionManager tracks authentication
- * 4. MainDashboardFrame shown - User can view slots or book appointments
+ * 4. MainDashboardFrame shown - User can view slots, book appointments, and manage reservations
  * 5. User logs out - Session cleared, back to LoginFrame
  *
  * @author appointment-system
@@ -58,6 +61,9 @@ public class Main {
         
         // Repository layer: stores appointments
         AppointmentRepository appointmentRepository = new InMemoryAppointmentRepository();
+
+        // Repository layer: stores confirmed reservations
+        AppointmentBookingRepository appointmentBookingRepository = new InMemoryAppointmentBookingRepository();
         
         // Service layer: event notification system
         AuthEventLogger authEventLogger = new AuthEventLogger();
@@ -79,12 +85,22 @@ public class Main {
         // Service layer: appointment operations
         AppointmentService appointmentService = new AppointmentService(appointmentRepository, eventManager);
 
+        // Service layer: reservation booking/management operations
+        AppointmentBookingService appointmentBookingService = new AppointmentBookingService(
+                appointmentRepository,
+                appointmentBookingRepository,
+                sessionManager,
+                adminRepository,
+                eventManager
+        );
+
         // ===== GUI APPLICATION LAUNCH =====
         // Create and start GUI application controller
         // Presentation layer (GUI) is launched here
         ApplicationController appController = new ApplicationController(
             authService,
             appointmentService,
+            appointmentBookingService,
             sessionManager
         );
         

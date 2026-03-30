@@ -1,6 +1,7 @@
 package org.example.presentation.gui;
 
 import org.example.service.AppointmentService;
+import org.example.service.AppointmentBookingService;
 import org.example.service.SessionManager;
 
 import javax.swing.*;
@@ -13,10 +14,14 @@ import java.awt.event.WindowEvent;
  *
  * Shows menu options for viewing slots, booking appointments,
  * and session actions. Manages switching between different panels.
+ *
+ * @author appointment-system
+ * @version 1.0
  */
 public class MainDashboardFrame extends JFrame {
 
     private final AppointmentService appointmentService;
+    private final AppointmentBookingService appointmentBookingService;
     private final SessionManager sessionManager;
     private final Runnable onLogout;
     private final Runnable onExit;
@@ -25,25 +30,32 @@ public class MainDashboardFrame extends JFrame {
     private JPanel contentPanel;
     private SlotsPanel slotsPanel;
     private BookingPanel bookingPanel;
+    private ReservationsPanel reservationsPanel;
 
     private JLabel welcomeLabel;
     private JLabel subtitleLabel;
+    private JLabel statusLabel;
+    private JButton manageReservationsButton;
+    private JLabel menuSpacerLabel;
 
     /**
      * Creates main dashboard frame with appointment and session dependencies.
      *
      * @param appointmentService appointment service (service layer)
+     * @param appointmentBookingService booking service (service layer)
      * @param sessionManager session manager (service layer)
      * @param onLogout callback when user logs out
      * @param onExit callback when user exits the application
      */
     public MainDashboardFrame(
             AppointmentService appointmentService,
+            AppointmentBookingService appointmentBookingService,
             SessionManager sessionManager,
             Runnable onLogout,
             Runnable onExit
     ) {
         this.appointmentService = appointmentService;
+        this.appointmentBookingService = appointmentBookingService;
         this.sessionManager = sessionManager;
         this.onLogout = onLogout;
         this.onExit = onExit;
@@ -52,10 +64,9 @@ public class MainDashboardFrame extends JFrame {
     }
 
     private void initializeUI() {
-        setTitle("Appointment Scheduling System - Dashboard");
+        setTitle("Appointment System - Dashboard");
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setMinimumSize(new Dimension(860, 560));
-        setLocationRelativeTo(null);
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -69,11 +80,15 @@ public class MainDashboardFrame extends JFrame {
 
         JPanel headerPanel = buildHeaderPanel();
         JPanel centerPanel = buildCenterPanel();
+        JPanel footerPanel = buildFooterPanel();
 
         page.add(headerPanel, BorderLayout.NORTH);
         page.add(centerPanel, BorderLayout.CENTER);
+        page.add(footerPanel, BorderLayout.SOUTH);
 
         setContentPane(page);
+        pack();
+        setLocationRelativeTo(null);
         showMenuPanel();
     }
 
@@ -97,23 +112,17 @@ public class MainDashboardFrame extends JFrame {
         textPanel.add(Box.createVerticalStrut(4));
         textPanel.add(subtitleLabel);
 
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        actions.setOpaque(false);
-
-        JButton logoutButton = new JButton("Logout");
-        UiStyle.styleSecondaryButton(logoutButton);
-        logoutButton.addActionListener(e -> handleLogout());
-
-        JButton exitButton = new JButton("Exit");
-        UiStyle.styleSecondaryButton(exitButton);
-        exitButton.addActionListener(e -> handleExit());
-
-        actions.add(logoutButton);
-        actions.add(exitButton);
-
         header.add(textPanel, BorderLayout.WEST);
-        header.add(actions, BorderLayout.EAST);
         return header;
+    }
+
+    private JPanel buildFooterPanel() {
+        JPanel footer = UiStyle.createCardPanel(new BorderLayout());
+        statusLabel = new JLabel("Ready");
+        statusLabel.setFont(UiStyle.FONT_BODY);
+        statusLabel.setForeground(UiStyle.COLOR_INFO);
+        footer.add(statusLabel, BorderLayout.WEST);
+        return footer;
     }
 
     private JPanel buildCenterPanel() {
@@ -124,11 +133,13 @@ public class MainDashboardFrame extends JFrame {
         contentPanel.setOpaque(false);
 
         slotsPanel = new SlotsPanel(appointmentService, this::showMenuPanel);
-        bookingPanel = new BookingPanel(appointmentService, this::showMenuPanel);
+        bookingPanel = new BookingPanel(appointmentService, appointmentBookingService, this::showMenuPanel);
+        reservationsPanel = new ReservationsPanel(appointmentBookingService, appointmentService, this::showMenuPanel);
 
         contentPanel.add(menuPanel, "MENU");
         contentPanel.add(slotsPanel, "SLOTS");
         contentPanel.add(bookingPanel, "BOOKING");
+        contentPanel.add(reservationsPanel, "RESERVATIONS");
 
         return contentPanel;
     }
@@ -137,39 +148,42 @@ public class MainDashboardFrame extends JFrame {
         JPanel wrapper = new JPanel(new GridBagLayout());
         wrapper.setOpaque(false);
 
-        JPanel card = new JPanel();
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBackground(UiStyle.COLOR_CARD);
-        card.setBorder(UiStyle.createCardBorder());
-        card.setPreferredSize(new Dimension(520, 320));
+        JPanel card = UiStyle.createCardPanel(new BorderLayout(UiStyle.SPACE_MD, UiStyle.SPACE_MD));
+        card.setPreferredSize(new Dimension(560, 340));
 
-        JLabel title = new JLabel("Administrator Actions", SwingConstants.CENTER);
+        JLabel title = new JLabel("Dashboard", SwingConstants.CENTER);
         title.setFont(UiStyle.FONT_TITLE);
-        title.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel hint = new JLabel("Choose an action to continue", SwingConstants.CENTER);
         hint.setFont(UiStyle.FONT_BODY);
         hint.setForeground(Color.DARK_GRAY);
-        hint.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JButton viewSlotsButton = new JButton("View Available Slots");
-        UiStyle.stylePrimaryButton(viewSlotsButton);
-        viewSlotsButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        viewSlotsButton.addActionListener(e -> showSlotsPanel());
+        JPanel titleBlock = new JPanel();
+        titleBlock.setOpaque(false);
+        titleBlock.setLayout(new BoxLayout(titleBlock, BoxLayout.Y_AXIS));
+        titleBlock.add(title);
+        titleBlock.add(Box.createVerticalStrut(UiStyle.SPACE_XS));
+        titleBlock.add(hint);
 
-        JButton bookButton = new JButton("Book Appointment");
-        UiStyle.stylePrimaryButton(bookButton);
-        bookButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        bookButton.addActionListener(e -> showBookingPanel());
+        JPanel buttonGrid = new JPanel(new GridLayout(3, 2, UiStyle.SPACE_SM, UiStyle.SPACE_SM));
+        buttonGrid.setOpaque(false);
 
-        card.add(title);
-        card.add(Box.createVerticalStrut(8));
-        card.add(hint);
-        card.add(Box.createVerticalStrut(28));
-        card.add(viewSlotsButton);
-        card.add(Box.createVerticalStrut(14));
-        card.add(bookButton);
-        card.add(Box.createVerticalGlue());
+        JButton viewSlotsButton = UiStyle.createPrimaryButton("View Slots", e -> showSlotsPanel());
+        JButton bookButton = UiStyle.createPrimaryButton("Book Appointment", e -> showBookingPanel());
+        manageReservationsButton = UiStyle.createPrimaryButton("Manage Reservations", e -> showReservationsPanel());
+        JButton logoutButton = UiStyle.createSecondaryButton("Logout", e -> handleLogout());
+        JButton exitButton = UiStyle.createSecondaryButton("Exit", e -> handleExit());
+        menuSpacerLabel = new JLabel();
+
+        buttonGrid.add(viewSlotsButton);
+        buttonGrid.add(bookButton);
+        buttonGrid.add(manageReservationsButton);
+        buttonGrid.add(menuSpacerLabel);
+        buttonGrid.add(logoutButton);
+        buttonGrid.add(exitButton);
+
+        card.add(titleBlock, BorderLayout.NORTH);
+        card.add(buttonGrid, BorderLayout.CENTER);
 
         wrapper.add(card);
         return wrapper;
@@ -182,20 +196,53 @@ public class MainDashboardFrame extends JFrame {
         String username = sessionManager.getCurrentUsername();
         String safeName = (username == null || username.trim().isEmpty()) ? "Administrator" : username.trim();
         welcomeLabel.setText("Welcome, " + safeName);
+        subtitleLabel.setText(sessionManager.isAdmin()
+                ? "Appointment administration dashboard"
+                : "Appointment user dashboard");
+
+        boolean adminSession = sessionManager.isAdmin();
+        manageReservationsButton.setVisible(adminSession);
+        menuSpacerLabel.setVisible(adminSession);
+        setStatus("Logged in as " + safeName + ".");
+    }
+
+    /**
+     * Returns dashboard content to the default menu state.
+     */
+    public void resetToMenu() {
+        showMenuPanel();
     }
 
     private void showMenuPanel() {
         cardLayout.show(contentPanel, "MENU");
+        setStatus("Dashboard ready.");
     }
 
     private void showSlotsPanel() {
         slotsPanel.refresh();
         cardLayout.show(contentPanel, "SLOTS");
+        setStatus("Viewing available appointment slots.");
     }
 
     private void showBookingPanel() {
         bookingPanel.refresh();
         cardLayout.show(contentPanel, "BOOKING");
+        setStatus("Booking form ready.");
+    }
+
+    private void showReservationsPanel() {
+        if (!sessionManager.isAdmin()) {
+            setStatus("Only administrators can manage reservations.");
+            showMenuPanel();
+            return;
+        }
+        reservationsPanel.refresh();
+        cardLayout.show(contentPanel, "RESERVATIONS");
+        setStatus("Reservation management ready.");
+    }
+
+    private void setStatus(String message) {
+        statusLabel.setText(message == null || message.trim().isEmpty() ? "Ready" : message);
     }
 
     private void handleLogout() {
