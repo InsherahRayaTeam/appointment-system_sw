@@ -64,6 +64,19 @@ public class ConsoleMenu {
         System.out.println("\nThank you for using Appointment System.");
     }
 
+    /**
+     * Displays the admin menu and handles user interactions until logout.
+     * IMPORTANT: User must already be authenticated before calling this method.
+     * Use this method when authentication is handled externally (e.g., in Main).
+     * 
+     * Prerequisite: sessionManager.isLoggedIn() must be true
+     */
+    public void runAdminMenuUntilLogout() {
+        printAppHeader();
+        showAdminMenu();
+        // After logout, sessionManager.isLoggedIn() returns false and menu exits
+    }
+
     private boolean showLoginScreen() {
         bookingView.printSectionHeader("Administrator Login");
         String username = inputHandler.readLine("Username (type 'exit' to quit): ").trim();

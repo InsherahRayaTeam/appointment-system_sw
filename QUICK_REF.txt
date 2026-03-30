@@ -1,0 +1,79 @@
+# 🔑 Quick Reference Card
+
+## Login Credentials
+```
+Username: admin
+Password: admin123
+```
+
+## Where Admin is Created
+```
+src/main/resources/admin.properties
+- Lines 4-5: admin.username=admin, admin.password=admin123
+```
+
+## How It's Loaded
+```
+InMemoryAdminRepository.loadFromResource()
+  ├─ Reads admin.properties
+  ├─ Creates AdminUser object
+  └─ Stores in HashMap
+```
+
+## How It's Validated
+```
+AdminAuthService.authenticateWithPolicy()
+  ├─ Queries: adminRepository.findByUsername(username)
+  ├─ Gets: AdminUser from HashMap
+  ├─ Compares: storedPassword == inputPassword
+  └─ Returns: AuthenticationAttemptResult
+```
+
+## Architecture Layers
+```
+PRESENTATION    ConsoleMenu → reads input, displays results
+    ↓ delegates to
+SERVICE         AdminAuthService → validates credentials
+    ↓ queries
+REPOSITORY      InMemoryAdminRepository → loads from properties
+    ↓ wraps
+DOMAIN          AdminUser, Credentials, LoginStatus
+```
+
+## Test Cases
+```
+✅ Correct:      admin / admin123       → SUCCESS
+❌ Wrong pass:   admin / wrongpass      → INVALID_CREDENTIALS
+❌ Wrong user:   hacker / anypass       → INVALID_CREDENTIALS
+⏱️  After 3 fail: (3rd attempt)          → LOCKED for 30s
+```
+
+## Files to Know
+```
+admin.properties                    ← Default credentials
+InMemoryAdminRepository.java        ← Loads & stores users
+AdminAuthService.java               ← Validates credentials
+ConsoleMenu.java                    ← UI (no auth logic)
+AdminUser.java                      ← Entity model
+```
+
+## Command to Run
+```bash
+mvn clean package
+java -cp target/appointment-system.jar org.example.Main
+```
+
+## Info Files Created
+```
+REQUIREMENTS_SUMMARY.md             ← What you asked for
+ADMIN_CREDENTIALS_SETUP.md          ← Complete setup guide
+CREDENTIALS_QUICK_REF.md            ← Quick reference
+ARCHITECTURE_VISUAL_GUIDE.md        ← Visual diagrams
+```
+
+---
+
+## Status: ✅ COMPLETE
+
+All requirements implemented. System ready for use with persistent admin credentials!
+
