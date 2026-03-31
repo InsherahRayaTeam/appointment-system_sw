@@ -67,21 +67,21 @@ class ParticipantRuleTest {
     }
 
     @Test
-    void shouldAllowZeroParticipantsBecauseRuleChecksOnlyMaxLimit() {
+    void shouldRejectZeroParticipants() {
         Appointment appointment = new Appointment("apt1", appointmentTime, 60, 0);
 
         boolean result = participantRule.isValid(appointment);
 
-        assertTrue(result);
+        assertFalse(result);
     }
 
     @Test
-    void shouldAllowNegativeParticipantsBecauseRuleChecksOnlyMaxLimit() {
+    void shouldRejectNegativeParticipants() {
         Appointment appointment = new Appointment("apt1", appointmentTime, 60, -5);
 
         boolean result = participantRule.isValid(appointment);
 
-        assertTrue(result);
+        assertFalse(result);
     }
 
     @Test

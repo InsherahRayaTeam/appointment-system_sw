@@ -21,13 +21,11 @@ import java.time.Duration;
 
 /**
  * Application bootstrap class that wires dependencies and launches GUI.
- * 
  * ARCHITECTURE:
  * - Presentation Layer (GUI): LoginFrame, MainDashboardFrame, SlotsPanel, BookingPanel, ReservationsPanel
  * - Service Layer: AdminAuthService, AppointmentService, AppointmentBookingService, SessionManager, etc.
  * - Repository Layer: InMemoryAdminRepository, InMemoryAppointmentRepository, InMemoryAppointmentBookingRepository
  * - Domain Layer: AdminUser, AppointmentSlot, Appointment, Credentials, etc.
- *
  * GUI FLOW:
  * 1. Application Startup - LoginFrame shown first
  * 2. User logs in via GUI - AdminAuthService validates credentials
@@ -42,7 +40,6 @@ public class Main {
 
     /**
      * Starts the appointment system with GUI interface.
-     * 
      * Sets up all service layer dependencies and launches the GUI application.
      * All authentication and business logic is delegated to appropriate services.
      *
