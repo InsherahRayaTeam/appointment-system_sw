@@ -5,6 +5,11 @@ import org.example.domain.AdminUser;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,10 +19,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class SessionManagerTest {
 
     private SessionManager sessionManager;
+
+    @Mock
+    private TimeProvider timeProvider;
 
     @BeforeEach
     void setUp() {
@@ -117,7 +127,7 @@ public class SessionManagerTest {
     }
     @Test
     void login_NullUsername_ThrowsException() {
-        assertThrows(IllegalArgumentException.class, () -> sessionManager.login(null));
+        assertThrows(IllegalArgumentException.class, () -> sessionManager.login((String) null));
     }
 
     @Test
@@ -160,5 +170,45 @@ public class SessionManagerTest {
     @Test
     void constructor_NullEventManager_ThrowsException() {
         assertThrows(NullPointerException.class, () -> new SessionManager(mock(AuthEventLogger.class), null));
+    }
+
+    @Test
+    void constructor_WithTimeProvider_UsesProvidedTime() {
+        LocalDateTime mockTime = LocalDateTime.of(2026, 3, 31, 10, 0);
+        when(timeProvider.now()).thenReturn(mockTime);
+
+        SessionManager managedSession = new SessionManager(
+                mock(AuthEventLogger.class),
+                mock(EventManager.class),
+                timeProvider
+        );
+        managedSession.login("testuser");
+
+        assertEquals(mockTime, managedSession.getLoginTime());
+    }
+
+    @Test
+    void constructor_NullTimeProvider_ThrowsException() {
+        assertThrows(NullPointerException.class, () -> new SessionManager(
+                mock(AuthEventLogger.class),
+                mock(EventManager.class),
+                null
+        ));
+    }
+
+    @Test
+    void login_WithInjectedTimeProvider_UsesProviderTime() {
+        LocalDateTime customTime = LocalDateTime.of(2026, 1, 1, 12, 0);
+        when(timeProvider.now()).thenReturn(customTime);
+
+        SessionManager managedSession = new SessionManager(
+                mock(AuthEventLogger.class),
+                mock(EventManager.class),
+                timeProvider
+        );
+        managedSession.login("admin", UserRole.ADMIN);
+
+        assertEquals(customTime, managedSession.getLoginTime());
+        verify(timeProvider).now();
     }
 }

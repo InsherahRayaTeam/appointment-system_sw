@@ -234,6 +234,8 @@ public class BookingPanel extends JPanel {
         }
 
         switch (status) {
+            case UNAUTHORIZED:
+                return "Only regular users can book appointments.";
             case BLANK_CUSTOMER_NAME:
                 return "Customer name is required.";
             case BLANK_SLOT_TIME:
