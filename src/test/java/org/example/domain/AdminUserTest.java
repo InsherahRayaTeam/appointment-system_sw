@@ -10,8 +10,8 @@ public class AdminUserTest {
     void constructor_CorrectlyStoresUsernameAndPassword() {
         AdminUser adminUser = new AdminUser("admin", "admin123");
 
-        assertEquals("admin", adminUser.getUsername());
-        assertEquals("admin123", adminUser.getPassword());
+        assertEquals("admin", SystemUser.getUsername());
+        assertEquals("admin123", SystemUser.getPassword());
     }
 
     @Test
@@ -30,16 +30,16 @@ public class AdminUserTest {
 
     @Test
     void constructor_DefaultRoleIsAdmin() {
-        AdminUser adminUser = new AdminUser("admin", "admin123");
+        SystemUser adminUser = new SystemUser("admin", "admin123");
 
         assertEquals(UserRole.ADMIN, adminUser.getRole());
     }
 
     @Test
     void constructor_AssignsIdentifier() {
-        AdminUser adminUser = new AdminUser("admin", "admin123");
+        SystemUser adminUser = new SystemUser("", "admin123");
 
-        assertEquals("admin-id", adminUser.getId());
+        assertEquals("admin-id", SystemUser.getId());
     }
 }
 

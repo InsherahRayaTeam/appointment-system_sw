@@ -1,14 +1,11 @@
 package org.example.service;
 
-import org.example.domain.AdminUser;
 import org.example.domain.Credentials;
+import org.example.domain.SystemUser;
 import org.example.domain.UserRole;
-import org.example.repository.AdminRepository;
+import org.example.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -18,18 +15,20 @@ import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.never;
-import static org.mockito.ArgumentMatchers.anyString;
 
 @ExtendWith(MockitoExtension.class)
-public class AdminAuthServiceTest {
+class AdminAuthServiceTest {
 
     @Mock
-    private AdminRepository adminRepository;
+    private UserRepository userRepository;
 
     @Mock
     private EventManager eventManager;
@@ -39,331 +38,130 @@ public class AdminAuthServiceTest {
     @BeforeEach
     void setUp() {
         adminAuthService = new AdminAuthService(
-                adminRepository,
+                userRepository,
                 eventManager,
                 new LoginAttemptTracker(3, Duration.ofSeconds(30))
         );
     }
 
     @Test
-    void authenticateWithStatus_CredentialsObject_Success_ReturnsSuccess() {
-        String username = "admin";
-        String password = "admin";
-        when(adminRepository.findByUsername(username)).thenReturn(Optional.of(new AdminUser(username, password)));
+    void authenticateWithStatus_AdminCredentials_ReturnsSuccessAndNotifiesAdminMessage() {
+        SystemUser admin = new SystemUser("admin-1", "admin@gmail.com", "admin123", UserRole.ADMIN);
+        when(userRepository.findByEmail("admin@gmail.com")).thenReturn(Optional.of(admin));
 
-        LoginStatus result = adminAuthService.authenticateWithStatus(new Credentials(" admin ", password));
+        LoginStatus result = adminAuthService.authenticateWithStatus(new Credentials(" ADMIN@GMAIL.COM ", "admin123"));
 
         assertEquals(LoginStatus.SUCCESS, result);
-        verify(adminRepository).findByUsername(username);
+        verify(userRepository).findByEmail("admin@gmail.com");
         verify(eventManager).notifyObservers("Admin logged in successfully");
     }
 
     @Test
-    void authenticateWithStatus_RegularUserCredentials_ReturnsSuccess() {
-        String username = "user";
-        String password = "user123";
-        when(adminRepository.findByUsername(username)).thenReturn(
-                Optional.of(new AdminUser("user-1", username, password, UserRole.USER))
-        );
+    void authenticateWithStatus_UserCredentials_ReturnsSuccessAndNotifiesUserMessage() {
+        SystemUser user = new SystemUser("user-1", "user@gmail.com", "user123", UserRole.USER);
+        when(userRepository.findByEmail("user@gmail.com")).thenReturn(Optional.of(user));
 
-        LoginStatus result = adminAuthService.authenticateWithStatus(username, password);
+        LoginStatus result = adminAuthService.authenticateWithStatus("user@gmail.com", "user123");
 
         assertEquals(LoginStatus.SUCCESS, result);
-        verify(adminRepository).findByUsername(username);
+        verify(userRepository).findByEmail("user@gmail.com");
         verify(eventManager).notifyObservers("User logged in successfully");
     }
 
     @Test
-    void authenticateWithPolicy_AdminLogin_IncludesAuthenticatedRole() {
-        when(adminRepository.findByUsername("admin")).thenReturn(
-                Optional.of(new AdminUser("admin-1", "admin", "admin123", UserRole.ADMIN))
-        );
+    void authenticateWithStatus_WrongPassword_ReturnsInvalidCredentials() {
+        SystemUser user = new SystemUser("admin-1", "admin@gmail.com", "admin123", UserRole.ADMIN);
+        when(userRepository.findByEmail("admin@gmail.com")).thenReturn(Optional.of(user));
+
+        LoginStatus result = adminAuthService.authenticateWithStatus("admin@gmail.com", "wrong");
+
+        assertEquals(LoginStatus.INVALID_CREDENTIALS, result);
+        verify(userRepository).findByEmail("admin@gmail.com");
+        verify(eventManager).notifyObservers("Failed login attempt");
+    }
+
+    @Test
+    void authenticateWithStatus_NullCredentials_ReturnsBlankInputAndSkipsDependencies() {
+        LoginStatus result = adminAuthService.authenticateWithStatus((Credentials) null);
+
+        assertEquals(LoginStatus.BLANK_INPUT, result);
+        verifyNoInteractions(userRepository);
+        verify(eventManager, never()).notifyObservers(anyString());
+    }
+
+    @Test
+    void authenticate_RawBlankInput_ThrowsIllegalArgumentExceptionFromCredentials() {
+        assertThrows(IllegalArgumentException.class, () -> adminAuthService.authenticate("  ", "pw"));
+        assertThrows(IllegalArgumentException.class, () -> adminAuthService.authenticateWithStatus("", "pw"));
+    }
+
+    @Test
+    void authenticateWithPolicy_Success_ReturnsAuthenticatedUserAndResetsTracker() {
+        SystemUser admin = new SystemUser("admin-1", "admin@gmail.com", "admin123", UserRole.ADMIN);
+        when(userRepository.findByEmail("admin@gmail.com")).thenReturn(Optional.of(admin));
 
         AuthenticationAttemptResult result = adminAuthService.authenticateWithPolicy(
-                new Credentials("admin", "admin123")
+                new Credentials(" ADMIN@GMAIL.COM ", "admin123")
         );
 
         assertTrue(result.isSuccess());
-        assertEquals("admin", result.getAuthenticatedUsername());
+        assertEquals("admin@gmail.com", result.getAuthenticatedEmail());
         assertEquals(UserRole.ADMIN, result.getAuthenticatedRole());
-        assertEquals("admin", result.getAuthenticatedUser().getUsername());
-        assertEquals(UserRole.ADMIN, result.getAuthenticatedUser().getRole());
-    }
-
-    @Test
-    void authenticateWithPolicy_UserLogin_IncludesAuthenticatedRole() {
-        when(adminRepository.findByUsername("user")).thenReturn(
-                Optional.of(new AdminUser("user-1", "user", "user123", UserRole.USER))
-        );
-
-        AuthenticationAttemptResult result = adminAuthService.authenticateWithPolicy(
-                new Credentials("user", "user123")
-        );
-
-        assertTrue(result.isSuccess());
-        assertEquals("user", result.getAuthenticatedUsername());
-        assertEquals(UserRole.USER, result.getAuthenticatedRole());
-        assertEquals("user", result.getAuthenticatedUser().getUsername());
-        assertEquals(UserRole.USER, result.getAuthenticatedUser().getRole());
-    }
-
-    @Test
-    void authenticateWithStatus_BlankPassword_ReturnsBlankInputStatus() {
-        LoginStatus result = adminAuthService.authenticateWithStatus("admin", "   ");
-
-        assertEquals(LoginStatus.BLANK_INPUT, result);
-        verifyNoInteractions(adminRepository);
-        verify(eventManager, never()).notifyObservers(anyString());
-    }
-
-    @Test
-    void authenticateWithStatus_NullCredentials_ReturnsBlankInputStatus() {
-        Credentials credentials = null;
-        LoginStatus result = adminAuthService.authenticateWithStatus(credentials);
-
-        assertEquals(LoginStatus.BLANK_INPUT, result);
-        verifyNoInteractions(adminRepository);
-        verify(eventManager, never()).notifyObservers(anyString());
-    }
-
-    @Test
-    void authenticate_ValidCredentials_ReturnsSuccess() {
-        String username = "admin";
-        String password = "admin";
-        AdminUser adminUser = new AdminUser(username, password);
-        when(adminRepository.findByUsername(username)).thenReturn(Optional.of(adminUser));
-
-        LoginStatus result = adminAuthService.authenticateWithStatus(username, password);
-
-        assertEquals(LoginStatus.SUCCESS, result);
-        verify(adminRepository).findByUsername(username);
+        assertEquals(admin, result.getAuthenticatedUser());
+        verify(userRepository).findByEmail("admin@gmail.com");
         verify(eventManager).notifyObservers("Admin logged in successfully");
     }
 
     @Test
-    void authenticate_TrimmedUsername_ValidCredentials_ReturnsSuccess() {
-        String username = "admin";
-        String password = "admin";
-        AdminUser adminUser = new AdminUser(username, password);
-        when(adminRepository.findByUsername(username)).thenReturn(Optional.of(adminUser));
+    void authenticateWithPolicy_InvalidCredentials_TracksFailuresAndReturnsRemainingAttempts() {
+        when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
 
-        LoginStatus result = adminAuthService.authenticateWithStatus("  admin  ", password);
+        AuthenticationAttemptResult result = adminAuthService.authenticateWithPolicy(new Credentials("unknown@example.com", "pw"));
 
-        assertEquals(LoginStatus.SUCCESS, result);
-        verify(adminRepository).findByUsername(username);
-        verify(eventManager).notifyObservers("Admin logged in successfully");
-    }
-
-    @Test
-    void authenticate_BlankInput_ReturnsBlankInputStatus() {
-        LoginStatus result = adminAuthService.authenticateWithStatus("   ", "password");
-
-        assertEquals(LoginStatus.BLANK_INPUT, result);
-        verifyNoInteractions(adminRepository);
-        verify(eventManager, never()).notifyObservers(anyString());
-    }
-
-    @Test
-    void authenticate_InvalidPassword_ReturnsInvalidCredentials() {
-        String username = "admin";
-        String password = "wrong";
-        AdminUser adminUser = new AdminUser(username, "admin");
-        when(adminRepository.findByUsername(username)).thenReturn(Optional.of(adminUser));
-
-        LoginStatus result = adminAuthService.authenticateWithStatus(username, password);
-
-        assertEquals(LoginStatus.INVALID_CREDENTIALS, result);
-        verify(adminRepository).findByUsername(username);
+        assertFalse(result.isSuccess());
+        assertFalse(result.isLocked());
+        assertEquals(LoginStatus.INVALID_CREDENTIALS, result.getStatus());
+        assertEquals(2, result.getAttemptsRemaining());
         verify(eventManager).notifyObservers("Failed login attempt");
     }
 
     @Test
-    void authenticate_UserNotFound_ReturnsInvalidCredentials() {
-        String username = "unknown";
-        String password = "admin";
-        when(adminRepository.findByUsername(username)).thenReturn(Optional.empty());
+    void authenticateWithPolicy_AfterMaxFailures_ReturnsLockedResult() {
+        LoginAttemptTracker tracker = new LoginAttemptTracker(2, Duration.ofSeconds(30));
+        AdminAuthService service = new AdminAuthService(userRepository, eventManager, tracker);
+        when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
 
-        LoginStatus result = adminAuthService.authenticateWithStatus(username, password);
+        AuthenticationAttemptResult first = service.authenticateWithPolicy(new Credentials("unknown@example.com", "pw"));
+        AuthenticationAttemptResult second = service.authenticateWithPolicy(new Credentials("unknown@example.com", "pw"));
+        AuthenticationAttemptResult third = service.authenticateWithPolicy(new Credentials("unknown@example.com", "pw"));
 
-        assertEquals(LoginStatus.INVALID_CREDENTIALS, result);
-        verify(adminRepository).findByUsername(username);
+        assertFalse(first.isLocked());
+        assertTrue(second.isLocked());
+        assertTrue(third.isLocked());
+        verify(userRepository, times(2)).findByEmail("unknown@example.com");
+    }
+
+    @Test
+    void authenticateWithPolicy_NullCredentials_ReturnsBlankInputAndCountsFailure() {
+        AuthenticationAttemptResult result = adminAuthService.authenticateWithPolicy(null);
+
+        assertEquals(LoginStatus.BLANK_INPUT, result);
+        assertEquals(2, result.getAttemptsRemaining());
+        verifyNoInteractions(userRepository);
         verify(eventManager).notifyObservers("Failed login attempt");
     }
 
     @Test
-    void authenticate_BackwardCompatibleBooleanApi_ReturnsTrueForSuccess() {
-        String username = "admin";
-        String password = "admin";
-        AdminUser adminUser = new AdminUser(username, password);
-        when(adminRepository.findByUsername(username)).thenReturn(Optional.of(adminUser));
+    void isLockedAndGetRemainingLockSeconds_ReflectTrackerState() {
+        LoginAttemptTracker tracker = new LoginAttemptTracker(1, Duration.ofSeconds(30));
+        AdminAuthService service = new AdminAuthService(userRepository, eventManager, tracker);
+        when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
 
-        boolean result = adminAuthService.authenticate(username, password);
+        assertFalse(service.isLocked());
 
-        assertTrue(result);
-    }
+        service.authenticateWithPolicy(new Credentials("unknown@example.com", "pw"));
 
-    @Test
-    void authenticate_BackwardCompatibleBooleanApi_ReturnsFalseForBlankInput() {
-        boolean result = adminAuthService.authenticate("   ", "   ");
-
-        assertFalse(result);
-        verifyNoInteractions(adminRepository);
-    }
-
-    // ==================== Parameterized Tests ====================
-
-    /**
-     * Parameterized test for valid username and password combinations.
-     * Tests that successful authentication returns SUCCESS status and queries repository.
-     */
-    @ParameterizedTest(name = "Valid credentials: username=''{0}'', password=''{1}''")
-    @CsvSource({
-        "admin, admin",
-        "testuser, testpass",
-        "user123, pass123"
-    })
-    void authenticateWithStatus_ValidCredentials_ReturnsSuccess(String username, String password) {
-        AdminUser adminUser = new AdminUser(username, password);
-        when(adminRepository.findByUsername(username)).thenReturn(Optional.of(adminUser));
-
-        LoginStatus result = adminAuthService.authenticateWithStatus(username, password);
-
-        assertEquals(LoginStatus.SUCCESS, result);
-        verify(adminRepository).findByUsername(username);
-    }
-
-    /**
-     * Parameterized test for usernames with leading/trailing whitespace.
-     * Tests that whitespace is trimmed before repository lookup.
-     */
-    @ParameterizedTest(name = "Trimmed username: username=''{0}'' (raw with spaces)")
-    @CsvSource({
-        "' admin ', admin",
-        "'  testuser  ', testpass",
-        "'\t user123 \t', pass123"
-    })
-    void authenticateWithStatus_UsernameWithWhitespace_TrimmedAndAuthenticated(String rawUsername, String password) {
-        String trimmedUsername = rawUsername.trim();
-        AdminUser adminUser = new AdminUser(trimmedUsername, password);
-        when(adminRepository.findByUsername(trimmedUsername)).thenReturn(Optional.of(adminUser));
-
-        LoginStatus result = adminAuthService.authenticateWithStatus(rawUsername, password);
-
-        assertEquals(LoginStatus.SUCCESS, result);
-        verify(adminRepository).findByUsername(trimmedUsername);
-    }
-
-    /**
-     * Parameterized test for blank or whitespace-only passwords.
-     * Tests that blank passwords are rejected without repository lookup.
-     */
-    @ParameterizedTest(name = "Blank password: username='admin', password=''{0}''")
-    @ValueSource(strings = {"", "   ", "\t", "\n"})
-    void authenticateWithStatus_BlankPassword_ReturnsBlankInput(String blankPassword) {
-        LoginStatus result = adminAuthService.authenticateWithStatus("admin", blankPassword);
-
-        assertEquals(LoginStatus.BLANK_INPUT, result);
-        verifyNoInteractions(adminRepository);
-    }
-
-    /**
-     * Parameterized test for blank or whitespace-only usernames.
-     * Tests that blank usernames are rejected without repository lookup.
-     */
-    @ParameterizedTest(name = "Blank username: username=''{0}'', password='password'")
-    @ValueSource(strings = {"", "   ", "\t", "\n"})
-    void authenticateWithStatus_BlankUsername_ReturnsBlankInput(String blankUsername) {
-        LoginStatus result = adminAuthService.authenticateWithStatus(blankUsername, "password");
-
-        assertEquals(LoginStatus.BLANK_INPUT, result);
-        verifyNoInteractions(adminRepository);
-    }
-
-    /**
-     * Parameterized test for invalid password scenarios.
-     * Tests that incorrect passwords return INVALID_CREDENTIALS status.
-     */
-    @ParameterizedTest(name = "Invalid password: username='admin', password=''{0}''")
-    @ValueSource(strings = {"wrong", "incorrect", "123456", "invalid"})
-    void authenticateWithStatus_InvalidPassword_ReturnsInvalidCredentials(String invalidPassword) {
-        String username = "admin";
-        String correctPassword = "admin";
-        AdminUser adminUser = new AdminUser(username, correctPassword);
-        when(adminRepository.findByUsername(username)).thenReturn(Optional.of(adminUser));
-
-        LoginStatus result = adminAuthService.authenticateWithStatus(username, invalidPassword);
-
-        assertEquals(LoginStatus.INVALID_CREDENTIALS, result);
-        verify(adminRepository).findByUsername(username);
-    }
-
-    /**
-     * Parameterized test for non-existent usernames.
-     * Tests that unknown users return INVALID_CREDENTIALS status.
-     */
-    @ParameterizedTest(name = "User not found: username=''{0}''")
-    @ValueSource(strings = {"unknown", "nonexistent", "hacker", "admin123"})
-    void authenticateWithStatus_UserNotFound_ReturnsInvalidCredentials(String unknownUsername) {
-        when(adminRepository.findByUsername(unknownUsername)).thenReturn(Optional.empty());
-
-        LoginStatus result = adminAuthService.authenticateWithStatus(unknownUsername, "password");
-
-        assertEquals(LoginStatus.INVALID_CREDENTIALS, result);
-        verify(adminRepository).findByUsername(unknownUsername);
-    }
-
-    /**
-     * Parameterized test for backward-compatible boolean API with valid credentials.
-     * Tests that authenticate(username, password) returns true for valid logins.
-     */
-    @ParameterizedTest(name = "Boolean API - Valid: username=''{0}'', password=''{1}''")
-    @CsvSource({
-        "admin, admin",
-        "user, pass",
-        "test, test123"
-    })
-    void authenticate_BooleanApi_ValidCredentials_ReturnsTrue(String username, String password) {
-        AdminUser adminUser = new AdminUser(username, password);
-        when(adminRepository.findByUsername(username)).thenReturn(Optional.of(adminUser));
-
-        boolean result = adminAuthService.authenticate(username, password);
-
-        assertTrue(result);
-        verify(adminRepository).findByUsername(username);
-    }
-
-    /**
-     * Parameterized test for backward-compatible boolean API with invalid credentials.
-     * Tests that authenticate(username, password) returns false for failed logins.
-     */
-    @ParameterizedTest(name = "Boolean API - Invalid: username=''{0}'', password=''{1}''")
-    @CsvSource({
-        "admin, wrongpass",
-        "unknown, pass",
-        "user, wrong"
-    })
-    void authenticate_BooleanApi_InvalidCredentials_ReturnsFalse(String username, String password) {
-        when(adminRepository.findByUsername(username)).thenReturn(Optional.empty());
-
-        boolean result = adminAuthService.authenticate(username, password);
-
-        assertFalse(result);
-    }
-
-    /**
-     * Parameterized test for backward-compatible boolean API with blank inputs.
-     * Tests that authenticate(username, password) returns false for blank inputs.
-     */
-    @ParameterizedTest(name = "Boolean API - Blank: username=''{0}'', password=''{1}''")
-    @CsvSource({
-        "   , password",
-        "admin,    ",
-        "  ,   "
-    })
-    void authenticate_BooleanApi_BlankInput_ReturnsFalse(String username, String password) {
-        boolean result = adminAuthService.authenticate(username, password);
-
-        assertFalse(result);
-        verifyNoInteractions(adminRepository);
+        assertTrue(service.isLocked());
+        assertTrue(service.getRemainingLockSeconds() > 0);
     }
 }

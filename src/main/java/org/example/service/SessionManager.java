@@ -1,7 +1,7 @@
 package org.example.service;
 
+import org.example.domain.SystemUser;
 import org.example.domain.UserRole;
-import org.example.domain.AdminUser;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -15,8 +15,8 @@ import java.util.Objects;
 public class SessionManager {
 
     private boolean loggedIn = false;
-    private AdminUser currentUser;
-    private String currentUsername;
+    private SystemUser currentUser;
+    private String currentEmail;
     private UserRole currentUserRole;
     private LocalDateTime loginTime;
     private final AuthEventLogger authEventLogger;
@@ -29,36 +29,44 @@ public class SessionManager {
      * @param eventManager event manager used to publish logout notifications
      */
     public SessionManager(AuthEventLogger authEventLogger, EventManager eventManager) {
-        this.authEventLogger = Objects.requireNonNull(authEventLogger, "authEventLogger cannot be null");
-        this.eventManager = Objects.requireNonNull(eventManager, "eventManager cannot be null");
+        this.authEventLogger = Objects.requireNonNull(
+                authEventLogger,
+                "authEventLogger cannot be null"
+        );
+        this.eventManager = Objects.requireNonNull(
+                eventManager,
+                "eventManager cannot be null"
+        );
     }
 
     /**
-     * Starts an authenticated session for a username.
+     * Starts an authenticated session for an email.
      *
-     * @param username username to attach to the session
+     * @param email email to attach to the session
      */
-    public void login(String username) {
-        login(username, UserRole.ADMIN);
+    public void login(String email) {
+        login(email, UserRole.USER);
     }
 
     /**
-     * Starts an authenticated session for a username and role.
+     * Starts an authenticated session for an email and role.
      *
-     * @param username username to attach to the session
+     * @param email email to attach to the session
      * @param role authenticated role
      */
-    public void login(String username, UserRole role) {
-        if (username == null || username.trim().isEmpty()) {
-            throw new IllegalArgumentException("username cannot be blank");
+    public void login(String email, UserRole role) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("email cannot be blank");
         }
         if (role == null) {
             throw new IllegalArgumentException("role cannot be null");
         }
 
+        String normalizedEmail = email.trim().toLowerCase();
+
         loggedIn = true;
-        currentUser = new AdminUser(username.trim() + "-session", username.trim(), "", role);
-        currentUsername = username.trim();
+        currentUser = new SystemUser(normalizedEmail + "-session", normalizedEmail, "[SESSION]", role);
+        currentEmail = normalizedEmail;
         currentUserRole = role;
         loginTime = LocalDateTime.now();
     }
@@ -68,14 +76,16 @@ public class SessionManager {
      *
      * @param user authenticated user
      */
-    public void login(AdminUser user) {
-        if (user == null || user.getUsername() == null || user.getUsername().trim().isEmpty()) {
-            throw new IllegalArgumentException("user cannot be null or blank");
+    public void login(SystemUser user) {
+        if (user == null || user.getEmail() == null || user.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("user cannot be null or have blank email");
         }
+
         UserRole role = user.getRole() == null ? UserRole.USER : user.getRole();
+
         loggedIn = true;
         currentUser = user;
-        currentUsername = user.getUsername().trim();
+        currentEmail = user.getEmail().trim().toLowerCase();
         currentUserRole = role;
         loginTime = LocalDateTime.now();
     }
@@ -84,7 +94,7 @@ public class SessionManager {
      * Backward-compatible login API.
      */
     public void login() {
-        login("admin", UserRole.ADMIN);
+        login("admin@gmail.com", UserRole.ADMIN);
     }
 
     /**
@@ -93,7 +103,7 @@ public class SessionManager {
     public void logout() {
         loggedIn = false;
         currentUser = null;
-        currentUsername = null;
+        currentEmail = null;
         currentUserRole = null;
         loginTime = null;
     }
@@ -102,11 +112,11 @@ public class SessionManager {
      * Clears session state and publishes logout logging/notification side effects.
      */
     public void logoutAndNotify() {
-        String username = currentUsername;
+        String email = currentEmail;
         logout();
 
-        authEventLogger.logLogout(username);
-        String displayUser = username == null ? "<unknown>" : username;
+        authEventLogger.logLogout(email);
+        String displayUser = email == null ? "<unknown>" : email;
         eventManager.notifyObservers("Goodbye, " + displayUser + "! You have been logged out.");
     }
 
@@ -120,12 +130,12 @@ public class SessionManager {
     }
 
     /**
-     * Returns the username for the current session.
+     * Returns the email for the current session.
      *
-     * @return current username or null when logged out
+     * @return current email or null when logged out
      */
-    public String getCurrentUsername() {
-        return currentUsername;
+    public String getCurrentEmail() {
+        return currentEmail;
     }
 
     /**
@@ -133,7 +143,7 @@ public class SessionManager {
      *
      * @return current user or null when logged out
      */
-    public AdminUser getCurrentUser() {
+    public SystemUser getCurrentUser() {
         return currentUser;
     }
 

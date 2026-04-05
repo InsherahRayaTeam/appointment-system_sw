@@ -3,7 +3,7 @@ package org.example.service;
 import org.example.domain.Appointment;
 import org.example.domain.AppointmentSlot;
 import org.example.domain.AppointmentStatus;
-import org.example.repository.AdminRepository;
+import org.example.repository.UserRepository;
 import org.example.repository.AppointmentBookingRepository;
 import org.example.repository.AppointmentRepository;
 
@@ -25,7 +25,7 @@ public class AppointmentBookingService {
     private final BookingRuleStrategy durationRule;
     private final BookingRuleStrategy participantRule;
     private final SessionManager sessionManager;
-    private final AdminRepository adminRepository;
+    private final UserRepository adminRepository;
     private final EventManager eventManager;
 
     /**
@@ -54,7 +54,7 @@ public class AppointmentBookingService {
             AppointmentRepository appointmentRepository,
             AppointmentBookingRepository appointmentBookingRepository,
             SessionManager sessionManager,
-            AdminRepository adminRepository,
+            UserRepository adminRepository,
             EventManager eventManager
     ) {
         this.appointmentRepository = Objects.requireNonNull(

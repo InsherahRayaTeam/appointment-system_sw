@@ -2,7 +2,7 @@ package org.example.presentation;
 
 import org.example.domain.AdminUser;
 import org.example.domain.UserRole;
-import org.example.repository.AdminRepository;
+import org.example.repository.UserRepository;
 import org.example.service.AdminAuthService;
 import org.example.service.EventManager;
 import org.example.service.LoginAttemptTracker;
@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 public class ConsoleLoginTest {
 
     @Mock
-    private AdminRepository adminRepository;
+    private UserRepository adminRepository;
 
     @BeforeEach
     void setUp() {
