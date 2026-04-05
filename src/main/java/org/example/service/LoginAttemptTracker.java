@@ -24,13 +24,21 @@ public class LoginAttemptTracker {
      * Creates a login attempt tracker with the specified limits.
      *
      * @param maxFailedAttempts the maximum number of failed attempts before lockout
-     * @param lockDuration      the duration to lock the account after exceeding max attempts
+     * @param lockDuration the duration to lock the account after exceeding max attempts
      * @throws IllegalArgumentException if maxFailedAttempts is less than 1 or lockDuration is not positive
      */
     public LoginAttemptTracker(int maxFailedAttempts, Duration lockDuration) {
         this(maxFailedAttempts, lockDuration, Clock.systemUTC());
     }
 
+    /**
+     * Creates a login attempt tracker with an explicit clock.
+     * Useful for testing time-based behavior.
+     *
+     * @param maxFailedAttempts the maximum number of failed attempts before lockout
+     * @param lockDuration the duration to lock the account after exceeding max attempts
+     * @param clock the clock used for time calculations
+     */
     LoginAttemptTracker(int maxFailedAttempts, Duration lockDuration, Clock clock) {
         if (maxFailedAttempts < 1) {
             throw new IllegalArgumentException("maxFailedAttempts must be at least 1");
@@ -38,6 +46,10 @@ public class LoginAttemptTracker {
         if (lockDuration == null || lockDuration.isNegative() || lockDuration.isZero()) {
             throw new IllegalArgumentException("lockDuration must be positive");
         }
+        if (clock == null) {
+            throw new IllegalArgumentException("clock cannot be null");
+        }
+
         this.maxFailedAttempts = maxFailedAttempts;
         this.lockDuration = lockDuration;
         this.clock = clock;
@@ -66,7 +78,7 @@ public class LoginAttemptTracker {
 
     /**
      * Records a failed login attempt.
-     * If max attempts exceeded, triggers account lockout.
+     * If max attempts are exceeded, triggers account lockout.
      */
     public void recordFailure() {
         if (isLocked()) {

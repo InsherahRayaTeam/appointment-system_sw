@@ -1,8 +1,7 @@
 package org.example.service;
 
+import org.example.domain.SystemUser;
 import org.example.domain.UserRole;
-import org.example.domain.AdminUser;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-public class SessionManagerTest {
+class SessionManagerTest {
 
     private SessionManager sessionManager;
 
@@ -27,53 +26,50 @@ public class SessionManagerTest {
     @Test
     void initialState_NotLoggedIn() {
         assertFalse(sessionManager.isLoggedIn());
-        assertNull(sessionManager.getCurrentUsername());
+        assertNull(sessionManager.getCurrentEmail());
+        assertNull(sessionManager.getCurrentUser());
+        assertNull(sessionManager.getCurrentUserRole());
         assertNull(sessionManager.getLoginTime());
     }
 
     @Test
-    void login_SetsSessionData() {
-        sessionManager.login("admin");
+    void login_WithEmail_DefaultsToUserRoleAndNormalizesEmail() {
+        sessionManager.login("  User@Example.com  ");
 
         assertTrue(sessionManager.isLoggedIn());
         assertNotNull(sessionManager.getLoginTime());
-        assertEquals("admin", sessionManager.getCurrentUsername());
-        assertEquals(UserRole.ADMIN, sessionManager.getCurrentUserRole());
+        assertEquals("user@example.com", sessionManager.getCurrentEmail());
+        assertEquals(UserRole.USER, sessionManager.getCurrentUserRole());
         assertNotNull(sessionManager.getCurrentUser());
+        assertTrue(sessionManager.isUser());
+        assertFalse(sessionManager.isAdmin());
     }
 
     @Test
-    void login_WithRegularUserRole_SetsUserRoleState() {
-        sessionManager.login("user", UserRole.USER);
+    void login_WithAdminRole_SetsAdminSessionState() {
+        sessionManager.login("admin@example.com", UserRole.ADMIN);
 
         assertTrue(sessionManager.isLoggedIn());
-        assertTrue(sessionManager.isUser());
-        assertFalse(sessionManager.isAdmin());
-        assertEquals(UserRole.USER, sessionManager.getCurrentUserRole());
-        assertEquals("user", sessionManager.getCurrentUser().getUsername());
+        assertTrue(sessionManager.isAdmin());
+        assertFalse(sessionManager.isUser());
+        assertEquals(UserRole.ADMIN, sessionManager.getCurrentUserRole());
     }
 
     @Test
     void login_WithUserObject_SetsCurrentUserDirectly() {
-        AdminUser user = new AdminUser("user-1", "user", "user123", UserRole.USER);
+        SystemUser user = new SystemUser("user-1", "USER@Example.com", "user123", UserRole.USER);
 
         sessionManager.login(user);
 
         assertTrue(sessionManager.isLoggedIn());
-        assertEquals("user", sessionManager.getCurrentUsername());
+        assertEquals("user@example.com", sessionManager.getCurrentEmail());
         assertEquals(UserRole.USER, sessionManager.getCurrentUserRole());
         assertEquals("user-1", sessionManager.getCurrentUser().getId());
+        assertEquals(user, sessionManager.getCurrentUser());
     }
 
     @Test
-    void login_TrimmedUsername_SetsNormalizedSessionUser() {
-        sessionManager.login(" admin ");
-
-        assertEquals("admin", sessionManager.getCurrentUsername());
-    }
-
-    @Test
-    void login_BlankUsername_ThrowsException() {
+    void login_BlankEmail_ThrowsException() {
         assertThrows(IllegalArgumentException.class, () -> sessionManager.login("   "));
     }
 
@@ -82,41 +78,33 @@ public class SessionManagerTest {
         sessionManager.login();
 
         assertTrue(sessionManager.isLoggedIn());
-        assertEquals("admin", sessionManager.getCurrentUsername());
+        assertEquals("admin@gmail.com", sessionManager.getCurrentEmail());
+        assertEquals(UserRole.ADMIN, sessionManager.getCurrentUserRole());
     }
 
     @Test
     void logout_ClearsSessionData() {
-        sessionManager.login("admin");
+        sessionManager.login("admin@example.com");
 
         sessionManager.logout();
 
         assertFalse(sessionManager.isLoggedIn());
         assertNull(sessionManager.getCurrentUser());
-        assertNull(sessionManager.getCurrentUsername());
+        assertNull(sessionManager.getCurrentEmail());
         assertNull(sessionManager.getCurrentUserRole());
         assertNull(sessionManager.getLoginTime());
     }
 
     @Test
-    void logout_UserIsNoLongerAuthenticated() {
-        sessionManager.login("admin");
-
+    void logout_WhenAlreadyLoggedOut_RemainsSafeNoStateChange() {
         sessionManager.logout();
 
-        assertFalse(sessionManager.isLoggedIn());
-    }
-
-    @Test
-    void logout_WhenNotLoggedIn_DoesNothing() {
-        sessionManager.logout();
-
-        assertFalse(sessionManager.isLoggedIn());
-        assertNull(sessionManager.getCurrentUsername());
+        assertNull(sessionManager.getCurrentEmail());
         assertNull(sessionManager.getLoginTime());
     }
+
     @Test
-    void login_NullUsername_ThrowsException() {
+    void login_NullEmail_ThrowsException() {
         assertThrows(IllegalArgumentException.class, () -> sessionManager.login(null));
     }
 
@@ -126,18 +114,23 @@ public class SessionManagerTest {
     }
 
     @Test
+    void login_NullUser_ThrowsException() {
+        assertThrows(IllegalArgumentException.class, () -> sessionManager.login((SystemUser) null));
+    }
+
+    @Test
     void logoutAndNotify_WithLoggedInUser_LogsAndNotifiesThroughServices() {
         AuthEventLogger authEventLogger = mock(AuthEventLogger.class);
         EventManager eventManager = mock(EventManager.class);
         SessionManager managedSession = new SessionManager(authEventLogger, eventManager);
-        managedSession.login("admin");
+        managedSession.login("  ADMIN@EXAMPLE.COM ");
 
         managedSession.logoutAndNotify();
 
         assertFalse(managedSession.isLoggedIn());
-        assertNull(managedSession.getCurrentUsername());
-        verify(authEventLogger).logLogout("admin");
-        verify(eventManager).notifyObservers("Goodbye, admin! You have been logged out.");
+        assertNull(managedSession.getCurrentEmail());
+        verify(authEventLogger).logLogout("admin@example.com");
+        verify(eventManager).notifyObservers("Goodbye, admin@example.com! You have been logged out.");
     }
 
     @Test

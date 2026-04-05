@@ -5,7 +5,7 @@ import org.example.domain.Appointment;
 import org.example.domain.AppointmentSlot;
 import org.example.domain.AppointmentStatus;
 import org.example.domain.UserRole;
-import org.example.repository.AdminRepository;
+import org.example.repository.UserRepository;
 import org.example.repository.AppointmentBookingRepository;
 import org.example.repository.AppointmentRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -16,7 +16,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +42,7 @@ class AppointmentBookingServiceTest {
     private SessionManager sessionManager;
 
     @Mock
-    private AdminRepository adminRepository;
+    private UserRepository adminRepository;
 
     @Mock
     private EventManager eventManager;

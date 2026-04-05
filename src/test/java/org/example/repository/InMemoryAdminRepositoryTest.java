@@ -12,11 +12,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class InMemoryAdminRepositoryTest {
 
-    private InMemoryAdminRepository repository;
+    private InMemoryUserRepository repository;
 
     @BeforeEach
     void setUp() {
-        repository = new InMemoryAdminRepository();
+        repository = new InMemoryUserRepository();
     }
 
     @Test

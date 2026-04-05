@@ -1,12 +1,15 @@
 package org.example.service;
 
-import org.example.domain.AdminUser;
+import org.example.domain.SystemUser;
 import org.example.domain.UserRole;
 
 import java.util.Objects;
 
 /**
  * Immutable service-layer result for policy-aware authentication attempts.
+ *
+ * Carries authentication status, lock state, remaining attempts,
+ * and authenticated user details when login succeeds.
  *
  * @author appointment-system
  * @version 1.0
@@ -17,46 +20,73 @@ public final class AuthenticationAttemptResult {
     private final boolean locked;
     private final long remainingLockSeconds;
     private final int attemptsRemaining;
-    private final String authenticatedUsername;
+    private final String authenticatedEmail;
     private final UserRole authenticatedRole;
-    private final AdminUser authenticatedUser;
+    private final SystemUser authenticatedUser;
 
+    /**
+     * Creates an immutable authentication attempt result.
+     *
+     * @param status login status
+     * @param locked whether account is currently locked
+     * @param remainingLockSeconds remaining lock duration in seconds
+     * @param attemptsRemaining remaining attempts before lockout
+     * @param authenticatedEmail authenticated email on success
+     * @param authenticatedRole authenticated role on success
+     * @param authenticatedUser authenticated user on success
+     */
     private AuthenticationAttemptResult(
             LoginStatus status,
             boolean locked,
             long remainingLockSeconds,
             int attemptsRemaining,
-            String authenticatedUsername,
+            String authenticatedEmail,
             UserRole authenticatedRole,
-            AdminUser authenticatedUser
+            SystemUser authenticatedUser
     ) {
         this.status = Objects.requireNonNull(status, "status cannot be null");
         this.locked = locked;
         this.remainingLockSeconds = remainingLockSeconds;
         this.attemptsRemaining = attemptsRemaining;
-        this.authenticatedUsername = authenticatedUsername;
+        this.authenticatedEmail = authenticatedEmail;
         this.authenticatedRole = authenticatedRole;
         this.authenticatedUser = authenticatedUser;
     }
 
     /**
-     * Creates a success result.
+     * Creates a success result without user details.
      *
      * @return successful authentication result
      */
     public static AuthenticationAttemptResult success() {
-        return new AuthenticationAttemptResult(LoginStatus.SUCCESS, false, 0, 0, null, null, null);
+        return new AuthenticationAttemptResult(
+                LoginStatus.SUCCESS,
+                false,
+                0,
+                0,
+                null,
+                null,
+                null
+        );
     }
 
     /**
-     * Creates a success result with authenticated user details.
+     * Creates a success result with authenticated email and role.
      *
-     * @param username authenticated username
+     * @param email authenticated email
      * @param role authenticated role
      * @return successful authentication result
      */
-    public static AuthenticationAttemptResult success(String username, UserRole role) {
-        return new AuthenticationAttemptResult(LoginStatus.SUCCESS, false, 0, 0, username, role, null);
+    public static AuthenticationAttemptResult success(String email, UserRole role) {
+        return new AuthenticationAttemptResult(
+                LoginStatus.SUCCESS,
+                false,
+                0,
+                0,
+                email,
+                role,
+                null
+        );
     }
 
     /**
@@ -65,16 +95,17 @@ public final class AuthenticationAttemptResult {
      * @param user authenticated user
      * @return successful authentication result
      */
-    public static AuthenticationAttemptResult success(AdminUser user) {
+    public static AuthenticationAttemptResult success(SystemUser user) {
         if (user == null) {
             return success();
         }
+
         return new AuthenticationAttemptResult(
                 LoginStatus.SUCCESS,
                 false,
                 0,
                 0,
-                user.getUsername(),
+                user.getEmail(),
                 user.getRole(),
                 user
         );
@@ -91,7 +122,16 @@ public final class AuthenticationAttemptResult {
         if (status == LoginStatus.SUCCESS) {
             throw new IllegalArgumentException("status must represent a failure");
         }
-        return new AuthenticationAttemptResult(status, false, 0, Math.max(0, attemptsRemaining), null, null, null);
+
+        return new AuthenticationAttemptResult(
+                status,
+                false,
+                0,
+                Math.max(0, attemptsRemaining),
+                null,
+                null,
+                null
+        );
     }
 
     /**
@@ -131,7 +171,7 @@ public final class AuthenticationAttemptResult {
     }
 
     /**
-     * Indicates whether account is currently locked.
+     * Indicates whether the account is currently locked.
      *
      * @return true when locked, otherwise false
      */
@@ -158,12 +198,12 @@ public final class AuthenticationAttemptResult {
     }
 
     /**
-     * Returns authenticated username when login succeeds.
+     * Returns authenticated email when login succeeds.
      *
-     * @return authenticated username, or null when login failed
+     * @return authenticated email, or null when login failed
      */
-    public String getAuthenticatedUsername() {
-        return authenticatedUsername;
+    public String getAuthenticatedEmail() {
+        return authenticatedEmail;
     }
 
     /**
@@ -180,7 +220,7 @@ public final class AuthenticationAttemptResult {
      *
      * @return authenticated user, or null when login failed
      */
-    public AdminUser getAuthenticatedUser() {
+    public SystemUser getAuthenticatedUser() {
         return authenticatedUser;
     }
 }

@@ -1,9 +1,9 @@
 package org.example.service;
 
 import org.example.domain.Credentials;
+import org.example.domain.SystemUser;
 import org.example.domain.UserRole;
-import org.example.domain.AdminUser;
-import org.example.repository.AdminRepository;
+import org.example.repository.UserRepository;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -11,29 +11,38 @@ import java.util.Optional;
 /**
  * Authenticates system users and applies login-attempt policy.
  *
+ * Supports both ADMIN and USER accounts using email-based login.
+ *
  * @author appointment-system
  * @version 1.0
  */
 public class AdminAuthService {
 
-    private final AdminRepository adminRepository;
+    private final UserRepository userRepository;
     private final EventManager eventManager;
     private final LoginAttemptTracker loginAttemptTracker;
 
     /**
-     * Creates an authentication service with repository, notifier, and lockout policy dependencies.
+     * Creates an authentication service with repository, event manager,
+     * and login-attempt tracking dependencies.
      *
-     * @param adminRepository repository used to resolve admin credentials
-     * @param eventManager event dispatcher used for auth notifications
-     * @param loginAttemptTracker lockout/attempt policy tracker
+     * @param userRepository repository used to resolve user credentials
+     * @param eventManager event dispatcher used for login notifications
+     * @param loginAttemptTracker tracker used for lockout policy
      */
     public AdminAuthService(
-            AdminRepository adminRepository,
+            UserRepository userRepository,
             EventManager eventManager,
             LoginAttemptTracker loginAttemptTracker
     ) {
-        this.adminRepository = Objects.requireNonNull(adminRepository, "adminRepository cannot be null");
-        this.eventManager = Objects.requireNonNull(eventManager, "eventManager cannot be null");
+        this.userRepository = Objects.requireNonNull(
+                userRepository,
+                "userRepository cannot be null"
+        );
+        this.eventManager = Objects.requireNonNull(
+                eventManager,
+                "eventManager cannot be null"
+        );
         this.loginAttemptTracker = Objects.requireNonNull(
                 loginAttemptTracker,
                 "loginAttemptTracker cannot be null"
@@ -43,16 +52,16 @@ public class AdminAuthService {
     /**
      * Backward-compatible boolean authentication API.
      *
-     * @param username raw username input
+     * @param email raw email input
      * @param password raw password input
      * @return true when credentials are valid, otherwise false
      */
-    public boolean authenticate(String username, String password) {
-        return authenticateWithStatus(new Credentials(username, password)) == LoginStatus.SUCCESS;
+    public boolean authenticate(String email, String password) {
+        return authenticateWithStatus(new Credentials(email, password)) == LoginStatus.SUCCESS;
     }
 
     /**
-     * Authenticates credentials and returns a status result.
+     * Authenticates credentials and returns login status.
      *
      * @param credentials credential payload
      * @return authentication status for the provided credentials
@@ -62,39 +71,33 @@ public class AdminAuthService {
             return LoginStatus.BLANK_INPUT;
         }
 
-        String username = credentials.getUsername();
+        String email = credentials.getEmail();
         String password = credentials.getPassword();
 
-        if (isBlank(username) || isBlank(password)) {
+        if (isBlank(email) || isBlank(password)) {
             return LoginStatus.BLANK_INPUT;
         }
 
+        Optional<SystemUser> user = resolveAuthenticatedUser(credentials);
 
-        Optional<AdminUser> authenticatedUser = resolveAuthenticatedUser(credentials);
-        boolean authenticated = authenticatedUser.isPresent();
-
-        if (authenticated) {
-            if (authenticatedUser.get().getRole() == UserRole.ADMIN) {
-                eventManager.notifyObservers("Admin logged in successfully");
-            } else {
-                eventManager.notifyObservers("User logged in successfully");
-            }
+        if (user.isPresent()) {
+            notifySuccessfulLogin(user.get());
             return LoginStatus.SUCCESS;
-        } else {
-            eventManager.notifyObservers("Failed login attempt");
-            return LoginStatus.INVALID_CREDENTIALS;
         }
+
+        eventManager.notifyObservers("Failed login attempt");
+        return LoginStatus.INVALID_CREDENTIALS;
     }
 
     /**
-     * Convenience overload for raw username/password input.
+     * Convenience overload for raw email/password input.
      *
-     * @param username raw username input
+     * @param email raw email input
      * @param password raw password input
      * @return authentication status
      */
-    public LoginStatus authenticateWithStatus(String username, String password) {
-        return authenticateWithStatus(new Credentials(username, password));
+    public LoginStatus authenticateWithStatus(String email, String password) {
+        return authenticateWithStatus(new Credentials(email, password));
     }
 
     /**
@@ -108,19 +111,16 @@ public class AdminAuthService {
             return AuthenticationAttemptResult.locked(loginAttemptTracker.getRemainingLockSeconds());
         }
 
-        Optional<AdminUser> authenticatedUser = resolveAuthenticatedUser(credentials);
-        if (authenticatedUser.isPresent()) {
-            if (authenticatedUser.get().getRole() == UserRole.ADMIN) {
-                eventManager.notifyObservers("Admin logged in successfully");
-            } else {
-                eventManager.notifyObservers("User logged in successfully");
-            }
+        Optional<SystemUser> user = resolveAuthenticatedUser(credentials);
+
+        if (user.isPresent()) {
+            notifySuccessfulLogin(user.get());
             loginAttemptTracker.recordSuccess();
-            return AuthenticationAttemptResult.success(authenticatedUser.get());
+            return AuthenticationAttemptResult.success(user.get());
         }
 
         LoginStatus status = credentials == null
-                || isBlank(credentials.getUsername())
+                || isBlank(credentials.getEmail())
                 || isBlank(credentials.getPassword())
                 ? LoginStatus.BLANK_INPUT
                 : LoginStatus.INVALID_CREDENTIALS;
@@ -128,6 +128,7 @@ public class AdminAuthService {
         eventManager.notifyObservers("Failed login attempt");
 
         loginAttemptTracker.recordFailure();
+
         if (loginAttemptTracker.isLocked()) {
             return AuthenticationAttemptResult.locked(loginAttemptTracker.getRemainingLockSeconds());
         }
@@ -145,7 +146,7 @@ public class AdminAuthService {
     }
 
     /**
-     * Returns remaining lockout duration.
+     * Returns remaining lockout duration in seconds.
      *
      * @return remaining lock duration in seconds
      */
@@ -153,20 +154,29 @@ public class AdminAuthService {
         return loginAttemptTracker.getRemainingLockSeconds();
     }
 
+    private void notifySuccessfulLogin(SystemUser user) {
+        if (user.getRole() == UserRole.ADMIN) {
+            eventManager.notifyObservers("Admin logged in successfully");
+        } else {
+            eventManager.notifyObservers("User logged in successfully");
+        }
+    }
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
     }
 
-    private Optional<AdminUser> resolveAuthenticatedUser(Credentials credentials) {
-        if (credentials == null || isBlank(credentials.getUsername()) || isBlank(credentials.getPassword())) {
+    private Optional<SystemUser> resolveAuthenticatedUser(Credentials credentials) {
+        if (credentials == null
+                || isBlank(credentials.getEmail())
+                || isBlank(credentials.getPassword())) {
             return Optional.empty();
         }
 
-        String normalizedUsername = credentials.getUsername().trim();
+        String email = credentials.getEmail().trim().toLowerCase();
         String password = credentials.getPassword();
 
-        return adminRepository.findByUsername(normalizedUsername)
+        return userRepository.findByEmail(email)
                 .filter(user -> user.getPassword().equals(password));
     }
 }
