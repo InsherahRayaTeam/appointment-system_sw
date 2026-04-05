@@ -3,13 +3,16 @@ package org.example.presentation.gui;
 import org.example.domain.Appointment;
 import org.example.domain.SystemUser;
 import org.example.service.AppointmentBookingService;
+import org.example.service.BookingStatus;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -26,6 +29,7 @@ public class ReservationsPanel extends JPanel {
     private final SystemUser user;
     private final AppointmentBookingService appointmentBookingService;
     private final DefaultTableModel tableModel;
+    private final JTable reservationsTable;
     private final JLabel infoLabel;
 
     /**
@@ -54,12 +58,22 @@ public class ReservationsPanel extends JPanel {
             }
         };
 
-        add(new JScrollPane(new JTable(tableModel)), BorderLayout.CENTER);
+        reservationsTable = new JTable(tableModel);
+        reservationsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        add(new JScrollPane(reservationsTable), BorderLayout.CENTER);
 
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton refreshButton = new JButton("Refresh");
+        JButton modifyButton = new JButton("Modify Reservation");
+        JButton cancelButton = new JButton("Cancel Reservation");
+
         refreshButton.addActionListener(e -> refreshData());
+        modifyButton.addActionListener(e -> onModifyReservation());
+        cancelButton.addActionListener(e -> onCancelReservation());
+
         actionPanel.add(refreshButton);
+        actionPanel.add(modifyButton);
+        actionPanel.add(cancelButton);
         add(actionPanel, BorderLayout.SOUTH);
 
         refreshData();
@@ -72,18 +86,75 @@ public class ReservationsPanel extends JPanel {
         tableModel.setRowCount(0);
 
         List<Appointment> reservations = appointmentBookingService.getReservationsForCustomer(user.getEmail());
-        int count = 0;
         for (Appointment appointment : reservations) {
             tableModel.addRow(toRow(appointment));
-            count++;
         }
 
-        if (count == 0) {
+        if (reservations.isEmpty()) {
             infoLabel.setText("No reservations found for " + user.getEmail());
         } else {
-            infoLabel.setText("Reservations for " + user.getEmail() + ": " + count + " record(s)");
+            infoLabel.setText("Reservations for " + user.getEmail() + ": " + reservations.size() + " record(s)");
         }
     }
+
+    private void onCancelReservation() {
+        String reservationId = selectedReservationId();
+        if (reservationId == null) {
+            showWarning("Please select a reservation first.");
+            return;
+        }
+
+        BookingStatus status = appointmentBookingService.cancelOwnAppointment(reservationId);
+        showResult(status, "Cancel Reservation");
+        if (status == BookingStatus.SUCCESS) {
+            refreshData();
+        }
+    }
+
+    private void onModifyReservation() {
+        String reservationId = selectedReservationId();
+        if (reservationId == null) {
+            showWarning("Please select a reservation first.");
+            return;
+        }
+        String newSlotTime = JOptionPane.showInputDialog(
+                this,
+                "Enter replacement slot time (for example, 11:00):",
+                "Modify Reservation",
+                JOptionPane.QUESTION_MESSAGE
+        );
+        if (newSlotTime == null || newSlotTime.trim().isEmpty()) {
+            showWarning("Please provide a replacement slot time.");
+            return;
+        }
+        BookingStatus status = appointmentBookingService.modifyOwnAppointment(reservationId, newSlotTime);
+        showResult(status, "Modify Reservation");
+        if (status == BookingStatus.SUCCESS) {
+            refreshData();
+        }
+    }
+
+    private String selectedReservationId() {
+        int selectedRow = reservationsTable.getSelectedRow();
+        if (selectedRow < 0) {
+            return null;
+        }
+
+        Object id = tableModel.getValueAt(selectedRow, 0);
+        return id == null ? null : id.toString();
+    }
+
+    private void showResult(BookingStatus status, String title) {
+        int messageType = status == BookingStatus.SUCCESS
+                ? JOptionPane.INFORMATION_MESSAGE
+                : JOptionPane.ERROR_MESSAGE;
+        JOptionPane.showMessageDialog(this, GuiMessageHelper.toMessage(status), title, messageType);
+    }
+
+    private void showWarning(String message) {
+        JOptionPane.showMessageDialog(this, message, "Input Required", JOptionPane.WARNING_MESSAGE);
+    }
+
 
     private Object[] toRow(Appointment appointment) {
         return new Object[] {

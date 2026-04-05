@@ -233,13 +233,45 @@ public class AppointmentBookingService {
      * @return operation status
      */
     public BookingStatus cancelAppointment(String appointmentId) {
-        if (!isCurrentUserAdmin()) {
-            return BookingStatus.UNAUTHORIZED;
-        }
+        return cancelReservationInternal(appointmentId, ReservationAccess.ADMIN_ANY);
+    }
 
-        Appointment appointment = appointmentBookingRepository.findById(normalize(appointmentId)).orElse(null);
+    /**
+     * Cancels the current user's own reservation.
+     *
+     * @param appointmentId reservation identifier
+     * @return operation status
+     */
+    public BookingStatus cancelOwnAppointment(String appointmentId) {
+        return cancelReservationInternal(appointmentId, ReservationAccess.OWN_ONLY);
+    }
+
+    /**
+     * Modifies a reservation by reassigning it to a different available slot.
+     *
+     * @param appointmentId reservation identifier
+     * @param newSlotTime requested replacement slot time
+     * @return operation status
+     */
+    public BookingStatus modifyAppointment(String appointmentId, String newSlotTime) {
+        return modifyReservationInternal(appointmentId, newSlotTime, ReservationAccess.ADMIN_ANY);
+    }
+
+    /**
+     * Modifies the current user's own reservation by reassigning to a different slot.
+     *
+     * @param appointmentId reservation identifier
+     * @param newSlotTime requested replacement slot time
+     * @return operation status
+     */
+    public BookingStatus modifyOwnAppointment(String appointmentId, String newSlotTime) {
+        return modifyReservationInternal(appointmentId, newSlotTime, ReservationAccess.OWN_ONLY);
+    }
+
+    private BookingStatus cancelReservationInternal(String appointmentId, ReservationAccess access) {
+        Appointment appointment = resolveAuthorizedAppointment(appointmentId, access);
         if (appointment == null) {
-            return BookingStatus.APPOINTMENT_NOT_FOUND;
+            return resolveAuthorizationOrNotFoundStatus(appointmentId, access);
         }
         if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
             return BookingStatus.APPOINTMENT_ALREADY_CANCELLED;
@@ -265,24 +297,18 @@ public class AppointmentBookingService {
         return BookingStatus.SUCCESS;
     }
 
-    /**
-     * Modifies a reservation by reassigning it to a different available slot.
-     *
-     * @param appointmentId reservation identifier
-     * @param newSlotTime requested replacement slot time
-     * @return operation status
-     */
-    public BookingStatus modifyAppointment(String appointmentId, String newSlotTime) {
-        if (!isCurrentUserAdmin()) {
-            return BookingStatus.UNAUTHORIZED;
-        }
+    private BookingStatus modifyReservationInternal(
+            String appointmentId,
+            String newSlotTime,
+            ReservationAccess access
+    ) {
         if (newSlotTime == null || newSlotTime.trim().isEmpty()) {
             return BookingStatus.BLANK_SLOT_TIME;
         }
 
-        Appointment appointment = appointmentBookingRepository.findById(normalize(appointmentId)).orElse(null);
+        Appointment appointment = resolveAuthorizedAppointment(appointmentId, access);
         if (appointment == null) {
-            return BookingStatus.APPOINTMENT_NOT_FOUND;
+            return resolveAuthorizationOrNotFoundStatus(appointmentId, access);
         }
         if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
             return BookingStatus.APPOINTMENT_ALREADY_CANCELLED;
@@ -317,6 +343,47 @@ public class AppointmentBookingService {
 
         notifyEvent("Reservation modified: " + updated.getId() + " -> " + normalizedNewSlotTime);
         return BookingStatus.SUCCESS;
+    }
+
+    private Appointment resolveAuthorizedAppointment(String appointmentId, ReservationAccess access) {
+        if (!isSessionActive()) {
+            return null;
+        }
+        if (access == ReservationAccess.ADMIN_ANY && !isCurrentUserAdmin()) {
+            return null;
+        }
+
+        Appointment appointment = appointmentBookingRepository.findById(normalize(appointmentId)).orElse(null);
+        if (appointment == null) {
+            return null;
+        }
+
+        if (access == ReservationAccess.OWN_ONLY && !isOwnedByCurrentUser(appointment)) {
+            return null;
+        }
+
+        return appointment;
+    }
+
+    private BookingStatus resolveAuthorizationOrNotFoundStatus(String appointmentId, ReservationAccess access) {
+        if (!isSessionActive()) {
+            return BookingStatus.UNAUTHORIZED;
+        }
+
+        if (access == ReservationAccess.ADMIN_ANY && !isCurrentUserAdmin()) {
+            return BookingStatus.UNAUTHORIZED;
+        }
+
+        Appointment appointment = appointmentBookingRepository.findById(normalize(appointmentId)).orElse(null);
+        if (appointment == null) {
+            return BookingStatus.APPOINTMENT_NOT_FOUND;
+        }
+
+        if (access == ReservationAccess.OWN_ONLY && !isOwnedByCurrentUser(appointment)) {
+            return BookingStatus.UNAUTHORIZED;
+        }
+
+        return BookingStatus.APPOINTMENT_NOT_FOUND;
     }
 
     private AppointmentSlot findSlotByTime(String slotTime) {
@@ -359,6 +426,22 @@ public class AppointmentBookingService {
                 .orElse(false);
     }
 
+    private boolean isSessionActive() {
+        return sessionManager != null && sessionManager.isLoggedIn();
+    }
+
+    private boolean isOwnedByCurrentUser(Appointment appointment) {
+        if (appointment == null || !isSessionActive()) {
+            return false;
+        }
+
+        String currentEmail = normalize(sessionManager.getCurrentEmail());
+        String ownerIdentity = normalize(appointment.getCustomerName());
+        return currentEmail != null
+                && ownerIdentity != null
+                && ownerIdentity.equalsIgnoreCase(currentEmail);
+    }
+
     private void notifyEvent(String message) {
         if (eventManager != null && message != null && !message.trim().isEmpty()) {
             eventManager.notifyObservers(message);
@@ -385,5 +468,10 @@ public class AppointmentBookingService {
 
     private Appointment validationProbe(int durationMinutes, int participantCount) {
         return new Appointment("validation", LocalDateTime.now(), durationMinutes, participantCount);
+    }
+
+    private enum ReservationAccess {
+        ADMIN_ANY,
+        OWN_ONLY
     }
 }

@@ -325,6 +325,77 @@ class AppointmentBookingServiceTest {
     }
 
     @Test
+    void cancelOwnAppointment_UserOwnFutureReservation_ReturnsSuccessAndReleasesSlot() {
+        // Arrange
+        authenticateAsUser("alice@example.com");
+
+        AppointmentSlot slot = new AppointmentSlot("10:00");
+        slot.book();
+        Appointment appointment = futureReservation("apt-user-1", "10:00", "alice@example.com");
+
+        when(appointmentBookingRepository.findById(eq("apt-user-1"))).thenReturn(Optional.of(appointment));
+        when(appointmentRepository.findAll()).thenReturn(List.of(slot));
+        when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
+
+        // Act
+        BookingStatus result = appointmentBookingService.cancelOwnAppointment("apt-user-1");
+
+        // Assert
+        assertEquals(BookingStatus.SUCCESS, result);
+        assertTrue(slot.isAvailable());
+        verify(eventManager).notifyObservers("Reservation cancelled: apt-user-1");
+    }
+
+    @Test
+    void cancelOwnAppointment_UserOtherReservation_ReturnsUnauthorized() {
+        // Arrange
+        authenticateAsUser("alice@example.com");
+        when(appointmentBookingRepository.findById(eq("apt-user-2")))
+                .thenReturn(Optional.of(futureReservation("apt-user-2", "10:00", "bob@example.com")));
+
+        // Act
+        BookingStatus result = appointmentBookingService.cancelOwnAppointment("apt-user-2");
+
+        // Assert
+        assertEquals(BookingStatus.UNAUTHORIZED, result);
+        verify(appointmentBookingRepository, never()).update(any(Appointment.class));
+    }
+
+    @Test
+    void cancelOwnAppointment_UserPastReservation_ReturnsAppointmentNotFuture() {
+        // Arrange
+        authenticateAsUser("alice@example.com");
+        Appointment past = new Appointment(
+                "apt-user-3",
+                "alice@example.com",
+                LocalDate.now().minusDays(1).atTime(LocalTime.parse("10:00")),
+                60,
+                2,
+                AppointmentStatus.CONFIRMED
+        );
+        when(appointmentBookingRepository.findById(eq("apt-user-3"))).thenReturn(Optional.of(past));
+
+        // Act
+        BookingStatus result = appointmentBookingService.cancelOwnAppointment("apt-user-3");
+
+        // Assert
+        assertEquals(BookingStatus.APPOINTMENT_NOT_FUTURE, result);
+        verify(appointmentBookingRepository, never()).update(any(Appointment.class));
+    }
+
+    @Test
+    void cancelOwnAppointment_WhenUnauthenticated_ReturnsUnauthorized() {
+        // Arrange
+        when(sessionManager.isLoggedIn()).thenReturn(false);
+
+        // Act
+        BookingStatus result = appointmentBookingService.cancelOwnAppointment("apt-user-4");
+
+        // Assert
+        assertEquals(BookingStatus.UNAUTHORIZED, result);
+    }
+
+    @Test
     void modifyAppointment_WhenUnauthorized_ReturnsUnauthorized() {
         // Arrange
         when(sessionManager.isLoggedIn()).thenReturn(false);
@@ -424,9 +495,88 @@ class AppointmentBookingServiceTest {
         assertTrue(targetSlot.isAvailable());
     }
 
+    @Test
+    void modifyOwnAppointment_UserOwnFutureReservation_ReturnsSuccess() {
+        // Arrange
+        authenticateAsUser("alice@example.com");
+
+        AppointmentSlot oldSlot = new AppointmentSlot("10:00");
+        oldSlot.book();
+        AppointmentSlot newSlot = new AppointmentSlot("11:00");
+
+        when(appointmentBookingRepository.findById(eq("apt-user-5")))
+                .thenReturn(Optional.of(futureReservation("apt-user-5", "10:00", "alice@example.com")));
+        when(appointmentRepository.findAll()).thenReturn(List.of(oldSlot, newSlot));
+        when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
+
+        // Act
+        BookingStatus result = appointmentBookingService.modifyOwnAppointment("apt-user-5", "11:00");
+
+        // Assert
+        assertEquals(BookingStatus.SUCCESS, result);
+        assertTrue(oldSlot.isAvailable());
+        assertFalse(newSlot.isAvailable());
+        verify(eventManager).notifyObservers("Reservation modified: apt-user-5 -> 11:00");
+    }
+
+    @Test
+    void modifyOwnAppointment_UserOtherReservation_ReturnsUnauthorized() {
+        // Arrange
+        authenticateAsUser("alice@example.com");
+        when(appointmentBookingRepository.findById(eq("apt-user-6")))
+                .thenReturn(Optional.of(futureReservation("apt-user-6", "10:00", "bob@example.com")));
+
+        // Act
+        BookingStatus result = appointmentBookingService.modifyOwnAppointment("apt-user-6", "11:00");
+
+        // Assert
+        assertEquals(BookingStatus.UNAUTHORIZED, result);
+        verify(appointmentBookingRepository, never()).update(any(Appointment.class));
+    }
+
+    @Test
+    void modifyOwnAppointment_UserPastReservation_ReturnsAppointmentNotFuture() {
+        // Arrange
+        authenticateAsUser("alice@example.com");
+        Appointment past = new Appointment(
+                "apt-user-7",
+                "alice@example.com",
+                LocalDate.now().minusDays(1).atTime(LocalTime.parse("10:00")),
+                60,
+                2,
+                AppointmentStatus.CONFIRMED
+        );
+        when(appointmentBookingRepository.findById(eq("apt-user-7"))).thenReturn(Optional.of(past));
+
+        // Act
+        BookingStatus result = appointmentBookingService.modifyOwnAppointment("apt-user-7", "11:00");
+
+        // Assert
+        assertEquals(BookingStatus.APPOINTMENT_NOT_FUTURE, result);
+        verify(appointmentBookingRepository, never()).update(any(Appointment.class));
+    }
+
+    @Test
+    void modifyOwnAppointment_WhenUnauthenticated_ReturnsUnauthorized() {
+        // Arrange
+        when(sessionManager.isLoggedIn()).thenReturn(false);
+
+        // Act
+        BookingStatus result = appointmentBookingService.modifyOwnAppointment("apt-user-8", "11:00");
+
+        // Assert
+        assertEquals(BookingStatus.UNAUTHORIZED, result);
+    }
+
     private void authenticateAsAdmin() {
         when(sessionManager.isLoggedIn()).thenReturn(true);
         when(sessionManager.isAdmin()).thenReturn(true);
+    }
+
+    private void authenticateAsUser(String email) {
+        when(sessionManager.isLoggedIn()).thenReturn(true);
+        when(sessionManager.isAdmin()).thenReturn(false);
+        when(sessionManager.getCurrentEmail()).thenReturn(email);
     }
 
     private Appointment futureReservation(String id, String slotTime, String customerEmail) {
