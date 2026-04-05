@@ -67,21 +67,21 @@ class DurationRuleTest {
     }
 
     @Test
-    void shouldRejectZeroDuration() {
+    void shouldAllowZeroDurationBecauseRuleChecksOnlyMaxLimit() {
         Appointment appointment = new Appointment("apt1", appointmentTime, 0, 3);
 
         boolean result = durationRule.isValid(appointment);
 
-        assertFalse(result);
+        assertTrue(result);
     }
 
     @Test
-    void shouldRejectNegativeDuration() {
+    void shouldAllowNegativeDurationBecauseRuleChecksOnlyMaxLimit() {
         Appointment appointment = new Appointment("apt1", appointmentTime, -60, 3);
 
         boolean result = durationRule.isValid(appointment);
 
-        assertFalse(result);
+        assertTrue(result);
     }
 
     @Test

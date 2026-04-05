@@ -31,14 +31,11 @@ public class MainDashboardFrame extends JFrame {
     private SlotsPanel slotsPanel;
     private BookingPanel bookingPanel;
     private ReservationsPanel reservationsPanel;
-    private SlotManagementPanel slotManagementPanel;
 
     private JLabel welcomeLabel;
     private JLabel subtitleLabel;
     private JLabel statusLabel;
-    private JButton bookButton;
     private JButton manageReservationsButton;
-    private JButton manageSlotButton;
     private JLabel menuSpacerLabel;
 
     /**
@@ -137,22 +134,12 @@ public class MainDashboardFrame extends JFrame {
 
         slotsPanel = new SlotsPanel(appointmentService, this::showMenuPanel);
         bookingPanel = new BookingPanel(appointmentService, appointmentBookingService, this::showMenuPanel);
-        reservationsPanel = new ReservationsPanel(
-                appointmentBookingService,
-                appointmentService,
-                sessionManager,
-                this::showMenuPanel
-        );
-        slotManagementPanel = new SlotManagementPanel(
-                appointmentBookingService,
-                this::showMenuPanel
-        );
+        reservationsPanel = new ReservationsPanel(appointmentBookingService, appointmentService, this::showMenuPanel);
 
         contentPanel.add(menuPanel, "MENU");
         contentPanel.add(slotsPanel, "SLOTS");
         contentPanel.add(bookingPanel, "BOOKING");
         contentPanel.add(reservationsPanel, "RESERVATIONS");
-        contentPanel.add(slotManagementPanel, "SLOT_MANAGEMENT");
 
         return contentPanel;
     }
@@ -182,9 +169,8 @@ public class MainDashboardFrame extends JFrame {
         buttonGrid.setOpaque(false);
 
         JButton viewSlotsButton = UiStyle.createPrimaryButton("View Slots", e -> showSlotsPanel());
-        bookButton = UiStyle.createPrimaryButton("Book Appointment", e -> showBookingPanel());
+        JButton bookButton = UiStyle.createPrimaryButton("Book Appointment", e -> showBookingPanel());
         manageReservationsButton = UiStyle.createPrimaryButton("Manage Reservations", e -> showReservationsPanel());
-        JButton manageSlotButton = UiStyle.createPrimaryButton("Manage Slots", e -> showSlotManagementPanel());
         JButton logoutButton = UiStyle.createSecondaryButton("Logout", e -> handleLogout());
         JButton exitButton = UiStyle.createSecondaryButton("Exit", e -> handleExit());
         menuSpacerLabel = new JLabel();
@@ -192,7 +178,7 @@ public class MainDashboardFrame extends JFrame {
         buttonGrid.add(viewSlotsButton);
         buttonGrid.add(bookButton);
         buttonGrid.add(manageReservationsButton);
-        buttonGrid.add(manageSlotButton);
+        buttonGrid.add(menuSpacerLabel);
         buttonGrid.add(logoutButton);
         buttonGrid.add(exitButton);
 
@@ -215,13 +201,8 @@ public class MainDashboardFrame extends JFrame {
                 : "Appointment user dashboard");
 
         boolean adminSession = sessionManager.isAdmin();
-        boolean userSession = sessionManager.isUser();
-        bookButton.setVisible(userSession);
         manageReservationsButton.setVisible(adminSession);
-        manageReservationsButton.setText(adminSession ? "Manage Reservations" : "My Appointments");
-        manageReservationsButton.setVisible(adminSession || userSession);
-        manageSlotButton.setVisible(adminSession);
-        menuSpacerLabel.setVisible(adminSession || userSession);
+        menuSpacerLabel.setVisible(adminSession);
         setStatus("Logged in as " + safeName + ".");
     }
 
@@ -250,25 +231,14 @@ public class MainDashboardFrame extends JFrame {
     }
 
     private void showReservationsPanel() {
-        if (!sessionManager.isAdmin() && !sessionManager.isUser()) {
-            setStatus("Please log in to manage appointments.");
+        if (!sessionManager.isAdmin()) {
+            setStatus("Only administrators can manage reservations.");
             showMenuPanel();
             return;
         }
         reservationsPanel.refresh();
         cardLayout.show(contentPanel, "RESERVATIONS");
         setStatus("Reservation management ready.");
-    }
-
-    private void showSlotManagementPanel() {
-        if (!sessionManager.isAdmin()) {
-            setStatus("Admin access required for slot management.");
-            showMenuPanel();
-            return;
-        }
-        slotManagementPanel.refresh();
-        cardLayout.show(contentPanel, "SLOT_MANAGEMENT");
-        setStatus("Slot management ready.");
     }
 
     private void setStatus(String message) {

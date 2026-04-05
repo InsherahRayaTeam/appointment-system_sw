@@ -42,21 +42,5 @@ public interface AppointmentBookingRepository {
      * @return true when an existing appointment was updated
      */
     boolean update(Appointment appointment);
-
-    /**
-     * Finds all appointments for a specific customer (used for "My Appointments" flow).
-     *
-     * @param customerName the customer name
-     * @return list of appointments for this customer
-     */
-    List<Appointment> findByCustomerName(String customerName);
-
-    /**
-     * Removes an appointment from the repository.
-     *
-     * @param appointmentId appointment identifier
-     * @return true when an existing appointment was removed
-     */
-    boolean remove(String appointmentId);
 }
 

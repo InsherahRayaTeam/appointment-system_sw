@@ -10,7 +10,6 @@ public class AppointmentSlot {
 
     private String time;
     private boolean booked;
-    private boolean cancelled;
 
     /**
      * Creates an appointment slot for the provided time.
@@ -20,7 +19,6 @@ public class AppointmentSlot {
     public AppointmentSlot(String time) {
         this.time = time;
         this.booked = false;
-        this.cancelled = false;
     }
 
     /**
@@ -62,21 +60,5 @@ public class AppointmentSlot {
      */
     public void release() {
         booked = false;
-    }
-
-    /**
-     * Indicates whether this slot has been cancelled by an administrator.
-     *
-     * @return true when slot is cancelled, otherwise false
-     */
-    public boolean isCancelled() {
-        return cancelled;
-    }
-
-    /**
-     * Marks this appointment slot as cancelled (admin action).
-     */
-    public void cancel() {
-        cancelled = true;
     }
 }

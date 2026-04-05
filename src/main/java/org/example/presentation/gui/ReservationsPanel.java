@@ -4,7 +4,6 @@ import org.example.domain.Appointment;
 import org.example.service.AppointmentBookingService;
 import org.example.service.AppointmentService;
 import org.example.service.BookingStatus;
-import org.example.service.SessionManager;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -22,7 +21,6 @@ public class ReservationsPanel extends JPanel {
 
     private final AppointmentBookingService appointmentBookingService;
     private final AppointmentService appointmentService;
-    private final SessionManager sessionManager;
     private final Runnable onBack;
 
     private final List<Appointment> currentReservations = new ArrayList<>();
@@ -31,7 +29,6 @@ public class ReservationsPanel extends JPanel {
     private JLabel statusLabel;
     private JButton modifyButton;
     private JButton cancelButton;
-    private JLabel titleLabel;
 
     /**
      * Creates reservations management panel.
@@ -43,12 +40,10 @@ public class ReservationsPanel extends JPanel {
     public ReservationsPanel(
             AppointmentBookingService appointmentBookingService,
             AppointmentService appointmentService,
-            SessionManager sessionManager,
             Runnable onBack
     ) {
         this.appointmentBookingService = appointmentBookingService;
         this.appointmentService = appointmentService;
-        this.sessionManager = sessionManager;
         this.onBack = onBack;
 
         initializeUI();
@@ -62,7 +57,7 @@ public class ReservationsPanel extends JPanel {
         JPanel top = new JPanel(new BorderLayout());
         top.setOpaque(false);
 
-        titleLabel = new JLabel("Manage Reservations");
+        JLabel titleLabel = new JLabel("Manage Reservations");
         titleLabel.setFont(UiStyle.FONT_SUBTITLE);
         top.add(titleLabel, BorderLayout.WEST);
 
@@ -122,19 +117,13 @@ public class ReservationsPanel extends JPanel {
         tableModel.setRowCount(0);
         currentReservations.clear();
 
-        List<Appointment> reservations;
-        if (sessionManager.isAdmin()) {
-            titleLabel.setText("Manage Reservations");
-            reservations = appointmentBookingService.getManagedReservations();
-        } else if (sessionManager.isUser()) {
-            titleLabel.setText("My Appointments");
-            reservations = appointmentBookingService.getCurrentUserReservations();
-        } else {
-            setStatus("Please log in to manage appointments.", UiStyle.COLOR_ERROR);
+        if (!appointmentBookingService.canCurrentUserManageReservations()) {
+            setStatus("Only authenticated administrators can manage reservations.", UiStyle.COLOR_ERROR);
             setActionButtonsEnabled(false);
             return;
         }
 
+        List<Appointment> reservations = appointmentBookingService.getManagedReservations();
         currentReservations.addAll(reservations);
 
         for (Appointment appointment : reservations) {
@@ -151,11 +140,7 @@ public class ReservationsPanel extends JPanel {
         if (reservations.isEmpty()) {
             setStatus("No reservations available.", UiStyle.COLOR_INFO);
         } else {
-            if (sessionManager.isAdmin()) {
-                setStatus("Select a reservation to modify or cancel.", UiStyle.COLOR_INFO);
-            } else {
-                setStatus("Select your appointment to modify or cancel.", UiStyle.COLOR_INFO);
-            }
+            setStatus("Select a reservation to modify or cancel.", UiStyle.COLOR_INFO);
         }
 
         setActionButtonsEnabled(!reservations.isEmpty());
@@ -168,9 +153,7 @@ public class ReservationsPanel extends JPanel {
             return;
         }
 
-        BookingStatus status = sessionManager.isAdmin()
-                ? appointmentBookingService.cancelManagedReservation(selected.getId())
-                : appointmentBookingService.cancelMyAppointment(selected.getId());
+        BookingStatus status = appointmentBookingService.cancelAppointment(selected.getId());
         if (status == BookingStatus.SUCCESS) {
             JOptionPane.showMessageDialog(
                     this,
@@ -214,9 +197,7 @@ public class ReservationsPanel extends JPanel {
             return;
         }
 
-        BookingStatus status = sessionManager.isAdmin()
-                ? appointmentBookingService.modifyManagedReservation(selected.getId(), selectedSlot.toString())
-                : appointmentBookingService.modifyMyAppointment(selected.getId(), selectedSlot.toString());
+        BookingStatus status = appointmentBookingService.modifyAppointment(selected.getId(), selectedSlot.toString());
         if (status == BookingStatus.SUCCESS) {
             JOptionPane.showMessageDialog(
                     this,
