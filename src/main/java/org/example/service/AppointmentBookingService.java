@@ -3,10 +3,12 @@ package org.example.service;
 import org.example.domain.Appointment;
 import org.example.domain.AppointmentSlot;
 import org.example.domain.AppointmentStatus;
-import org.example.repository.UserRepository;
+import org.example.domain.UserRole;
 import org.example.repository.AppointmentBookingRepository;
 import org.example.repository.AppointmentRepository;
+import org.example.repository.UserRepository;
 
+import java.util.ArrayList;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -25,7 +27,7 @@ public class AppointmentBookingService {
     private final BookingRuleStrategy durationRule;
     private final BookingRuleStrategy participantRule;
     private final SessionManager sessionManager;
-    private final UserRepository adminRepository;
+    private final UserRepository userRepository;
     private final EventManager eventManager;
 
     /**
@@ -47,14 +49,14 @@ public class AppointmentBookingService {
      * @param appointmentRepository repository used to read and update slot availability
      * @param appointmentBookingRepository repository used to store confirmed appointments
      * @param sessionManager session manager used to enforce authenticated admin-only management
-     * @param adminRepository repository used to validate administrator identity
+     * @param userRepository repository used to validate user identity when needed
      * @param eventManager event manager used for reservation-management notifications
      */
     public AppointmentBookingService(
             AppointmentRepository appointmentRepository,
             AppointmentBookingRepository appointmentBookingRepository,
             SessionManager sessionManager,
-            UserRepository adminRepository,
+            UserRepository userRepository,
             EventManager eventManager
     ) {
         this.appointmentRepository = Objects.requireNonNull(
@@ -68,7 +70,7 @@ public class AppointmentBookingService {
         this.durationRule = new DurationRule();
         this.participantRule = new ParticipantRule();
         this.sessionManager = sessionManager;
-        this.adminRepository = adminRepository;
+        this.userRepository = userRepository;
         this.eventManager = eventManager;
     }
 
@@ -131,6 +133,7 @@ public class AppointmentBookingService {
         if (slotTime == null || slotTime.trim().isEmpty()) {
             return BookingStatus.BLANK_SLOT_TIME;
         }
+
         Appointment probe = validationProbe(durationMinutes, participantCount);
         if (!durationRule.isValid(probe)) {
             return BookingStatus.INVALID_DURATION;
@@ -188,6 +191,39 @@ public class AppointmentBookingService {
      */
     public boolean canCurrentUserManageReservations() {
         return isCurrentUserAdmin();
+    }
+
+    /**
+     * Returns reservations for a specific customer email when session access is valid.
+     *
+     * Access rules:
+     * - Admin can request any customer's reservations.
+     * - Regular users can request only their own reservations.
+     *
+     * @param customerEmail customer email used during booking
+     * @return matching reservations, or empty list when input/access is invalid
+     */
+    public List<Appointment> getReservationsForCustomer(String customerEmail) {
+        String normalizedCustomerEmail = normalize(customerEmail);
+        if (normalizedCustomerEmail == null || sessionManager == null || !sessionManager.isLoggedIn()) {
+            return Collections.emptyList();
+        }
+
+        String currentEmail = normalize(sessionManager.getCurrentEmail());
+        boolean isAdmin = sessionManager.isAdmin();
+
+        if (!isAdmin && (currentEmail == null || !normalizedCustomerEmail.equalsIgnoreCase(currentEmail))) {
+            return Collections.emptyList();
+        }
+
+        List<Appointment> results = new ArrayList<>();
+        for (Appointment appointment : appointmentBookingRepository.findAll()) {
+            String bookingCustomer = normalize(appointment.getCustomerName());
+            if (bookingCustomer != null && normalizedCustomerEmail.equalsIgnoreCase(bookingCustomer)) {
+                results.add(appointment);
+            }
+        }
+        return results;
     }
 
     /**
@@ -297,6 +333,13 @@ public class AppointmentBookingService {
         return null;
     }
 
+    /**
+     * Checks whether the current logged-in session belongs to an administrator.
+     *
+     * Uses SessionManager directly as the source of truth.
+     *
+     * @return true if the logged-in user is an admin, otherwise false
+     */
     private boolean isCurrentUserAdmin() {
         if (sessionManager == null || !sessionManager.isLoggedIn()) {
             return false;
@@ -306,12 +349,13 @@ public class AppointmentBookingService {
             return true;
         }
 
-        if (adminRepository == null) {
+        if (userRepository == null) {
             return false;
         }
-        String username = normalize(sessionManager.getCurrentUsername());
-        return username != null && adminRepository.findByUsername(username)
-                .map(user -> user.getRole() == org.example.domain.UserRole.ADMIN)
+
+        String email = normalize(sessionManager.getCurrentEmail());
+        return email != null && userRepository.findByEmail(email)
+                .map(user -> user.getRole() == UserRole.ADMIN)
                 .orElse(false);
     }
 
