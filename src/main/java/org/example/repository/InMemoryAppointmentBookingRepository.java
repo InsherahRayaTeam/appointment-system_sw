@@ -85,50 +85,6 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
         return false;
     }
 
-    /**
-     * Finds all appointments for a specific customer (used for "My Appointments" flow).
-     *
-     * @param customerName the customer name
-     * @return list of appointments for this customer
-     */
-    @Override
-    public List<Appointment> findByCustomerName(String customerName) {
-        List<Appointment> result = new ArrayList<>();
-        if (customerName == null || customerName.trim().isEmpty()) {
-            return result;
-        }
-
-        String normalizedName = customerName.trim();
-        for (Appointment appointment : appointments) {
-            if (normalizedName.equals(appointment.getCustomerName())) {
-                result.add(copyOf(appointment));
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Removes an appointment from the repository.
-     *
-     * @param appointmentId appointment identifier
-     * @return true when an existing appointment was removed
-     */
-    @Override
-    public boolean remove(String appointmentId) {
-        if (appointmentId == null || appointmentId.trim().isEmpty()) {
-            return false;
-        }
-
-        String normalizedId = appointmentId.trim();
-        for (int i = 0; i < appointments.size(); i++) {
-            if (normalizedId.equals(appointments.get(i).getId())) {
-                appointments.remove(i);
-                return true;
-            }
-        }
-        return false;
-    }
-
     private Appointment copyOf(Appointment appointment) {
         return new Appointment(
                 appointment.getId(),

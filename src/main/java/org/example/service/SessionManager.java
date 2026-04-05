@@ -21,7 +21,6 @@ public class SessionManager {
     private LocalDateTime loginTime;
     private final AuthEventLogger authEventLogger;
     private final EventManager eventManager;
-    private final TimeProvider timeProvider;
 
     /**
      * Creates a session manager with mandatory logout collaborators.
@@ -30,20 +29,8 @@ public class SessionManager {
      * @param eventManager event manager used to publish logout notifications
      */
     public SessionManager(AuthEventLogger authEventLogger, EventManager eventManager) {
-        this(authEventLogger, eventManager, new SystemTimeProvider());
-    }
-
-    /**
-     * Creates a session manager with time provider injection for testability.
-     *
-     * @param authEventLogger logger used for logout audit events
-     * @param eventManager event manager used to publish logout notifications
-     * @param timeProvider provider for current time
-     */
-    public SessionManager(AuthEventLogger authEventLogger, EventManager eventManager, TimeProvider timeProvider) {
         this.authEventLogger = Objects.requireNonNull(authEventLogger, "authEventLogger cannot be null");
         this.eventManager = Objects.requireNonNull(eventManager, "eventManager cannot be null");
-        this.timeProvider = Objects.requireNonNull(timeProvider, "timeProvider cannot be null");
     }
 
     /**
@@ -73,7 +60,7 @@ public class SessionManager {
         currentUser = new AdminUser(username.trim() + "-session", username.trim(), "", role);
         currentUsername = username.trim();
         currentUserRole = role;
-        loginTime = timeProvider.now();
+        loginTime = LocalDateTime.now();
     }
 
     /**
@@ -90,7 +77,7 @@ public class SessionManager {
         currentUser = user;
         currentUsername = user.getUsername().trim();
         currentUserRole = role;
-        loginTime = timeProvider.now();
+        loginTime = LocalDateTime.now();
     }
 
     /**
