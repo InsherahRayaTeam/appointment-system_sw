@@ -4,11 +4,12 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SystemUserTest {
 
     @Test
-    void constructor_WithGeneratedId_NormalizesEmailAndAssignsFields() {
+    void constructor_WithGeneratedId_NormalizesEmailAndGeneratesTrimmedId() {
         // Arrange / Act
         SystemUser user = new SystemUser("  ADMIN@GMAIL.COM  ", "secret", UserRole.ADMIN);
 
@@ -27,17 +28,33 @@ class SystemUserTest {
         // Assert
         assertEquals("user-42", user.getId());
         assertEquals("user@example.com", user.getEmail());
+        assertEquals("pw", user.getPassword());
         assertEquals(UserRole.USER, user.getRole());
     }
 
     @Test
-    void constructor_WithNullGeneratedEmail_ThrowsException() {
+    void constructor_WithGeneratedIdAndBlankEmail_ThrowsException() {
+        // Arrange / Act / Assert
+        assertThrows(IllegalArgumentException.class, () -> new SystemUser("   ", "pw", UserRole.USER));
+    }
+
+    @Test
+    void constructor_WithGeneratedIdAndNullEmail_ThrowsException() {
         // Arrange / Act / Assert
         assertThrows(IllegalArgumentException.class, () -> new SystemUser(null, "pw", UserRole.USER));
     }
 
     @Test
-    void constructor_WithBlankId_ThrowsException() {
+    void constructor_WithExplicitIdAndNullId_ThrowsException() {
+        // Arrange / Act / Assert
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new SystemUser(null, "user@example.com", "pw", UserRole.USER)
+        );
+    }
+
+    @Test
+    void constructor_WithExplicitIdAndBlankId_ThrowsException() {
         // Arrange / Act / Assert
         assertThrows(
                 IllegalArgumentException.class,
@@ -71,6 +88,14 @@ class SystemUserTest {
                 () -> new SystemUser("id", "user@example.com", "pw", null)
         );
     }
+
+    @Test
+    void constructor_WithPasswordContainingSpaces_PreservesRawPassword() {
+        // Arrange / Act
+        SystemUser user = new SystemUser("id", "user@example.com", "  pw  ", UserRole.USER);
+
+        // Assert
+        assertEquals("  pw  ", user.getPassword());
+        assertTrue(user.getPassword().startsWith(" "));
+    }
 }
-
-

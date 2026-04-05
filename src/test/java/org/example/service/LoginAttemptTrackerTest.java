@@ -16,39 +16,41 @@ class LoginAttemptTrackerTest {
 
     @Test
     void constructor_WithInvalidArguments_ThrowsException() {
+        // Arrange / Act / Assert
         assertThrows(IllegalArgumentException.class, () -> new LoginAttemptTracker(0, Duration.ofSeconds(30)));
         assertThrows(IllegalArgumentException.class, () -> new LoginAttemptTracker(1, Duration.ZERO));
         assertThrows(IllegalArgumentException.class, () -> new LoginAttemptTracker(1, Duration.ofSeconds(-1)));
         assertThrows(IllegalArgumentException.class, () -> new LoginAttemptTracker(1, null));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new LoginAttemptTracker(1, Duration.ofSeconds(1), null)
-        );
+        assertThrows(IllegalArgumentException.class, () -> new LoginAttemptTracker(1, Duration.ofSeconds(1), null));
     }
 
     @Test
     void recordFailure_IncrementsFailedAttemptsAndReducesAttemptsRemaining() {
+        // Arrange
         MutableClock clock = new MutableClock(Instant.parse("2026-01-01T10:00:00Z"));
         LoginAttemptTracker tracker = new LoginAttemptTracker(3, Duration.ofSeconds(30), clock);
 
+        // Act
         tracker.recordFailure();
 
+        // Assert
         assertEquals(1, tracker.getFailedAttempts());
         assertEquals(2, tracker.getAttemptsRemaining());
         assertFalse(tracker.isLocked());
     }
 
     @Test
-    void recordFailure_LocksAfterConfiguredAttempts() {
+    void recordFailure_WhenThresholdReached_EnablesLockAndResetsFailureCounter() {
+        // Arrange
         MutableClock clock = new MutableClock(Instant.parse("2026-01-01T10:00:00Z"));
         LoginAttemptTracker tracker = new LoginAttemptTracker(3, Duration.ofSeconds(30), clock);
 
+        // Act
         tracker.recordFailure();
         tracker.recordFailure();
-        assertFalse(tracker.isLocked());
+        tracker.recordFailure();
 
-        tracker.recordFailure();
-
+        // Assert
         assertTrue(tracker.isLocked());
         assertEquals(0, tracker.getFailedAttempts());
         assertEquals(3, tracker.getAttemptsRemaining());
@@ -56,44 +58,65 @@ class LoginAttemptTrackerTest {
     }
 
     @Test
-    void lock_ExpiresAtBoundaryAndRemainingSecondsBecomesZero() {
+    void isLocked_AtExactBoundary_ReturnsFalseAndRemainingSecondsZero() {
+        // Arrange
         MutableClock clock = new MutableClock(Instant.parse("2026-01-01T10:00:00Z"));
         LoginAttemptTracker tracker = new LoginAttemptTracker(1, Duration.ofSeconds(10), clock);
-
         tracker.recordFailure();
-        assertTrue(tracker.isLocked());
 
+        // Act
         clock.advance(Duration.ofSeconds(10));
 
+        // Assert
         assertFalse(tracker.isLocked());
         assertEquals(0, tracker.getRemainingLockSeconds());
     }
 
     @Test
-    void recordFailure_WhileLocked_DoesNotChangeState() {
+    void getRemainingLockSeconds_WhileLocked_IsMonotonicDownward() {
+        // Arrange
         MutableClock clock = new MutableClock(Instant.parse("2026-01-01T10:00:00Z"));
         LoginAttemptTracker tracker = new LoginAttemptTracker(1, Duration.ofSeconds(10), clock);
-
-        tracker.recordFailure();
-        long remainingBefore = tracker.getRemainingLockSeconds();
-
         tracker.recordFailure();
 
-        assertTrue(tracker.isLocked());
-        assertTrue(tracker.getRemainingLockSeconds() <= remainingBefore);
-        assertEquals(0, tracker.getFailedAttempts());
+        // Act
+        long first = tracker.getRemainingLockSeconds();
+        clock.advance(Duration.ofSeconds(3));
+        long second = tracker.getRemainingLockSeconds();
+
+        // Assert
+        assertTrue(first >= second);
+        assertTrue(second > 0);
     }
 
     @Test
-    void recordSuccess_ClearsLockAndFailures() {
+    void recordFailure_WhileLocked_DoesNotChangeLockStateOrFailureCounter() {
+        // Arrange
+        MutableClock clock = new MutableClock(Instant.parse("2026-01-01T10:00:00Z"));
+        LoginAttemptTracker tracker = new LoginAttemptTracker(1, Duration.ofSeconds(10), clock);
+        tracker.recordFailure();
+        long remainingBefore = tracker.getRemainingLockSeconds();
+
+        // Act
+        tracker.recordFailure();
+
+        // Assert
+        assertTrue(tracker.isLocked());
+        assertEquals(0, tracker.getFailedAttempts());
+        assertTrue(tracker.getRemainingLockSeconds() <= remainingBefore);
+    }
+
+    @Test
+    void recordSuccess_ClearsLockAndRestoresFullAttemptBudget() {
+        // Arrange
         MutableClock clock = new MutableClock(Instant.parse("2026-01-01T10:00:00Z"));
         LoginAttemptTracker tracker = new LoginAttemptTracker(1, Duration.ofSeconds(30), clock);
-
         tracker.recordFailure();
-        assertTrue(tracker.isLocked());
 
+        // Act
         tracker.recordSuccess();
 
+        // Assert
         assertFalse(tracker.isLocked());
         assertEquals(0, tracker.getFailedAttempts());
         assertEquals(1, tracker.getAttemptsRemaining());
