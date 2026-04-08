@@ -1,4 +1,4 @@
-package org.example.service;
+package org.example.presentation.gui;
 
 import org.example.domain.Appointment;
 import org.example.domain.AppointmentSlot;
@@ -8,6 +8,7 @@ import org.example.domain.UserRole;
 import org.example.repository.AppointmentBookingRepository;
 import org.example.repository.AppointmentRepository;
 import org.example.repository.UserRepository;
+import org.example.service.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,6 +21,9 @@ import java.util.Objects;
 
 /**
  * Represents appointment booking service in the system.
+ *
+ * @author appointment-system
+ * @version 1.0
  */
 public class AppointmentBookingService {
 
@@ -51,8 +55,8 @@ public class AppointmentBookingService {
      * @param appointmentRepository repository used to read and save data
      * @param appointmentBookingRepository repository used to read and save data
      * @param sessionManager manager object used for shared app state
-     * @param userRepository user involved in this action
-     * @param eventManager manager object used for shared app state
+     * @param userRepository user repository used for authorization checks
+     * @param eventManager manager object used for observer notifications
      */
     public AppointmentBookingService(
             AppointmentRepository appointmentRepository,
@@ -144,7 +148,13 @@ public class AppointmentBookingService {
             return BookingStatus.INVALID_PARTICIPANT_COUNT;
         }
 
-        return bookAppointment(customerName, slotTime, durationMinutes, participantCount, appointmentType);
+        return bookAppointment(
+                customerName,
+                slotTime,
+                durationMinutes,
+                participantCount,
+                appointmentType
+        );
     }
 
     /**
@@ -162,7 +172,13 @@ public class AppointmentBookingService {
             int durationMinutes,
             int participantCount
     ) {
-        return bookAppointment(customerName, slotTime, durationMinutes, participantCount, AppointmentType.NORMAL);
+        return bookAppointment(
+                customerName,
+                slotTime,
+                durationMinutes,
+                participantCount,
+                AppointmentType.NORMAL
+        );
     }
 
     /**
@@ -189,17 +205,19 @@ public class AppointmentBookingService {
             return BookingStatus.BLANK_SLOT_TIME;
         }
 
-        Appointment probe = validationProbe(durationMinutes, participantCount);
+        Appointment normalizedProbe = validationProbe(durationMinutes, participantCount);
         AppointmentType normalizedType = normalizeType(appointmentType);
-        probe.setType(normalizedType);
+        normalizedProbe.setType(normalizedType);
 
-        if (!durationRule.isValid(probe)) {
+        if (!durationRule.isValid(normalizedProbe)) {
             return BookingStatus.INVALID_DURATION;
         }
-        if (!participantRule.isValid(probe)) {
+
+        if (!participantRule.isValid(normalizedProbe)) {
             return BookingStatus.INVALID_PARTICIPANT_COUNT;
         }
-        if (!typeRulesAllow(probe, normalizedType)) {
+
+        if (!typeRulesAllow(normalizedProbe, normalizedType)) {
             return BookingStatus.INVALID_APPOINTMENT_RULES;
         }
 
@@ -216,6 +234,7 @@ public class AppointmentBookingService {
                 }
 
                 slot.book();
+
                 appointmentBookingRepository.save(new Appointment(
                         normalizedCustomerName,
                         normalizedSlotTime,
@@ -224,6 +243,7 @@ public class AppointmentBookingService {
                         AppointmentStatus.CONFIRMED,
                         normalizedType
                 ));
+
                 return BookingStatus.SUCCESS;
             }
         }
@@ -248,7 +268,7 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Checks whether it can current user manage reservations.
+     * Checks whether current user can manage reservations.
      *
      * @return true when the action is valid or successful, otherwise false
      */
@@ -286,7 +306,7 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Checks whether it can cancel appointment.
+     * Cancels an appointment as admin.
      *
      * @param appointmentId unique id used to find the record
      * @return status that explains the operation result
@@ -296,7 +316,7 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Checks whether it can cancel own appointment.
+     * Cancels the current user's own appointment.
      *
      * @param appointmentId unique id used to find the record
      * @return status that explains the operation result
@@ -306,7 +326,7 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Changes appointment using new input.
+     * Modifies an appointment as admin.
      *
      * @param appointmentId unique id used to find the record
      * @param newSlotTime slot time text like 10:00
@@ -317,7 +337,7 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Changes own appointment using new input.
+     * Modifies the current user's own appointment.
      *
      * @param appointmentId unique id used to find the record
      * @param newSlotTime slot time text like 10:00
@@ -328,10 +348,10 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Checks whether it can cancel reservation internal.
+     * Cancels a reservation using the given access level.
      *
      * @param appointmentId unique id used to find the record
-     * @param access value for access
+     * @param access access mode used by the caller
      * @return status that explains the operation result
      */
     private BookingStatus cancelReservationInternal(String appointmentId, ReservationAccess access) {
@@ -339,9 +359,11 @@ public class AppointmentBookingService {
         if (appointment == null) {
             return resolveAuthorizationOrNotFoundStatus(appointmentId, access);
         }
+
         if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
             return BookingStatus.APPOINTMENT_ALREADY_CANCELLED;
         }
+
         if (!appointment.isFutureComparedTo(LocalDateTime.now())) {
             return BookingStatus.APPOINTMENT_NOT_FUTURE;
         }
@@ -364,11 +386,11 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Changes reservation internal using new input.
+     * Modifies a reservation using the given access level.
      *
      * @param appointmentId unique id used to find the record
      * @param newSlotTime slot time text like 10:00
-     * @param access value for access
+     * @param access access mode used by the caller
      * @return status that explains the operation result
      */
     private BookingStatus modifyReservationInternal(
@@ -384,9 +406,11 @@ public class AppointmentBookingService {
         if (appointment == null) {
             return resolveAuthorizationOrNotFoundStatus(appointmentId, access);
         }
+
         if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
             return BookingStatus.APPOINTMENT_ALREADY_CANCELLED;
         }
+
         if (!appointment.isFutureComparedTo(LocalDateTime.now())) {
             return BookingStatus.APPOINTMENT_NOT_FUTURE;
         }
@@ -396,6 +420,7 @@ public class AppointmentBookingService {
         if (targetSlot == null) {
             return BookingStatus.SLOT_NOT_FOUND;
         }
+
         if (!targetSlot.isAvailable()) {
             return BookingStatus.SLOT_ALREADY_BOOKED;
         }
@@ -424,16 +449,17 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Runs resolve authorized appointment for this class.
+     * Resolves an appointment only if current caller is authorized.
      *
      * @param appointmentId unique id used to find the record
-     * @param access value for access
-     * @return result produced by this method
+     * @param access access mode used by the caller
+     * @return authorized appointment or null
      */
     private Appointment resolveAuthorizedAppointment(String appointmentId, ReservationAccess access) {
         if (!isSessionActive()) {
             return null;
         }
+
         if (access == ReservationAccess.ADMIN_ANY && !isCurrentUserAdmin()) {
             return null;
         }
@@ -451,10 +477,10 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Runs resolve authorization or not found status for this class.
+     * Resolves the appropriate status when authorization or lookup fails.
      *
      * @param appointmentId unique id used to find the record
-     * @param access value for access
+     * @param access access mode used by the caller
      * @return status that explains the operation result
      */
     private BookingStatus resolveAuthorizationOrNotFoundStatus(String appointmentId, ReservationAccess access) {
@@ -482,16 +508,16 @@ public class AppointmentBookingService {
      * Finds slot by time using the given input.
      *
      * @param slotTime slot time text like 10:00
-     * @return result produced by this method
+     * @return slot if found, otherwise null
      */
     private AppointmentSlot findSlotByTime(String slotTime) {
-        String normalized = normalize(slotTime);
-        if (normalized == null) {
+        String normalizedSlotTime = normalize(slotTime);
+        if (normalizedSlotTime == null) {
             return null;
         }
 
         for (AppointmentSlot slot : appointmentRepository.findAll()) {
-            if (normalized.equals(slot.getTime())) {
+            if (normalizedSlotTime.equals(slot.getTime())) {
                 return slot;
             }
         }
@@ -499,9 +525,9 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Checks whether current user admin is true.
+     * Checks whether current logged-in user is an administrator.
      *
-     * @return true when the action is valid or successful, otherwise false
+     * @return true when the current user is admin, otherwise false
      */
     private boolean isCurrentUserAdmin() {
         if (sessionManager == null || !sessionManager.isLoggedIn()) {
@@ -523,19 +549,19 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Checks whether session active is true.
+     * Checks whether a session is currently active.
      *
-     * @return true when the action is valid or successful, otherwise false
+     * @return true when logged in, otherwise false
      */
     private boolean isSessionActive() {
         return sessionManager != null && sessionManager.isLoggedIn();
     }
 
     /**
-     * Checks whether owned by current user is true.
+     * Checks whether the given appointment belongs to the current user.
      *
-     * @param appointment value for appointment
-     * @return true when the action is valid or successful, otherwise false
+     * @param appointment appointment to validate ownership for
+     * @return true when the current user owns the appointment, otherwise false
      */
     private boolean isOwnedByCurrentUser(Appointment appointment) {
         if (appointment == null || !isSessionActive()) {
@@ -544,12 +570,11 @@ public class AppointmentBookingService {
 
         String currentEmail = normalize(sessionManager.getCurrentEmail());
         String ownerIdentity = normalize(appointment.getCustomerName());
-        return ownerIdentity != null
-                && ownerIdentity.equalsIgnoreCase(currentEmail);
+        return ownerIdentity != null && ownerIdentity.equalsIgnoreCase(currentEmail);
     }
 
     /**
-     * Sends event to listeners.
+     * Sends event notification to registered observers.
      *
      * @param message message text to show or send
      */
@@ -560,10 +585,10 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Runs normalize for this class.
+     * Normalizes text input by trimming it.
      *
-     * @param value value used by this method
-     * @return text result from this method
+     * @param value raw input
+     * @return trimmed value, or null if blank
      */
     private String normalize(String value) {
         if (value == null || value.trim().isEmpty()) {
@@ -575,13 +600,14 @@ public class AppointmentBookingService {
     /**
      * Converts text into integer.
      *
-     * @param value value used by this method
-     * @return result produced by this method
+     * @param value raw input
+     * @return parsed integer, or null when invalid
      */
     private Integer parseInteger(String value) {
         if (value == null) {
             return null;
         }
+
         try {
             return Integer.parseInt(value.trim());
         } catch (NumberFormatException ex) {
@@ -590,22 +616,22 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Runs validation probe for this class.
+     * Creates a temporary appointment used only for validation.
      *
      * @param durationMinutes appointment duration in minutes
      * @param participantCount number of people for the appointment
-     * @return result produced by this method
+     * @return temporary appointment instance
      */
     private Appointment validationProbe(int durationMinutes, int participantCount) {
         return new Appointment("validation", LocalDateTime.now(), durationMinutes, participantCount);
     }
 
     /**
-     * Runs type rules allow for this class.
+     * Applies type-specific rules for an appointment.
      *
-     * @param appointment value for appointment
-     * @param appointmentType value for appointment type
-     * @return true when the action is valid or successful, otherwise false
+     * @param appointment appointment to validate
+     * @param appointmentType type to validate against
+     * @return true when the type rule accepts the appointment, otherwise false
      */
     private boolean typeRulesAllow(Appointment appointment, AppointmentType appointmentType) {
         AppointmentType normalizedType = normalizeType(appointmentType);
@@ -619,23 +645,24 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Runs normalize type for this class.
+     * Normalizes null appointment types to NORMAL.
      *
-     * @param appointmentType value for appointment type
-     * @return result produced by this method
+     * @param appointmentType appointment type
+     * @return normalized appointment type
      */
     private AppointmentType normalizeType(AppointmentType appointmentType) {
         return appointmentType == null ? AppointmentType.NORMAL : appointmentType;
     }
 
     /**
-     * Builds type rule map from current data.
+     * Builds a rule map for all supported appointment types.
      *
-     * @param rules value for rules
-     * @return result produced by this method
+     * @param rules list of type rules
+     * @return immutable-ready enum map with one rule per type
      */
     private Map<AppointmentType, AppointmentTypeRule> buildTypeRuleMap(List<AppointmentTypeRule> rules) {
         Map<AppointmentType, AppointmentTypeRule> strategyMap = new EnumMap<>(AppointmentType.class);
+
         for (AppointmentTypeRule rule : rules) {
             strategyMap.put(rule.getSupportedType(), rule);
         }
@@ -647,6 +674,9 @@ public class AppointmentBookingService {
         return strategyMap;
     }
 
+    /**
+     * Represents reservation access scope.
+     */
     private enum ReservationAccess {
         ADMIN_ANY,
         OWN_ONLY

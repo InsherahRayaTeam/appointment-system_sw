@@ -10,15 +10,25 @@ import java.util.Objects;
  */
 public class NormalRule implements AppointmentTypeRule {
 
+    /**
+     * Returns the supported type.
+     *
+     * @return normal appointment type
+     */
     @Override
     public AppointmentType getSupportedType() {
         return AppointmentType.NORMAL;
     }
 
+    /**
+     * Checks whether the appointment satisfies the normal rule.
+     *
+     * @param appointment value for appointment
+     * @return true when the appointment is valid
+     */
     @Override
     public boolean isValid(Appointment appointment) {
         Objects.requireNonNull(appointment, "appointment cannot be null");
         return true;
     }
 }
-
