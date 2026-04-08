@@ -11,7 +11,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
 /**
- * Test-only utilities for interacting with Swing components in a safe, readable way.
+ * GuiTestSupport class.
  */
 abstract class GuiTestSupport {
 

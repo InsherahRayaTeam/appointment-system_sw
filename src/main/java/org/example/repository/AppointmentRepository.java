@@ -5,24 +5,21 @@ import org.example.domain.AppointmentSlot;
 import java.util.List;
 
 /**
- * Repository interface for accessing appointment slot data.
- *
- * @author appointment-system
- * @version 1.0
+ * Defines the operations for appointment repository.
  */
 public interface AppointmentRepository {
 
     /**
-     * Retrieves all appointment slots, regardless of availability.
+     * Finds all using the given input.
      *
-     * @return a list of all appointment slots
+     * @return collection with the requested results
      */
     List<AppointmentSlot> findAll();
 
     /**
-     * Retrieves only available (not yet booked) appointment slots.
+     * Finds available using the given input.
      *
-     * @return a list of available appointment slots
+     * @return collection with the requested results
      */
     List<AppointmentSlot> findAvailable();
 }

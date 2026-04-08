@@ -3,10 +3,7 @@ package org.example.presentation.gui;
 import org.example.service.BookingStatus;
 
 /**
- * Maps service-layer statuses to concise UI messages.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents gui message helper in the system.
  */
 public final class GuiMessageHelper {
 
@@ -15,10 +12,11 @@ public final class GuiMessageHelper {
     }
 
     /**
-     * Converts a booking status into a user-facing message.
+     * Runs to message for this class.
      *
-     * @param status service outcome status
-     * @return short UI message
+     * @param status status value used for this operation
+     *
+     * @return text result from this method
      */
     public static String toMessage(BookingStatus status) {
         if (status == null) {
@@ -36,6 +34,8 @@ public final class GuiMessageHelper {
                 return "Duration is invalid. Allowed range is 15-120 minutes.";
             case INVALID_PARTICIPANT_COUNT:
                 return "Participant count is invalid. Allowed range is 1-10.";
+            case INVALID_APPOINTMENT_RULES:
+                return "Selected appointment type does not satisfy the booking rules.";
             case SLOT_NOT_FOUND:
                 return "Selected slot was not found.";
             case SLOT_ALREADY_BOOKED:

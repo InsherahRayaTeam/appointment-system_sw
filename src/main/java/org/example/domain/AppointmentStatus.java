@@ -1,10 +1,7 @@
 package org.example.domain;
 
 /**
- * Represents the status of a booked appointment.
- *
- * @author appointment-system
- * @version 1.0
+ * Lists the possible values for appointment status.
  */
 public enum AppointmentStatus {
     CONFIRMED,

@@ -1,10 +1,7 @@
 package org.example.domain;
 
 /**
- * Represents a bookable appointment slot.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents appointment slot in the system.
  */
 public class AppointmentSlot {
 
@@ -12,9 +9,9 @@ public class AppointmentSlot {
     private boolean booked;
 
     /**
-     * Creates an appointment slot for the provided time.
+     * Creates a new appointment slot object with the given values.
      *
-     * @param time the slot time label (for example, "10:00")
+     * @param time time value used by this method
      */
     public AppointmentSlot(String time) {
         this.time = time;
@@ -22,41 +19,41 @@ public class AppointmentSlot {
     }
 
     /**
-     * Returns the time of this appointment slot.
+     * Returns the time.
      *
-     * @return the configured slot time
+     * @return text result from this method
      */
     public String getTime() {
         return time;
     }
 
     /**
-     * Indicates whether this slot has already been booked.
+     * Checks whether booked is true.
      *
-     * @return true when booked, otherwise false
+     * @return true when the action is valid or successful, otherwise false
      */
     public boolean isBooked() {
         return booked;
     }
 
     /**
-     * Indicates whether this slot can still be booked.
+     * Checks whether available is true.
      *
-     * @return true when the slot is not booked, otherwise false
+     * @return true when the action is valid or successful, otherwise false
      */
     public boolean isAvailable() {
         return !booked;
     }
 
     /**
-     * Marks this appointment slot as booked.
+     * Runs book for this class.
      */
     public void book() {
         booked = true;
     }
 
     /**
-     * Marks this appointment slot as available again.
+     * Runs release for this class.
      */
     public void release() {
         booked = false;

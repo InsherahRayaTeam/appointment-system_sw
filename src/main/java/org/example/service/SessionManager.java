@@ -7,10 +7,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
- * Tracks authenticated session state and emits logout notifications through services.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents session manager in the system.
  */
 public class SessionManager {
 
@@ -23,10 +20,10 @@ public class SessionManager {
     private final EventManager eventManager;
 
     /**
-     * Creates a session manager with mandatory logout collaborators.
+     * Creates a new session manager object with the given values.
      *
-     * @param authEventLogger logger used for logout audit events
-     * @param eventManager event manager used to publish logout notifications
+     * @param authEventLogger value for auth event logger
+     * @param eventManager manager object used for shared app state
      */
     public SessionManager(AuthEventLogger authEventLogger, EventManager eventManager) {
         this.authEventLogger = Objects.requireNonNull(
@@ -40,19 +37,19 @@ public class SessionManager {
     }
 
     /**
-     * Starts an authenticated session for an email.
+     * Runs login for this class.
      *
-     * @param email email to attach to the session
+     * @param email email address used for login or matching
      */
     public void login(String email) {
         login(email, UserRole.USER);
     }
 
     /**
-     * Starts an authenticated session for an email and role.
+     * Runs login for this class.
      *
-     * @param email email to attach to the session
-     * @param role authenticated role
+     * @param email email address used for login or matching
+     * @param role role value used for access control
      */
     public void login(String email, UserRole role) {
         if (email == null || email.trim().isEmpty()) {
@@ -72,9 +69,9 @@ public class SessionManager {
     }
 
     /**
-     * Starts an authenticated session for a user object.
+     * Runs login for this class.
      *
-     * @param user authenticated user
+     * @param user user involved in this action
      */
     public void login(SystemUser user) {
         if (user == null || user.getEmail() == null || user.getEmail().trim().isEmpty()) {
@@ -91,14 +88,14 @@ public class SessionManager {
     }
 
     /**
-     * Backward-compatible login API.
+     * Runs login for this class.
      */
     public void login() {
         login("admin@gmail.com", UserRole.ADMIN);
     }
 
     /**
-     * Clears the in-memory session state.
+     * Runs logout for this class.
      */
     public void logout() {
         loggedIn = false;
@@ -109,7 +106,7 @@ public class SessionManager {
     }
 
     /**
-     * Clears session state and publishes logout logging/notification side effects.
+     * Runs logout and notify for this class.
      */
     public void logoutAndNotify() {
         String email = currentEmail;
@@ -121,63 +118,63 @@ public class SessionManager {
     }
 
     /**
-     * Indicates whether a user is currently logged in.
+     * Checks whether logged in is true.
      *
-     * @return true when session is active, otherwise false
+     * @return true when the action is valid or successful, otherwise false
      */
     public boolean isLoggedIn() {
         return loggedIn;
     }
 
     /**
-     * Returns the email for the current session.
+     * Returns the current email.
      *
-     * @return current email or null when logged out
+     * @return text result from this method
      */
     public String getCurrentEmail() {
         return currentEmail;
     }
 
     /**
-     * Returns the current authenticated user.
+     * Returns the current user.
      *
-     * @return current user or null when logged out
+     * @return requested value from this object
      */
     public SystemUser getCurrentUser() {
         return currentUser;
     }
 
     /**
-     * Returns the timestamp when the current session started.
+     * Returns the login time.
      *
-     * @return session login timestamp, or null when logged out
+     * @return requested value from this object
      */
     public LocalDateTime getLoginTime() {
         return loginTime;
     }
 
     /**
-     * Returns the role for the current session.
+     * Returns the current user role.
      *
-     * @return authenticated role or null when logged out
+     * @return requested value from this object
      */
     public UserRole getCurrentUserRole() {
         return currentUserRole;
     }
 
     /**
-     * Indicates whether current session belongs to an administrator.
+     * Checks whether admin is true.
      *
-     * @return true for admin session
+     * @return true when the action is valid or successful, otherwise false
      */
     public boolean isAdmin() {
         return isLoggedIn() && currentUserRole == UserRole.ADMIN;
     }
 
     /**
-     * Indicates whether current session belongs to a regular user.
+     * Checks whether user is true.
      *
-     * @return true for regular user session
+     * @return true when the action is valid or successful, otherwise false
      */
     public boolean isUser() {
         return isLoggedIn() && currentUserRole == UserRole.USER;

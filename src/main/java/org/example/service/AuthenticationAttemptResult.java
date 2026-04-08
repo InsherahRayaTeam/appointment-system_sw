@@ -6,13 +6,7 @@ import org.example.domain.UserRole;
 import java.util.Objects;
 
 /**
- * Immutable service-layer result for policy-aware authentication attempts.
- *
- * Carries authentication status, lock state, remaining attempts,
- * and authenticated user details when login succeeds.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents authentication attempt result in the system.
  */
 public final class AuthenticationAttemptResult {
 
@@ -25,15 +19,15 @@ public final class AuthenticationAttemptResult {
     private final SystemUser authenticatedUser;
 
     /**
-     * Creates an immutable authentication attempt result.
+     * Creates a new authentication attempt result object with the given values.
      *
-     * @param status login status
-     * @param locked whether account is currently locked
-     * @param remainingLockSeconds remaining lock duration in seconds
-     * @param attemptsRemaining remaining attempts before lockout
-     * @param authenticatedEmail authenticated email on success
-     * @param authenticatedRole authenticated role on success
-     * @param authenticatedUser authenticated user on success
+     * @param status status value used for this operation
+     * @param locked value for locked
+     * @param remainingLockSeconds value for remaining lock seconds
+     * @param attemptsRemaining value for attempts remaining
+     * @param authenticatedEmail email address used for login or matching
+     * @param authenticatedRole role value used for access control
+     * @param authenticatedUser user involved in this action
      */
     private AuthenticationAttemptResult(
             LoginStatus status,
@@ -54,9 +48,9 @@ public final class AuthenticationAttemptResult {
     }
 
     /**
-     * Creates a success result without user details.
+     * Runs success for this class.
      *
-     * @return successful authentication result
+     * @return result produced by this method
      */
     public static AuthenticationAttemptResult success() {
         return new AuthenticationAttemptResult(
@@ -71,11 +65,12 @@ public final class AuthenticationAttemptResult {
     }
 
     /**
-     * Creates a success result with authenticated email and role.
+     * Runs success for this class.
      *
-     * @param email authenticated email
-     * @param role authenticated role
-     * @return successful authentication result
+     * @param email email address used for login or matching
+     * @param role role value used for access control
+     *
+     * @return result produced by this method
      */
     public static AuthenticationAttemptResult success(String email, UserRole role) {
         return new AuthenticationAttemptResult(
@@ -90,10 +85,11 @@ public final class AuthenticationAttemptResult {
     }
 
     /**
-     * Creates a success result with full authenticated user context.
+     * Runs success for this class.
      *
-     * @param user authenticated user
-     * @return successful authentication result
+     * @param user user involved in this action
+     *
+     * @return result produced by this method
      */
     public static AuthenticationAttemptResult success(SystemUser user) {
         if (user == null) {
@@ -112,11 +108,12 @@ public final class AuthenticationAttemptResult {
     }
 
     /**
-     * Creates a failure result with remaining attempt count.
+     * Runs failure for this class.
      *
-     * @param status failure status (must not be SUCCESS)
-     * @param attemptsRemaining remaining failed-attempt budget
-     * @return failure authentication result
+     * @param status status value used for this operation
+     * @param attemptsRemaining value for attempts remaining
+     *
+     * @return result produced by this method
      */
     public static AuthenticationAttemptResult failure(LoginStatus status, int attemptsRemaining) {
         if (status == LoginStatus.SUCCESS) {
@@ -135,10 +132,11 @@ public final class AuthenticationAttemptResult {
     }
 
     /**
-     * Creates a locked result with remaining lock duration.
+     * Runs locked for this class.
      *
-     * @param remainingLockSeconds remaining lock duration in seconds
-     * @return locked authentication result
+     * @param remainingLockSeconds value for remaining lock seconds
+     *
+     * @return result produced by this method
      */
     public static AuthenticationAttemptResult locked(long remainingLockSeconds) {
         return new AuthenticationAttemptResult(
@@ -153,72 +151,72 @@ public final class AuthenticationAttemptResult {
     }
 
     /**
-     * Returns the underlying login status.
+     * Returns the status.
      *
-     * @return login status
+     * @return status that explains the operation result
      */
     public LoginStatus getStatus() {
         return status;
     }
 
     /**
-     * Indicates whether authentication succeeded.
+     * Checks whether success is true.
      *
-     * @return true when status is SUCCESS, otherwise false
+     * @return true when the action is valid or successful, otherwise false
      */
     public boolean isSuccess() {
         return status == LoginStatus.SUCCESS;
     }
 
     /**
-     * Indicates whether the account is currently locked.
+     * Checks whether locked is true.
      *
-     * @return true when locked, otherwise false
+     * @return true when the action is valid or successful, otherwise false
      */
     public boolean isLocked() {
         return locked;
     }
 
     /**
-     * Returns remaining lock duration in seconds.
+     * Returns the remaining lock seconds.
      *
-     * @return remaining lock seconds
+     * @return numeric result from this method
      */
     public long getRemainingLockSeconds() {
         return remainingLockSeconds;
     }
 
     /**
-     * Returns remaining attempts before lockout.
+     * Returns the attempts remaining.
      *
-     * @return remaining attempt count
+     * @return numeric result from this method
      */
     public int getAttemptsRemaining() {
         return attemptsRemaining;
     }
 
     /**
-     * Returns authenticated email when login succeeds.
+     * Returns the authenticated email.
      *
-     * @return authenticated email, or null when login failed
+     * @return text result from this method
      */
     public String getAuthenticatedEmail() {
         return authenticatedEmail;
     }
 
     /**
-     * Returns authenticated user role when login succeeds.
+     * Returns the authenticated role.
      *
-     * @return authenticated role, or null when login failed
+     * @return requested value from this object
      */
     public UserRole getAuthenticatedRole() {
         return authenticatedRole;
     }
 
     /**
-     * Returns authenticated user when login succeeds.
+     * Returns the authenticated user.
      *
-     * @return authenticated user, or null when login failed
+     * @return requested value from this object
      */
     public SystemUser getAuthenticatedUser() {
         return authenticatedUser;

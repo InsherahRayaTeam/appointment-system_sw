@@ -1,25 +1,23 @@
 package org.example.repository;
 
 import org.example.domain.Appointment;
+import org.example.domain.AppointmentType;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 /**
- * In-memory repository implementation for booked appointments.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents in memory appointment booking repository in the system.
  */
 public class InMemoryAppointmentBookingRepository implements AppointmentBookingRepository {
 
     private final List<Appointment> appointments = new ArrayList<>();
 
     /**
-     * Saves a defensive copy of the provided appointment.
+     * Runs save for this class.
      *
-     * @param appointment the appointment to save
+     * @param appointment value for appointment
      */
     @Override
     public void save(Appointment appointment) {
@@ -27,9 +25,9 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
     }
 
     /**
-     * Returns defensive copies of all stored appointments.
+     * Finds all using the given input.
      *
-     * @return a list containing copies of all appointments
+     * @return collection with the requested results
      */
     @Override
     public List<Appointment> findAll() {
@@ -41,10 +39,11 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
     }
 
     /**
-     * Finds an appointment by id and returns a defensive copy.
+     * Finds by id using the given input.
      *
-     * @param appointmentId appointment identifier
-     * @return optional appointment copy
+     * @param appointmentId unique id used to find the record
+     *
+     * @return optional value if data is found
      */
     @Override
     public Optional<Appointment> findById(String appointmentId) {
@@ -63,10 +62,11 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
     }
 
     /**
-     * Updates an existing appointment by id using a defensive copy.
+     * Runs update for this class.
      *
-     * @param appointment updated appointment data
-     * @return true when update succeeded
+     * @param appointment value for appointment
+     *
+     * @return true when the action is valid or successful, otherwise false
      */
     @Override
     public boolean update(Appointment appointment) {
@@ -92,7 +92,8 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
                 appointment.getStartTime(),
                 appointment.getDurationMinutes(),
                 appointment.getParticipantCount(),
-                appointment.getStatus()
+                appointment.getStatus(),
+                appointment.getType() == null ? AppointmentType.NORMAL : appointment.getType()
         );
     }
 }

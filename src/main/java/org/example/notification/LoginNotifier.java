@@ -1,50 +1,45 @@
 package org.example.notification;
 
 /**
- * Sends user-facing notifications for login and logout events.
- * Complements AuthEventLogger (audit log) with friendly console messages.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents login notifier in the system.
  */
 public class LoginNotifier implements Observer {
 
     /**
-     * Prints a generic observer notification message.
+     * Runs update for this class.
      *
-     * @param message event message text
+     * @param message message text to show or send
      */
     @Override
     public void update(String message) {
-        System.out.println("🔔 Notification: " + message);
+        System.out.println("Notification: " + message);
     }
 
     /**
-     * Prints login success message.
+     * Sends login success to listeners.
      *
-     * @param username username that logged in
+     * @param username user involved in this action
      */
     public void notifyLoginSuccess(String username) {
-        System.out.println("[NOTIFY] Welcome, " + username + "! You are now logged in.");
+        System.out.println("Login successful.");
     }
 
     /**
-     * Prints login failure message.
+     * Sends login failure to listeners.
      *
-     * @param username username that failed login
+     * @param username user involved in this action
      */
     public void notifyLoginFailure(String username) {
         String displayUser = (username == null || username.trim().isEmpty()) ? "<blank>" : username.trim();
-        System.out.println("[NOTIFY] Failed login attempt detected for user '" + displayUser + "'.");
+        System.out.println("Failed login attempt for user '" + displayUser + "'.");
     }
 
     /**
-     * Prints logout message.
+     * Sends logout to listeners.
      *
-     * @param username username that logged out
+     * @param username user involved in this action
      */
     public void notifyLogout(String username) {
-        String displayUser = username == null ? "<unknown>" : username;
-        System.out.println("[NOTIFY] Goodbye, " + displayUser + "! You have been logged out.");
+        System.out.println("You have been logged out successfully.");
     }
 }

@@ -13,10 +13,7 @@ import java.awt.Font;
 import java.awt.FlowLayout;
 
 /**
- * Basic admin dashboard screen.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents admin dashboard frame in the system.
  */
 public class AdminDashboardFrame extends JFrame {
 
@@ -32,10 +29,10 @@ public class AdminDashboardFrame extends JFrame {
     private final AdminReservationsPanel adminReservationsPanel;
 
     /**
-     * Creates the admin dashboard frame.
+     * Creates a new admin dashboard frame object with the given values.
      *
-     * @param user authenticated admin user
-     * @param appController app controller used for navigation and service access
+     * @param user user involved in this action
+     * @param appController controller used for navigation and actions
      */
     public AdminDashboardFrame(
             SystemUser user,
@@ -55,6 +52,9 @@ public class AdminDashboardFrame extends JFrame {
         initializeUi();
     }
 
+    /**
+     * Runs initialize ui for this class.
+     */
     private void initializeUi() {
         setTitle("Admin Dashboard");
         setSize(900, 520);
@@ -90,16 +90,25 @@ public class AdminDashboardFrame extends JFrame {
         showSlotsPanel();
     }
 
+    /**
+     * Shows slots panel to the user.
+     */
     private void showSlotsPanel() {
         slotsPanel.refreshData();
         cardLayout.show(contentPanel, CARD_SLOTS);
     }
 
+    /**
+     * Shows reservations panel to the user.
+     */
     private void showReservationsPanel() {
         adminReservationsPanel.refreshData();
         cardLayout.show(contentPanel, CARD_RESERVATIONS);
     }
 
+    /**
+     * Runs on logout for this class.
+     */
     private void onLogout() {
         appController.logoutAndOpenLogin();
     }

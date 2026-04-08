@@ -6,19 +6,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Dispatches domain/application events to subscribed observers.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents event manager in the system.
  */
 public class EventManager {
 
     private final List<Observer> observers = new ArrayList<>();
 
     /**
-     * Subscribes an observer if it is non-null and not already subscribed.
+     * Runs subscribe for this class.
      *
-     * @param observer observer to subscribe
+     * @param observer value for observer
      */
     public void subscribe(Observer observer) {
         if (observer == null || observers.contains(observer)) {
@@ -28,9 +25,9 @@ public class EventManager {
     }
 
     /**
-     * Unsubscribes an observer when present.
+     * Runs unsubscribe for this class.
      *
-     * @param observer observer to remove
+     * @param observer value for observer
      */
     public void unsubscribe(Observer observer) {
         if (observer == null) {
@@ -40,9 +37,9 @@ public class EventManager {
     }
 
     /**
-     * Notifies all subscribed observers with the provided message.
+     * Sends observers to listeners.
      *
-     * @param message message payload sent to observers
+     * @param message message text to show or send
      */
     public void notifyObservers(String message) {
         if (message == null) {
@@ -59,9 +56,9 @@ public class EventManager {
     }
 
     /**
-     * Backward-compatible alias for {@link #notifyObservers(String)}.
+     * Sends all observers to listeners.
      *
-     * @param message message payload sent to observers
+     * @param message message text to show or send
      */
     public void notifyAllObservers(String message) {
         notifyObservers(message);

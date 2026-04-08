@@ -1,6 +1,6 @@
 package org.example.repository;
 
-import org.example.domain.AdminUser;
+import org.example.domain.SystemUser;
 import org.example.domain.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,7 +10,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class InMemoryAdminRepositoryTest {
+class InMemorySystemUserRepositoryTest {
 
     private InMemoryUserRepository repository;
 
@@ -20,41 +20,41 @@ public class InMemoryAdminRepositoryTest {
     }
 
     @Test
-    void findByUsername_DefaultAdminUsername_ReturnsDefaultAdmin() {
-        Optional<AdminUser> result = repository.findByUsername("admin");
+    void findByEmail_DefaultAdminEmail_ReturnsDefaultAdmin() {
+        Optional<SystemUser> result = repository.findByEmail("admin@gmail.com");
 
         assertTrue(result.isPresent());
-        assertEquals("admin", result.get().getUsername());
+        assertEquals("admin@gmail.com", result.get().getEmail());
         assertEquals("admin123", result.get().getPassword());
         assertEquals(UserRole.ADMIN, result.get().getRole());
         assertEquals("admin-1", result.get().getId());
     }
 
     @Test
-    void findByUsername_DefaultRegularUser_ReturnsSeededUser() {
-        Optional<AdminUser> result = repository.findByUsername("user");
+    void findByEmail_DefaultRegularUser_ReturnsSeededUser() {
+        Optional<SystemUser> result = repository.findByEmail("user@gmail.com");
 
         assertTrue(result.isPresent());
-        assertEquals("user", result.get().getUsername());
+        assertEquals("user@gmail.com", result.get().getEmail());
         assertEquals("user123", result.get().getPassword());
         assertEquals(UserRole.USER, result.get().getRole());
         assertEquals("user-1", result.get().getId());
     }
 
     @Test
-    void findByUsername_NonExistingUsername_ReturnsEmpty() {
-        Optional<AdminUser> result = repository.findByUsername("nonexistent");
+    void findByEmail_NonExistingEmail_ReturnsEmpty() {
+        Optional<SystemUser> result = repository.findByEmail("nonexistent@example.com");
 
         assertTrue(result.isEmpty());
     }
 
     @Test
     void save_NewUser_PersistsAndCanBeQueried() {
-        AdminUser newUser = new AdminUser("user-2", "alice", "alice123", UserRole.USER);
+        SystemUser newUser = new SystemUser("user-2", "alice@example.com", "alice123", UserRole.USER);
 
         repository.save(newUser);
 
-        Optional<AdminUser> loaded = repository.findByUsername("alice");
+        Optional<SystemUser> loaded = repository.findByEmail("alice@example.com");
         assertTrue(loaded.isPresent());
         assertEquals("user-2", loaded.get().getId());
         assertEquals(UserRole.USER, loaded.get().getRole());
@@ -62,20 +62,17 @@ public class InMemoryAdminRepositoryTest {
 
     @Test
     void findAll_DefaultSeeds_ContainsAdminAndUser() {
-        assertTrue(repository.findAll().stream().anyMatch(user -> "admin".equals(user.getUsername())));
-        assertTrue(repository.findAll().stream().anyMatch(user -> "user".equals(user.getUsername())));
+        assertTrue(repository.findAll().stream().anyMatch(user -> "admin@gmail.com".equals(user.getEmail())));
+        assertTrue(repository.findAll().stream().anyMatch(user -> "user@gmail.com".equals(user.getEmail())));
     }
 
     @Test
     void repository_LoadsDefaultAdminWhenPropertiesFileMissing() {
-        // When properties file is missing or cannot be loaded,
-        // the repository defaults to admin/user seeds with secure sample passwords
-        Optional<AdminUser> result = repository.findByUsername("admin");
+        Optional<SystemUser> result = repository.findByEmail("admin@gmail.com");
 
         assertTrue(result.isPresent());
-        AdminUser admin = result.get();
-        assertEquals("admin", admin.getUsername());
+        SystemUser admin = result.get();
+        assertEquals("admin@gmail.com", admin.getEmail());
         assertEquals("admin123", admin.getPassword());
     }
 }
-

@@ -12,10 +12,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 /**
- * In-memory user repository backed by optional properties-file seed data.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents in memory user repository in the system.
  */
 public class InMemoryUserRepository implements UserRepository {
 
@@ -23,7 +20,7 @@ public class InMemoryUserRepository implements UserRepository {
     private final Map<String, SystemUser> usersByEmail = new HashMap<>();
 
     /**
-     * Creates the repository and loads default seed data.
+     * Creates a new in memory user repository object with the given values.
      */
     public InMemoryUserRepository() {
         loadFromResource();
@@ -86,10 +83,11 @@ public class InMemoryUserRepository implements UserRepository {
     }
 
     /**
-     * Finds a user by email.
+     * Finds by email using the given input.
      *
-     * @param email email to look up
-     * @return optional user
+     * @param email email address used for login or matching
+     *
+     * @return optional value if data is found
      */
     @Override
     public Optional<SystemUser> findByEmail(String email) {
@@ -100,9 +98,9 @@ public class InMemoryUserRepository implements UserRepository {
     }
 
     /**
-     * Saves or replaces a user by email.
+     * Runs save for this class.
      *
-     * @param user user to persist
+     * @param user user involved in this action
      */
     @Override
     public void save(SystemUser user) {
@@ -113,9 +111,9 @@ public class InMemoryUserRepository implements UserRepository {
     }
 
     /**
-     * Returns all users currently stored in memory.
+     * Finds all using the given input.
      *
-     * @return list of users
+     * @return collection with the requested results
      */
     @Override
     public List<SystemUser> findAll() {

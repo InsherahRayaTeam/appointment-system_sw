@@ -5,6 +5,7 @@ import org.example.domain.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,7 +23,7 @@ class InMemoryUserRepositoryTest {
     }
 
     @Test
-    void findByEmail_DefaultAdminUser_IsPresentWithAdminRole() {
+    void findByEmail_DefaultSystemUser_IsPresentWithAdminRole() {
         // Arrange / Act
         Optional<SystemUser> result = repository.findByEmail("admin@gmail.com");
 
@@ -104,6 +105,29 @@ class InMemoryUserRepositoryTest {
     }
 
     @Test
+    void seedUser_WithBlankId_UsesDerivedIdentifier() throws Exception {
+        invokeSeedUser("   ", "New.Admin@Example.com", "secure-pass", UserRole.ADMIN);
+
+        Optional<SystemUser> loaded = repository.findByEmail("new.admin@example.com");
+
+        assertTrue(loaded.isPresent());
+        assertEquals("new.admin@example.com-id", loaded.get().getId());
+        assertEquals("secure-pass", loaded.get().getPassword());
+        assertEquals(UserRole.ADMIN, loaded.get().getRole());
+    }
+
+    @Test
+    void seedUser_WithMissingRequiredValues_IsIgnored() throws Exception {
+        invokeSeedUser("ignored-1", null, "pw", UserRole.USER);
+        invokeSeedUser("ignored-2", "   ", "pw", UserRole.USER);
+        invokeSeedUser("ignored-3", "valid@example.com", null, UserRole.USER);
+        invokeSeedUser("ignored-4", "valid@example.com", "   ", UserRole.USER);
+
+        assertTrue(repository.findByEmail("valid@example.com").isEmpty());
+        assertTrue(repository.findByEmail("ignored@example.com").isEmpty());
+    }
+
+    @Test
     void findAll_ReturnsImmutableSnapshot() {
         // Arrange
         List<SystemUser> initialSnapshot = repository.findAll();
@@ -118,5 +142,17 @@ class InMemoryUserRepositoryTest {
         List<SystemUser> secondSnapshot = repository.findAll();
 
         assertEquals(initialSnapshot.size() + 1, secondSnapshot.size());
+    }
+
+    private void invokeSeedUser(String id, String email, String password, UserRole role) throws Exception {
+        Method seedUser = InMemoryUserRepository.class.getDeclaredMethod(
+                "seedUser",
+                String.class,
+                String.class,
+                String.class,
+                UserRole.class
+        );
+        seedUser.setAccessible(true);
+        seedUser.invoke(repository, id, email, password, role);
     }
 }

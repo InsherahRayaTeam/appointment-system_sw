@@ -8,10 +8,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 /**
- * Represents an appointment aggregate used by both legacy and booking workflows.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents appointment in the system.
  */
 public class Appointment {
 
@@ -19,32 +16,33 @@ public class Appointment {
     private final LocalDateTime startTime;
     private final int duration;
     private final int participants;
+    private AppointmentType type;
 
     // Optional fields used by booking workflow compatibility.
     private final String customerName;
     private final AppointmentStatus status;
 
     /**
-     * Creates an appointment with explicit identifier and start-time fields.
+     * Creates a new appointment object with the given values.
      *
-     * @param id appointment identifier
-     * @param startTime appointment start timestamp
+     * @param id unique id used to find the record
+     * @param startTime time value used by this method
      * @param duration appointment duration in minutes
-     * @param participants participant count
+     * @param participants number of people for the appointment
      */
     public Appointment(String id, LocalDateTime startTime, int duration, int participants) {
-        this(id, null, startTime, duration, participants, null);
+        this(id, null, startTime, duration, participants, null, AppointmentType.NORMAL);
     }
 
     /**
-     * Creates a complete appointment object with all booking fields.
+     * Creates a new appointment object with the given values.
      *
-     * @param id appointment identifier
-     * @param customerName customer name
-     * @param startTime appointment start timestamp
+     * @param id unique id used to find the record
+     * @param customerName value for customer name
+     * @param startTime time value used by this method
      * @param duration appointment duration in minutes
-     * @param participants participant count
-     * @param status appointment status
+     * @param participants number of people for the appointment
+     * @param status status value used for this operation
      */
     public Appointment(
             String id,
@@ -54,135 +52,213 @@ public class Appointment {
             int participants,
             AppointmentStatus status
     ) {
+        this(id, customerName, startTime, duration, participants, status, AppointmentType.NORMAL);
+    }
+
+    /**
+     * Creates a new appointment object with the given values.
+     *
+     * @param id unique id used to find the record
+     * @param customerName value for customer name
+     * @param startTime time value used by this method
+     * @param duration appointment duration in minutes
+     * @param participants number of people for the appointment
+     * @param status status value used for this operation
+     * @param type value for type
+     */
+    public Appointment(
+            String id,
+            String customerName,
+            LocalDateTime startTime,
+            int duration,
+            int participants,
+            AppointmentStatus status,
+            AppointmentType type
+    ) {
         this.id = id;
         this.startTime = startTime;
         this.duration = duration;
         this.participants = participants;
         this.customerName = customerName;
         this.status = status;
+        this.type = type == null ? AppointmentType.NORMAL : type;
     }
 
     /**
-     * Backward-compatible constructor used by booking flow (enum status).
+     * Creates a new appointment object with the given values.
      *
-     * @param customerName customer name
-     * @param slotTime slot time text representation
+     * @param customerName value for customer name
+     * @param slotTime slot time text like 10:00
      * @param duration appointment duration in minutes
-     * @param participants participant count
-     * @param status appointment status
+     * @param participants number of people for the appointment
+     * @param status status value used for this operation
      */
     public Appointment(String customerName, String slotTime, int duration, int participants, AppointmentStatus status) {
-        this(UUID.randomUUID().toString(), customerName, parseSlotTime(slotTime), duration, participants, status);
+        this(UUID.randomUUID().toString(), customerName, parseSlotTime(slotTime), duration, participants, status, AppointmentType.NORMAL);
     }
 
     /**
-     * Backward-compatible constructor used by legacy callers (String status).
+     * Creates a new appointment object with the given values.
      *
-     * @param customerName customer name
-     * @param slotTime slot time text representation
+     * @param customerName value for customer name
+     * @param slotTime slot time text like 10:00
      * @param duration appointment duration in minutes
-     * @param participants participant count
-     * @param status status text representation
+     * @param participants number of people for the appointment
+     * @param status status value used for this operation
+     * @param type value for type
+     */
+    public Appointment(
+            String customerName,
+            String slotTime,
+            int duration,
+            int participants,
+            AppointmentStatus status,
+            AppointmentType type
+    ) {
+        this(UUID.randomUUID().toString(), customerName, parseSlotTime(slotTime), duration, participants, status, type);
+    }
+
+    /**
+     * Creates a new appointment object with the given values.
+     *
+     * @param customerName value for customer name
+     * @param slotTime slot time text like 10:00
+     * @param duration appointment duration in minutes
+     * @param participants number of people for the appointment
+     * @param status status value used for this operation
      */
     public Appointment(String customerName, String slotTime, int duration, int participants, String status) {
-        this(customerName, slotTime, duration, participants, parseStatus(status));
+        this(customerName, slotTime, duration, participants, parseStatus(status), AppointmentType.NORMAL);
     }
 
     /**
-     * Returns appointment identifier.
+     * Creates a new appointment object with the given values.
      *
-     * @return appointment identifier
+     * @param customerName value for customer name
+     * @param slotTime slot time text like 10:00
+     * @param duration appointment duration in minutes
+     * @param participants number of people for the appointment
+     * @param status status value used for this operation
+     * @param type value for type
+     */
+    public Appointment(String customerName, String slotTime, int duration, int participants, String status, AppointmentType type) {
+        this(customerName, slotTime, duration, participants, parseStatus(status), type);
+    }
+
+    /**
+     * Returns the id.
+     *
+     * @return text result from this method
      */
     public String getId() {
         return id;
     }
 
     /**
-     * Returns start timestamp.
+     * Returns the start time.
      *
-     * @return appointment start time
+     * @return requested value from this object
      */
     public LocalDateTime getStartTime() {
         return startTime;
     }
 
     /**
-     * Returns duration in minutes.
+     * Returns the duration.
      *
-     * @return duration in minutes
+     * @return numeric result from this method
      */
     public int getDuration() {
         return duration;
     }
 
     /**
-     * Returns participant count.
+     * Returns the participants.
      *
-     * @return participant count
+     * @return numeric result from this method
      */
     public int getParticipants() {
         return participants;
     }
 
     /**
-     * Returns duration in minutes.
+     * Returns the duration minutes.
      *
-     * @return duration in minutes
+     * @return numeric result from this method
      */
     public int getDurationMinutes() {
         return duration;
     }
 
     /**
-     * Returns participant count.
+     * Returns the participant count.
      *
-     * @return participant count
+     * @return numeric result from this method
      */
     public int getParticipantCount() {
         return participants;
     }
 
     /**
-     * Returns slot time in local-time string format.
+     * Returns the slot time.
      *
-     * @return slot time string or null when unavailable
+     * @return text result from this method
      */
     public String getSlotTime() {
         return startTime != null ? startTime.toLocalTime().toString() : null;
     }
 
     /**
-     * Returns customer name for booking workflow.
+     * Returns the customer name.
      *
-     * @return customer name
+     * @return text result from this method
      */
     public String getCustomerName() {
         return customerName;
     }
 
     /**
-     * Returns status enum.
+     * Returns the status.
      *
-     * @return appointment status
+     * @return status that explains the operation result
      */
     public AppointmentStatus getStatus() {
         return status;
     }
 
     /**
-     * Legacy helper that returns the status as text when needed.
+     * Returns the type.
      *
-     * @return status value as text, or null when status is unavailable
+     * @return requested value from this object
+     */
+    public AppointmentType getType() {
+        return type;
+    }
+
+    /**
+     * Updates the type.
+     *
+     * @param type value for type
+     */
+    public void setType(AppointmentType type) {
+        this.type = type == null ? AppointmentType.NORMAL : type;
+    }
+
+    /**
+     * Returns the status value.
+     *
+     * @return text result from this method
      */
     public String getStatusValue() {
         return status == null ? null : status.name();
     }
 
     /**
-     * Indicates whether the appointment starts after a given reference time.
+     * Checks whether future compared to is true.
      *
-     * @param referenceTime timestamp used for comparison
-     * @return true when start time exists and is strictly after reference time
+     * @param referenceTime time value used by this method
+     *
+     * @return true when the action is valid or successful, otherwise false
      */
     public boolean isFutureComparedTo(LocalDateTime referenceTime) {
         return startTime != null
@@ -191,21 +267,23 @@ public class Appointment {
     }
 
     /**
-     * Returns a copy with a different status.
+     * Runs with status for this class.
      *
-     * @param newStatus replacement status
-     * @return copied appointment with updated status
+     * @param newStatus status value used for this operation
+     *
+     * @return result produced by this method
      */
     public Appointment withStatus(AppointmentStatus newStatus) {
-        return new Appointment(id, customerName, startTime, duration, participants, newStatus);
+        return new Appointment(id, customerName, startTime, duration, participants, newStatus, type);
     }
 
     /**
-     * Returns a copy with a different slot time and status.
+     * Runs with slot time and status for this class.
      *
-     * @param slotTime replacement slot time text
-     * @param newStatus replacement status
-     * @return copied appointment with updated start time and status
+     * @param slotTime slot time text like 10:00
+     * @param newStatus status value used for this operation
+     *
+     * @return result produced by this method
      */
     public Appointment withSlotTimeAndStatus(String slotTime, AppointmentStatus newStatus) {
         return new Appointment(
@@ -214,7 +292,8 @@ public class Appointment {
                 parseSlotTime(slotTime),
                 duration,
                 participants,
-                newStatus
+                newStatus,
+                type
         );
     }
 

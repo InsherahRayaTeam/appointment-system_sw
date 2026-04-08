@@ -1,6 +1,7 @@
 package org.example.presentation.gui;
 
 import org.example.domain.AppointmentSlot;
+import org.example.domain.AppointmentType;
 import org.example.domain.SystemUser;
 import org.example.service.AppointmentBookingService;
 import org.example.service.AppointmentService;
@@ -19,10 +20,7 @@ import java.awt.GridLayout;
 import java.util.List;
 
 /**
- * Captures user booking input and delegates booking to the service layer.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents booking panel in the system.
  */
 public class BookingPanel extends JPanel {
 
@@ -33,16 +31,17 @@ public class BookingPanel extends JPanel {
 
     private final JTextField customerNameField;
     private final JComboBox<String> slotComboBox;
+    private final JComboBox<AppointmentType> typeComboBox;
     private final JTextField durationField;
     private final JTextField participantCountField;
 
     /**
-     * Creates a booking panel for the currently authenticated user.
+     * Creates a new booking panel object with the given values.
      *
-     * @param user current authenticated user
-     * @param appointmentService service used to load available slots
-     * @param appointmentBookingService service used to perform booking
-     * @param onBookingSuccess callback run after successful booking
+     * @param user user involved in this action
+     * @param appointmentService service used to run business logic
+     * @param appointmentBookingService service used to run business logic
+     * @param onBookingSuccess value for on booking success
      */
     public BookingPanel(
             SystemUser user,
@@ -58,7 +57,7 @@ public class BookingPanel extends JPanel {
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JPanel formPanel = new JPanel(new GridLayout(4, 2, 10, 10));
+        JPanel formPanel = new JPanel(new GridLayout(5, 2, 10, 10));
 
         formPanel.add(new JLabel("Customer (email):"));
         customerNameField = new JTextField(user.getEmail());
@@ -68,6 +67,10 @@ public class BookingPanel extends JPanel {
         formPanel.add(new JLabel("Slot:"));
         slotComboBox = new JComboBox<>();
         formPanel.add(slotComboBox);
+
+        formPanel.add(new JLabel("Appointment Type:"));
+        typeComboBox = new JComboBox<>(AppointmentType.values());
+        formPanel.add(typeComboBox);
 
         formPanel.add(new JLabel("Duration (minutes):"));
         durationField = new JTextField("60");
@@ -98,7 +101,7 @@ public class BookingPanel extends JPanel {
     }
 
     /**
-     * Reloads the available slot options.
+     * Reloads and updates data.
      */
     public final void refreshData() {
         slotComboBox.removeAllItems();
@@ -116,6 +119,9 @@ public class BookingPanel extends JPanel {
         }
     }
 
+    /**
+     * Runs on book appointment for this class.
+     */
     private void onBookAppointment() {
         if (!slotComboBox.isEnabled()) {
             JOptionPane.showMessageDialog(
@@ -131,7 +137,8 @@ public class BookingPanel extends JPanel {
                 user.getEmail(),
                 selectedSlot(),
                 durationField.getText(),
-                participantCountField.getText()
+                participantCountField.getText(),
+                selectedType()
         );
 
         if (status == BookingStatus.SUCCESS) {
@@ -156,15 +163,34 @@ public class BookingPanel extends JPanel {
         );
     }
 
+    /**
+     * Runs selected slot for this class.
+     *
+     * @return text result from this method
+     */
     private String selectedSlot() {
         Object selected = slotComboBox.getSelectedItem();
         return selected == null ? null : selected.toString();
     }
 
+    /**
+     * Runs selected type for this class.
+     *
+     * @return result produced by this method
+     */
+    private AppointmentType selectedType() {
+        Object selected = typeComboBox.getSelectedItem();
+        return selected instanceof AppointmentType ? (AppointmentType) selected : AppointmentType.NORMAL;
+    }
+
+    /**
+     * Clears inputs.
+     */
     private void clearInputs() {
         customerNameField.setText(user.getEmail());
         durationField.setText("60");
         participantCountField.setText("1");
+        typeComboBox.setSelectedItem(AppointmentType.NORMAL);
         if (slotComboBox.getItemCount() > 0) {
             slotComboBox.setSelectedIndex(0);
         }

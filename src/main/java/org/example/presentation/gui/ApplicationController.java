@@ -12,10 +12,7 @@ import javax.swing.JFrame;
 import java.util.Objects;
 
 /**
- * Controls GUI startup and navigation between application screens.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents application controller in the system.
  */
 public class ApplicationController {
 
@@ -26,6 +23,14 @@ public class ApplicationController {
 
     private JFrame currentFrame;
 
+    /**
+     * Creates a new application controller object with the given values.
+     *
+     * @param authService service used to run business logic
+     * @param appointmentService service used to run business logic
+     * @param appointmentBookingService service used to run business logic
+     * @param sessionManager manager object used for shared app state
+     */
     public ApplicationController(
             AdminAuthService authService,
             AppointmentService appointmentService,
@@ -45,24 +50,23 @@ public class ApplicationController {
     }
 
     /**
-     * Starts the GUI application by showing the login screen.
+     * Starts this part of the application.
      */
     public void start() {
         openLoginFrame();
     }
 
     /**
-     * Opens the login screen.
+     * Opens login frame in the user interface.
      */
     public void openLoginFrame() {
         switchFrame(new LoginFrame(authService, this));
     }
 
     /**
-     * Handles successful authentication by creating a user session and opening
-     * the correct dashboard for the authenticated role.
+     * Runs handle successful login for this class.
      *
-     * @param result successful authentication result
+     * @param result value for result
      */
     public void handleSuccessfulLogin(AuthenticationAttemptResult result) {
         if (result == null || !result.isSuccess() || result.getAuthenticatedUser() == null) {
@@ -74,9 +78,9 @@ public class ApplicationController {
     }
 
     /**
-     * Opens the correct dashboard based on authenticated user role.
+     * Opens dashboard in the user interface.
      *
-     * @param result authentication result
+     * @param result value for result
      */
     public void openDashboard(AuthenticationAttemptResult result) {
         if (result == null || !result.isSuccess()) {
@@ -96,7 +100,7 @@ public class ApplicationController {
     }
 
     /**
-     * Logs out the active session and returns to the login screen.
+     * Runs logout and open login for this class.
      */
     public void logoutAndOpenLogin() {
         sessionManager.logoutAndNotify();
@@ -104,23 +108,28 @@ public class ApplicationController {
     }
 
     /**
-     * Returns appointment service if needed later by panels.
+     * Returns the appointment service.
      *
-     * @return appointment service
+     * @return requested value from this object
      */
     public AppointmentService getAppointmentService() {
         return appointmentService;
     }
 
     /**
-     * Returns booking service if needed later by panels.
+     * Returns the appointment booking service.
      *
-     * @return booking service
+     * @return requested value from this object
      */
     public AppointmentBookingService getAppointmentBookingService() {
         return appointmentBookingService;
     }
 
+    /**
+     * Runs switch frame for this class.
+     *
+     * @param newFrame window frame used by the screen
+     */
     private void switchFrame(JFrame newFrame) {
         if (currentFrame != null) {
             currentFrame.dispose();
