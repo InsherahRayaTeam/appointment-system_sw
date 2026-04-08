@@ -338,6 +338,42 @@ class AppointmentBookingServiceTest {
     }
 
     @Test
+    void cancelAppointment_WhenReservationNotFound_ReturnsAppointmentNotFound() {
+        // Arrange
+        authenticateAsAdmin();
+        when(appointmentBookingRepository.findById(eq("missing-id"))).thenReturn(Optional.empty());
+
+        // Act
+        BookingStatus result = appointmentBookingService.cancelAppointment("missing-id");
+
+        // Assert
+        assertEquals(BookingStatus.APPOINTMENT_NOT_FOUND, result);
+        verify(appointmentBookingRepository, never()).update(any(Appointment.class));
+    }
+
+    @Test
+    void cancelAppointment_WhenAlreadyCancelled_ReturnsAlreadyCancelled() {
+        // Arrange
+        authenticateAsAdmin();
+        Appointment cancelled = new Appointment(
+                "apt-34",
+                "alice@example.com",
+                LocalDate.now().plusDays(1).atTime(LocalTime.parse("10:00")),
+                60,
+                2,
+                AppointmentStatus.CANCELLED
+        );
+        when(appointmentBookingRepository.findById(eq("apt-34"))).thenReturn(Optional.of(cancelled));
+
+        // Act
+        BookingStatus result = appointmentBookingService.cancelAppointment("apt-34");
+
+        // Assert
+        assertEquals(BookingStatus.APPOINTMENT_ALREADY_CANCELLED, result);
+        verify(appointmentBookingRepository, never()).update(any(Appointment.class));
+    }
+
+    @Test
     void cancelAppointment_WhenUpdateFails_RestoresReleasedSlot() {
         // Arrange
         authenticateAsAdmin();
@@ -501,6 +537,61 @@ class AppointmentBookingServiceTest {
         verify(appointmentBookingRepository, never()).update(any());
         assertFalse(oldSlot.isAvailable());
         assertFalse(targetSlot.isAvailable());
+    }
+
+    @Test
+    void modifyAppointment_WhenReservationNotFound_ReturnsAppointmentNotFound() {
+        // Arrange
+        authenticateAsAdmin();
+        when(appointmentBookingRepository.findById(eq("apt-404"))).thenReturn(Optional.empty());
+
+        // Act
+        BookingStatus result = appointmentBookingService.modifyAppointment("apt-404", "11:00");
+
+        // Assert
+        assertEquals(BookingStatus.APPOINTMENT_NOT_FOUND, result);
+        verify(appointmentBookingRepository, never()).update(any(Appointment.class));
+    }
+
+    @Test
+    void modifyAppointment_WhenAlreadyCancelled_ReturnsAlreadyCancelled() {
+        // Arrange
+        authenticateAsAdmin();
+        Appointment cancelled = new Appointment(
+                "apt-45",
+                "alice@example.com",
+                LocalDate.now().plusDays(1).atTime(LocalTime.parse("10:00")),
+                60,
+                2,
+                AppointmentStatus.CANCELLED
+        );
+        when(appointmentBookingRepository.findById(eq("apt-45"))).thenReturn(Optional.of(cancelled));
+
+        // Act
+        BookingStatus result = appointmentBookingService.modifyAppointment("apt-45", "11:00");
+
+        // Assert
+        assertEquals(BookingStatus.APPOINTMENT_ALREADY_CANCELLED, result);
+        verify(appointmentBookingRepository, never()).update(any(Appointment.class));
+    }
+
+    @Test
+    void modifyAppointment_TargetSlotNotFound_ReturnsSlotNotFound() {
+        // Arrange
+        authenticateAsAdmin();
+        AppointmentSlot oldSlot = new AppointmentSlot("10:00");
+        oldSlot.book();
+
+        when(appointmentBookingRepository.findById(eq("apt-46")))
+                .thenReturn(Optional.of(futureReservation("apt-46", "10:00", "alice@example.com")));
+        when(appointmentRepository.findAll()).thenReturn(List.of(oldSlot));
+
+        // Act
+        BookingStatus result = appointmentBookingService.modifyAppointment("apt-46", "11:00");
+
+        // Assert
+        assertEquals(BookingStatus.SLOT_NOT_FOUND, result);
+        verify(appointmentBookingRepository, never()).update(any(Appointment.class));
     }
 
     @Test
@@ -708,6 +799,97 @@ class AppointmentBookingServiceTest {
         );
 
         assertEquals(BookingStatus.INVALID_APPOINTMENT_RULES, result);
+    }
+
+    @Test
+    void bookAppointment_FollowUpTypeAtLimits_ReturnsSuccess() {
+        // Arrange
+        AppointmentSlot slot = new AppointmentSlot("10:00");
+        when(appointmentRepository.findAll()).thenReturn(List.of(slot));
+
+        // Act
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "alice@example.com",
+                "10:00",
+                60,
+                2,
+                AppointmentType.FOLLOW_UP
+        );
+
+        // Assert
+        assertEquals(BookingStatus.SUCCESS, result);
+    }
+
+    @Test
+    void bookAppointment_FollowUpTypeWithDurationAboveLimit_ReturnsInvalidAppointmentRules() {
+        // Arrange / Act
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "alice@example.com",
+                "10:00",
+                61,
+                2,
+                AppointmentType.FOLLOW_UP
+        );
+
+        // Assert
+        assertEquals(BookingStatus.INVALID_APPOINTMENT_RULES, result);
+        verifyNoInteractions(appointmentRepository);
+        verifyNoInteractions(appointmentBookingRepository);
+    }
+
+    @Test
+    void bookAppointment_UrgentTypeAtDurationLimit_ReturnsSuccess() {
+        // Arrange
+        AppointmentSlot slot = new AppointmentSlot("10:00");
+        when(appointmentRepository.findAll()).thenReturn(List.of(slot));
+
+        // Act
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "alice@example.com",
+                "10:00",
+                30,
+                1,
+                AppointmentType.URGENT
+        );
+
+        // Assert
+        assertEquals(BookingStatus.SUCCESS, result);
+    }
+
+    @Test
+    void bookAppointment_GroupTypeWithTooFewParticipants_ReturnsInvalidAppointmentRules() {
+        // Arrange / Act
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "alice@example.com",
+                "10:00",
+                60,
+                2,
+                AppointmentType.GROUP
+        );
+
+        // Assert
+        assertEquals(BookingStatus.INVALID_APPOINTMENT_RULES, result);
+        verifyNoInteractions(appointmentRepository);
+        verifyNoInteractions(appointmentBookingRepository);
+    }
+
+    @Test
+    void bookAppointment_NormalTypeExplicit_ReturnsSuccess() {
+        // Arrange
+        AppointmentSlot slot = new AppointmentSlot("10:00");
+        when(appointmentRepository.findAll()).thenReturn(List.of(slot));
+
+        // Act
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "alice@example.com",
+                "10:00",
+                60,
+                1,
+                AppointmentType.NORMAL
+        );
+
+        // Assert
+        assertEquals(BookingStatus.SUCCESS, result);
     }
 
     private void authenticateAsAdmin() {

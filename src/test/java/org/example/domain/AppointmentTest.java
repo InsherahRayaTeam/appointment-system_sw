@@ -83,5 +83,37 @@ public class AppointmentTest {
         assertEquals(AppointmentStatus.CANCELLED, updated.getStatus());
         assertEquals("apt-status", updated.getId());
     }
+
+    @Test
+    void constructor_WithStringStatus_ParsesStatusIgnoringCase() {
+        Appointment appointment = new Appointment("Alice", "10:00", 60, 1, "confirmed");
+
+        assertEquals(AppointmentStatus.CONFIRMED, appointment.getStatus());
+    }
+
+    @Test
+    void constructor_WithInvalidStringStatus_StoresNullStatus() {
+        Appointment appointment = new Appointment("Alice", "10:00", 60, 1, "not_a_status");
+
+        assertNull(appointment.getStatus());
+    }
+
+    @Test
+    void withSlotTimeAndStatus_ShouldReturnCopyWithUpdatedTimeAndStatus() {
+        Appointment original = new Appointment(
+                "apt-modify",
+                "Alice",
+                LocalDateTime.now().plusHours(2),
+                60,
+                2,
+                AppointmentStatus.CONFIRMED
+        );
+
+        Appointment modified = original.withSlotTimeAndStatus("11:00", AppointmentStatus.MODIFIED);
+
+        assertEquals(AppointmentStatus.MODIFIED, modified.getStatus());
+        assertEquals("11:00", modified.getSlotTime());
+        assertEquals(original.getId(), modified.getId());
+    }
 }
 
