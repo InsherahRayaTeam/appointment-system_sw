@@ -94,7 +94,15 @@ public class Appointment {
      * @param status status value used for this operation
      */
     public Appointment(String customerName, String slotTime, int duration, int participants, AppointmentStatus status) {
-        this(UUID.randomUUID().toString(), customerName, parseSlotTime(slotTime), duration, participants, status, AppointmentType.NORMAL);
+        this(
+                UUID.randomUUID().toString(),
+                customerName,
+                parseSlotTime(slotTime),
+                duration,
+                participants,
+                status,
+                AppointmentType.NORMAL
+        );
     }
 
     /**
@@ -141,7 +149,14 @@ public class Appointment {
      * @param status status value used for this operation
      * @param type value for type
      */
-    public Appointment(String customerName, String slotTime, int duration, int participants, String status, AppointmentType type) {
+    public Appointment(
+            String customerName,
+            String slotTime,
+            int duration,
+            int participants,
+            String status,
+            AppointmentType type
+    ) {
         this(customerName, slotTime, duration, participants, parseStatus(status), type);
     }
 
@@ -257,7 +272,6 @@ public class Appointment {
      * Checks whether future compared to is true.
      *
      * @param referenceTime time value used by this method
-     *
      * @return true when the action is valid or successful, otherwise false
      */
     public boolean isFutureComparedTo(LocalDateTime referenceTime) {
@@ -270,7 +284,6 @@ public class Appointment {
      * Runs with status for this class.
      *
      * @param newStatus status value used for this operation
-     *
      * @return result produced by this method
      */
     public Appointment withStatus(AppointmentStatus newStatus) {
@@ -282,7 +295,6 @@ public class Appointment {
      *
      * @param slotTime slot time text like 10:00
      * @param newStatus status value used for this operation
-     *
      * @return result produced by this method
      */
     public Appointment withSlotTimeAndStatus(String slotTime, AppointmentStatus newStatus) {
@@ -297,27 +309,43 @@ public class Appointment {
         );
     }
 
+    /**
+     * Parses slot time into a future local date-time.
+     *
+     * @param slotTime slot time text like 10:00
+     * @return parsed future date-time, or null if invalid
+     */
     private static LocalDateTime parseSlotTime(String slotTime) {
         if (slotTime == null || slotTime.trim().isEmpty()) {
             return null;
         }
+
         try {
             LocalTime parsedTime = LocalTime.parse(slotTime.trim());
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime candidate = LocalDate.now().atTime(parsedTime);
+
             if (!candidate.isAfter(now)) {
                 candidate = candidate.plusDays(1);
             }
+
             return candidate;
         } catch (DateTimeParseException ex) {
             return null;
         }
     }
 
+    /**
+     * Parses a text status into appointment status enum.
+     *
+     * @param status raw status text
+     * @return parsed status, or null if invalid
+     */
     private static AppointmentStatus parseStatus(String status) {
         if (status == null || status.trim().isEmpty()) {
             return null;
         }
+
         try {
             return AppointmentStatus.valueOf(status.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {

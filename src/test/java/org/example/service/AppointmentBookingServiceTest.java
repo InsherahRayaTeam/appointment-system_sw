@@ -599,6 +599,117 @@ class AppointmentBookingServiceTest {
         assertEquals(BookingStatus.UNAUTHORIZED, result);
     }
 
+    @Test
+    void bookAppointment_AssessmentTypeWithShortDuration_ReturnsInvalidAppointmentRules() {
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "alice@example.com",
+                "10:00",
+                30, // أقل من المطلوب
+                1,
+                AppointmentType.ASSESSMENT
+        );
+
+        assertEquals(BookingStatus.INVALID_APPOINTMENT_RULES, result);
+    }
+    @Test
+    void bookAppointment_AssessmentTypeValid_ReturnsSuccess() {
+        AppointmentSlot slot = new AppointmentSlot("10:00");
+        when(appointmentRepository.findAll()).thenReturn(List.of(slot));
+
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "alice@example.com",
+                "10:00",
+                90,
+                1,
+                AppointmentType.ASSESSMENT
+        );
+
+        assertEquals(BookingStatus.SUCCESS, result);
+    }
+
+    @Test
+    void bookAppointment_IndividualTypeWithMultipleParticipants_ReturnsInvalidAppointmentRules() {
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "alice@example.com",
+                "10:00",
+                60,
+                2, // غلط
+                AppointmentType.INDIVIDUAL
+        );
+
+        assertEquals(BookingStatus.INVALID_APPOINTMENT_RULES, result);
+    }
+
+    @Test
+    void bookAppointment_IndividualTypeValid_ReturnsSuccess() {
+        AppointmentSlot slot = new AppointmentSlot("10:00");
+        when(appointmentRepository.findAll()).thenReturn(List.of(slot));
+
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "alice@example.com",
+                "10:00",
+                60,
+                1,
+                AppointmentType.INDIVIDUAL
+        );
+
+        assertEquals(BookingStatus.SUCCESS, result);
+    }
+    @Test
+    void bookAppointment_VirtualTypeValid_ReturnsSuccess() {
+        AppointmentSlot slot = new AppointmentSlot("10:00");
+        when(appointmentRepository.findAll()).thenReturn(List.of(slot));
+
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "alice@example.com",
+                "10:00",
+                60,
+                2,
+                AppointmentType.VIRTUAL
+        );
+
+        assertEquals(BookingStatus.SUCCESS, result);
+    }
+    @Test
+    void bookAppointment_VirtualTypeTooManyParticipants_ReturnsInvalidAppointmentRules() {
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "alice@example.com",
+                "10:00",
+                60,
+                5,
+                AppointmentType.VIRTUAL
+        );
+
+        assertEquals(BookingStatus.INVALID_APPOINTMENT_RULES, result);
+    }
+    @Test
+    void bookAppointment_InPersonTypeValid_ReturnsSuccess() {
+        AppointmentSlot slot = new AppointmentSlot("10:00");
+        when(appointmentRepository.findAll()).thenReturn(List.of(slot));
+
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "alice@example.com",
+                "10:00",
+                60,
+                1,
+                AppointmentType.IN_PERSON
+        );
+
+        assertEquals(BookingStatus.SUCCESS, result);
+    }
+    @Test
+    void bookAppointment_InPersonTypeWithZeroParticipants_ReturnsInvalidAppointmentRules() {
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "alice@example.com",
+                "10:00",
+                60,
+                0,
+                AppointmentType.IN_PERSON
+        );
+
+        assertEquals(BookingStatus.INVALID_APPOINTMENT_RULES, result);
+    }
+
     private void authenticateAsAdmin() {
         when(sessionManager.isLoggedIn()).thenReturn(true);
         when(sessionManager.isAdmin()).thenReturn(true);
@@ -630,4 +741,5 @@ class AppointmentBookingServiceTest {
                 AppointmentStatus.CONFIRMED
         );
     }
+
 }
