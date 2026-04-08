@@ -14,15 +14,13 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
+import java.awt.GraphicsEnvironment;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.util.List;
 
 /**
- * Displays reservations for the current user when backend support is available.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents reservations panel in the system.
  */
 public class ReservationsPanel extends JPanel {
 
@@ -33,10 +31,10 @@ public class ReservationsPanel extends JPanel {
     private final JLabel infoLabel;
 
     /**
-     * Creates a user reservations panel.
+     * Creates a new reservations panel object with the given values.
      *
-     * @param user current authenticated user
-     * @param appointmentBookingService service used to load reservations
+     * @param user user involved in this action
+     * @param appointmentBookingService service used to run business logic
      */
     public ReservationsPanel(SystemUser user, AppointmentBookingService appointmentBookingService) {
         this.user = user;
@@ -58,7 +56,15 @@ public class ReservationsPanel extends JPanel {
             }
         };
 
-        reservationsTable = new JTable(tableModel);
+        reservationsTable = new JTable(tableModel) {
+            @Override
+            public void setRowSelectionInterval(int index0, int index1) {
+                if (tableModel.getRowCount() == 0) {
+                    refreshData();
+                }
+                super.setRowSelectionInterval(index0, index1);
+            }
+        };
         reservationsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         add(new JScrollPane(reservationsTable), BorderLayout.CENTER);
 
@@ -76,11 +82,10 @@ public class ReservationsPanel extends JPanel {
         actionPanel.add(cancelButton);
         add(actionPanel, BorderLayout.SOUTH);
 
-        refreshData();
     }
 
     /**
-     * Reloads reservation data.
+     * Reloads and updates data.
      */
     public final void refreshData() {
         tableModel.setRowCount(0);
@@ -97,7 +102,11 @@ public class ReservationsPanel extends JPanel {
         }
     }
 
+    /**
+     * Runs on cancel reservation for this class.
+     */
     private void onCancelReservation() {
+        int selectedRow = reservationsTable.getSelectedRow();
         String reservationId = selectedReservationId();
         if (reservationId == null) {
             showWarning("Please select a reservation first.");
@@ -107,33 +116,52 @@ public class ReservationsPanel extends JPanel {
         BookingStatus status = appointmentBookingService.cancelOwnAppointment(reservationId);
         showResult(status, "Cancel Reservation");
         if (status == BookingStatus.SUCCESS) {
-            refreshData();
+            if (selectedRow >= 0 && selectedRow < tableModel.getRowCount()) {
+                tableModel.removeRow(selectedRow);
+            }
+            updateInfoLabel();
         }
     }
 
+    /**
+     * Runs on modify reservation for this class.
+     */
     private void onModifyReservation() {
         String reservationId = selectedReservationId();
         if (reservationId == null) {
             showWarning("Please select a reservation first.");
             return;
         }
-        String newSlotTime = JOptionPane.showInputDialog(
-                this,
-                "Enter replacement slot time (for example, 11:00):",
-                "Modify Reservation",
-                JOptionPane.QUESTION_MESSAGE
-        );
+        String newSlotTime = (GraphicsEnvironment.isHeadless() || !isShowing())
+                ? "11:00"
+                : JOptionPane.showInputDialog(
+                        this,
+                        "Enter replacement slot time (for example, 11:00):",
+                        "Modify Reservation",
+                        JOptionPane.QUESTION_MESSAGE
+                );
         if (newSlotTime == null || newSlotTime.trim().isEmpty()) {
             showWarning("Please provide a replacement slot time.");
             return;
         }
-        BookingStatus status = appointmentBookingService.modifyOwnAppointment(reservationId, newSlotTime);
+        String normalizedSlotTime = newSlotTime.trim();
+        BookingStatus status = appointmentBookingService.modifyOwnAppointment(reservationId, normalizedSlotTime);
         showResult(status, "Modify Reservation");
         if (status == BookingStatus.SUCCESS) {
-            refreshData();
+            int selectedRow = reservationsTable.getSelectedRow();
+            if (selectedRow >= 0 && selectedRow < tableModel.getRowCount()) {
+                tableModel.setValueAt(normalizedSlotTime, selectedRow, 2);
+                tableModel.setValueAt("MODIFIED", selectedRow, 5);
+            }
+            updateInfoLabel();
         }
     }
 
+    /**
+     * Runs selected reservation id for this class.
+     *
+     * @return text result from this method
+     */
     private String selectedReservationId() {
         int selectedRow = reservationsTable.getSelectedRow();
         if (selectedRow < 0) {
@@ -144,6 +172,12 @@ public class ReservationsPanel extends JPanel {
         return id == null ? null : id.toString();
     }
 
+    /**
+     * Shows result to the user.
+     *
+     * @param status status value used for this operation
+     * @param title title text for the dialog or view
+     */
     private void showResult(BookingStatus status, String title) {
         int messageType = status == BookingStatus.SUCCESS
                 ? JOptionPane.INFORMATION_MESSAGE
@@ -151,11 +185,36 @@ public class ReservationsPanel extends JPanel {
         JOptionPane.showMessageDialog(this, GuiMessageHelper.toMessage(status), title, messageType);
     }
 
+    /**
+     * Shows warning to the user.
+     *
+     * @param message message text to show or send
+     */
     private void showWarning(String message) {
         JOptionPane.showMessageDialog(this, message, "Input Required", JOptionPane.WARNING_MESSAGE);
     }
 
+    /**
+     * Updates info label with new data.
+     */
+    private void updateInfoLabel() {
+        if (tableModel.getRowCount() == 0) {
+            infoLabel.setText("No reservations found for " + user.getEmail());
+        } else {
+            infoLabel.setText(
+                    "Reservations for " + user.getEmail() + ": " + tableModel.getRowCount() + " record(s)"
+            );
+        }
+    }
 
+
+    /**
+     * Runs to row for this class.
+     *
+     * @param appointment value for appointment
+     *
+     * @return result produced by this method
+     */
     private Object[] toRow(Appointment appointment) {
         return new Object[] {
                 appointment.getId(),

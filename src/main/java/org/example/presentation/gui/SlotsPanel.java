@@ -16,10 +16,7 @@ import java.awt.FlowLayout;
 import java.util.List;
 
 /**
- * Displays currently available appointment slots.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents slots panel in the system.
  */
 public class SlotsPanel extends JPanel {
 
@@ -27,9 +24,9 @@ public class SlotsPanel extends JPanel {
     private final DefaultTableModel tableModel;
 
     /**
-     * Creates a panel that lists available appointment slots.
+     * Creates a new slots panel object with the given values.
      *
-     * @param appointmentService service used to load slot data
+     * @param appointmentService service used to run business logic
      */
     public SlotsPanel(AppointmentService appointmentService) {
         this.appointmentService = appointmentService;
@@ -61,7 +58,7 @@ public class SlotsPanel extends JPanel {
     }
 
     /**
-     * Reloads slot data from the service layer.
+     * Reloads and updates data.
      */
     public final void refreshData() {
         tableModel.setRowCount(0);

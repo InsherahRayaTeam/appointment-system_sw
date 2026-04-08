@@ -102,9 +102,6 @@ class LoginFrameTest extends GuiTestSupport {
 
     @Test
     void testLoginButton_withBlankInputs_showsValidationError() {
-        // Arrange
-        when(authService.authenticateWithPolicy(any(Credentials.class)))
-                .thenThrow(new IllegalArgumentException("Email and password are required."));
 
         JButton loginButton = getPrivateField(frame, "loginButton", JButton.class);
         JLabel statusLabel = getPrivateField(frame, "statusLabel", JLabel.class);

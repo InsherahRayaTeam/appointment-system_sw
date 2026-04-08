@@ -6,17 +6,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * In-memory appointment-slot repository seeded with demo times.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents in memory appointment repository in the system.
  */
 public class InMemoryAppointmentRepository implements AppointmentRepository {
 
     private final List<AppointmentSlot> slots = new ArrayList<>();
 
     /**
-     * Creates repository with predefined slot data.
+     * Creates a new in memory appointment repository object with the given values.
      */
     public InMemoryAppointmentRepository() {
         slots.add(new AppointmentSlot("10:00"));
@@ -25,9 +22,9 @@ public class InMemoryAppointmentRepository implements AppointmentRepository {
     }
 
     /**
-     * Returns all slots.
+     * Finds all using the given input.
      *
-     * @return list of all slots
+     * @return collection with the requested results
      */
     @Override
     public List<AppointmentSlot> findAll() {
@@ -35,9 +32,9 @@ public class InMemoryAppointmentRepository implements AppointmentRepository {
     }
 
     /**
-     * Returns only available slots.
+     * Finds available using the given input.
      *
-     * @return list of available slots
+     * @return collection with the requested results
      */
     @Override
     public List<AppointmentSlot> findAvailable() {

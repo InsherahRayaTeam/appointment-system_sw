@@ -3,20 +3,18 @@ package org.example.service;
 import org.example.domain.Appointment;
 
 /**
- * Strategy implementation that enforces the maximum appointment duration.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents duration rule in the system.
  */
 public class DurationRule implements BookingRuleStrategy {
 
     private final int maxDuration = 120;
 
     /**
-     * Checks whether appointment duration does not exceed the configured maximum.
+     * Checks whether valid is true.
      *
-     * @param appointment appointment candidate to validate
-     * @return true when duration is within limit, otherwise false
+     * @param appointment value for appointment
+     *
+     * @return true when the action is valid or successful, otherwise false
      */
     @Override
     public boolean isValid(Appointment appointment) {

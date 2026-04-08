@@ -9,12 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Authenticates system users and applies login-attempt policy.
- *
- * Supports both ADMIN and USER accounts using email-based login.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents admin auth service in the system.
  */
 public class AdminAuthService {
 
@@ -23,12 +18,11 @@ public class AdminAuthService {
     private final LoginAttemptTracker loginAttemptTracker;
 
     /**
-     * Creates an authentication service with repository, event manager,
-     * and login-attempt tracking dependencies.
+     * Creates a new admin auth service object with the given values.
      *
-     * @param userRepository repository used to resolve user credentials
-     * @param eventManager event dispatcher used for login notifications
-     * @param loginAttemptTracker tracker used for lockout policy
+     * @param userRepository user involved in this action
+     * @param eventManager manager object used for shared app state
+     * @param loginAttemptTracker value for login attempt tracker
      */
     public AdminAuthService(
             UserRepository userRepository,
@@ -50,21 +44,23 @@ public class AdminAuthService {
     }
 
     /**
-     * Backward-compatible boolean authentication API.
+     * Runs authenticate for this class.
      *
-     * @param email raw email input
-     * @param password raw password input
-     * @return true when credentials are valid, otherwise false
+     * @param email email address used for login or matching
+     * @param password password text entered by the user
+     *
+     * @return true when the action is valid or successful, otherwise false
      */
     public boolean authenticate(String email, String password) {
         return authenticateWithStatus(new Credentials(email, password)) == LoginStatus.SUCCESS;
     }
 
     /**
-     * Authenticates credentials and returns login status.
+     * Runs authenticate with status for this class.
      *
-     * @param credentials credential payload
-     * @return authentication status for the provided credentials
+     * @param credentials value for credentials
+     *
+     * @return status that explains the operation result
      */
     public LoginStatus authenticateWithStatus(Credentials credentials) {
         if (credentials == null) {
@@ -90,21 +86,23 @@ public class AdminAuthService {
     }
 
     /**
-     * Convenience overload for raw email/password input.
+     * Runs authenticate with status for this class.
      *
-     * @param email raw email input
-     * @param password raw password input
-     * @return authentication status
+     * @param email email address used for login or matching
+     * @param password password text entered by the user
+     *
+     * @return status that explains the operation result
      */
     public LoginStatus authenticateWithStatus(String email, String password) {
         return authenticateWithStatus(new Credentials(email, password));
     }
 
     /**
-     * Authenticates and applies lockout policy in one operation.
+     * Runs authenticate with policy for this class.
      *
-     * @param credentials credential payload
-     * @return policy-aware authentication result
+     * @param credentials value for credentials
+     *
+     * @return result produced by this method
      */
     public AuthenticationAttemptResult authenticateWithPolicy(Credentials credentials) {
         if (loginAttemptTracker.isLocked()) {
@@ -137,23 +135,28 @@ public class AdminAuthService {
     }
 
     /**
-     * Indicates whether authentication is currently locked.
+     * Checks whether locked is true.
      *
-     * @return true when lockout is active, otherwise false
+     * @return true when the action is valid or successful, otherwise false
      */
     public boolean isLocked() {
         return loginAttemptTracker.isLocked();
     }
 
     /**
-     * Returns remaining lockout duration in seconds.
+     * Returns the remaining lock seconds.
      *
-     * @return remaining lock duration in seconds
+     * @return numeric result from this method
      */
     public long getRemainingLockSeconds() {
         return loginAttemptTracker.getRemainingLockSeconds();
     }
 
+    /**
+     * Sends successful login to listeners.
+     *
+     * @param user user involved in this action
+     */
     private void notifySuccessfulLogin(SystemUser user) {
         if (user.getRole() == UserRole.ADMIN) {
             eventManager.notifyObservers("Admin logged in successfully");
@@ -162,10 +165,24 @@ public class AdminAuthService {
         }
     }
 
+    /**
+     * Checks whether blank is true.
+     *
+     * @param value value used by this method
+     *
+     * @return true when the action is valid or successful, otherwise false
+     */
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
     }
 
+    /**
+     * Runs resolve authenticated user for this class.
+     *
+     * @param credentials value for credentials
+     *
+     * @return optional value if data is found
+     */
     private Optional<SystemUser> resolveAuthenticatedUser(Credentials credentials) {
         if (credentials == null
                 || isBlank(credentials.getEmail())

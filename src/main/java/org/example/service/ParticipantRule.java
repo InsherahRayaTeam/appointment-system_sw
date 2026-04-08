@@ -3,20 +3,18 @@ package org.example.service;
 import org.example.domain.Appointment;
 
 /**
- * Strategy implementation that enforces the maximum participant count.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents participant rule in the system.
  */
 public class ParticipantRule implements BookingRuleStrategy {
 
     private final int maxParticipants = 5;
 
     /**
-     * Checks whether appointment participants do not exceed the configured maximum.
+     * Checks whether valid is true.
      *
-     * @param appointment appointment candidate to validate
-     * @return true when participant count is within limit, otherwise false
+     * @param appointment value for appointment
+     *
+     * @return true when the action is valid or successful, otherwise false
      */
     @Override
     public boolean isValid(Appointment appointment) {

@@ -5,11 +5,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 /**
- * Tracks failed login attempts and enforces temporary account lockout.
- * After a maximum number of consecutive failures, the account is locked for a specified duration.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents login attempt tracker in the system.
  */
 public class LoginAttemptTracker {
 
@@ -21,23 +17,21 @@ public class LoginAttemptTracker {
     private Instant lockedUntil;
 
     /**
-     * Creates a login attempt tracker with the specified limits.
+     * Creates a new login attempt tracker object with the given values.
      *
-     * @param maxFailedAttempts the maximum number of failed attempts before lockout
-     * @param lockDuration the duration to lock the account after exceeding max attempts
-     * @throws IllegalArgumentException if maxFailedAttempts is less than 1 or lockDuration is not positive
+     * @param maxFailedAttempts value for max failed attempts
+     * @param lockDuration appointment duration in minutes
      */
     public LoginAttemptTracker(int maxFailedAttempts, Duration lockDuration) {
         this(maxFailedAttempts, lockDuration, Clock.systemUTC());
     }
 
     /**
-     * Creates a login attempt tracker with an explicit clock.
-     * Useful for testing time-based behavior.
+     * Creates a new login attempt tracker object with the given values.
      *
-     * @param maxFailedAttempts the maximum number of failed attempts before lockout
-     * @param lockDuration the duration to lock the account after exceeding max attempts
-     * @param clock the clock used for time calculations
+     * @param maxFailedAttempts value for max failed attempts
+     * @param lockDuration appointment duration in minutes
+     * @param clock value for clock
      */
     LoginAttemptTracker(int maxFailedAttempts, Duration lockDuration, Clock clock) {
         if (maxFailedAttempts < 1) {
@@ -56,18 +50,18 @@ public class LoginAttemptTracker {
     }
 
     /**
-     * Checks if the account is currently locked.
+     * Checks whether locked is true.
      *
-     * @return true if locked and lock duration has not expired, false otherwise
+     * @return true when the action is valid or successful, otherwise false
      */
     public boolean isLocked() {
         return lockedUntil != null && Instant.now(clock).isBefore(lockedUntil);
     }
 
     /**
-     * Returns the remaining seconds until the lock expires.
+     * Returns the remaining lock seconds.
      *
-     * @return remaining lock duration in seconds, or 0 if not locked
+     * @return numeric result from this method
      */
     public long getRemainingLockSeconds() {
         if (!isLocked()) {
@@ -77,8 +71,7 @@ public class LoginAttemptTracker {
     }
 
     /**
-     * Records a failed login attempt.
-     * If max attempts are exceeded, triggers account lockout.
+     * Runs record failure for this class.
      */
     public void recordFailure() {
         if (isLocked()) {
@@ -93,8 +86,7 @@ public class LoginAttemptTracker {
     }
 
     /**
-     * Records a successful login attempt.
-     * Resets failed attempt counter and clears any active lockout.
+     * Runs record success for this class.
      */
     public void recordSuccess() {
         failedAttempts = 0;
@@ -102,18 +94,18 @@ public class LoginAttemptTracker {
     }
 
     /**
-     * Returns the current count of failed login attempts.
+     * Returns the failed attempts.
      *
-     * @return the number of consecutive failed attempts
+     * @return numeric result from this method
      */
     public int getFailedAttempts() {
         return failedAttempts;
     }
 
     /**
-     * Returns the remaining failed-attempt count before lockout.
+     * Returns the attempts remaining.
      *
-     * @return remaining attempt count
+     * @return numeric result from this method
      */
     public int getAttemptsRemaining() {
         return Math.max(0, maxFailedAttempts - failedAttempts);

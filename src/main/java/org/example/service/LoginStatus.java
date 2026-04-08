@@ -1,13 +1,7 @@
 package org.example.service;
 
 /**
- * Represents the outcome status of an authentication attempt.
- * SUCCESS: credentials were valid and authentication succeeded.
- * BLANK_INPUT: email or password was blank or empty.
- * INVALID_CREDENTIALS: email not found or password incorrect.
- *
- * @author appointment-system
- * @version 1.0
+ * Lists the possible values for login status.
  */
 public enum LoginStatus {
     SUCCESS,

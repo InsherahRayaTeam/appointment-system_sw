@@ -1,17 +1,14 @@
 package org.example.notification;
 
 /**
- * Observer contract for receiving notification messages.
- *
- * @author appointment-system
- * @version 1.0
+ * Defines the operations for observer.
  */
 public interface Observer {
 
     /**
-     * Receives an event message from the subject.
+     * Runs update for this class.
      *
-     * @param message event message
+     * @param message message text to show or send
      */
     void update(String message);
 }

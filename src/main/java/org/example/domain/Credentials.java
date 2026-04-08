@@ -3,12 +3,7 @@ package org.example.domain;
 import java.util.Objects;
 
 /**
- * Represents user login credentials using email and password.
- *
- * The email is used as the unique identifier (username).
- *
- * @author appointment-system
- * @version 1.0
+ * Represents credentials in the system.
  */
 public class Credentials {
 
@@ -16,10 +11,10 @@ public class Credentials {
     private final String password;
 
     /**
-     * Constructs credentials with email and password.
+     * Creates a new credentials object with the given values.
      *
-     * @param email the user's email (used as username)
-     * @param password the user's password
+     * @param email email address used for login or matching
+     * @param password password text entered by the user
      */
     public Credentials(String email, String password) {
         if (email == null || email.isBlank()) {
@@ -34,9 +29,9 @@ public class Credentials {
     }
 
     /**
-     * Returns the email (username).
+     * Returns the email.
      *
-     * @return email
+     * @return text result from this method
      */
     public String getEmail() {
         return email;
@@ -45,18 +40,19 @@ public class Credentials {
     /**
      * Returns the password.
      *
-     * @return password
+     * @return text result from this method
      */
     public String getPassword() {
         return password;
     }
 
     /**
-     * Checks if the provided credentials match this object.
+     * Runs matches for this class.
      *
-     * @param email input email
-     * @param password input password
-     * @return true if both match
+     * @param email email address used for login or matching
+     * @param password password text entered by the user
+     *
+     * @return true when the action is valid or successful, otherwise false
      */
     public boolean matches(String email, String password) {
         if (email == null || password == null) {
@@ -66,10 +62,11 @@ public class Credentials {
     }
 
     /**
-     * Equality based on email (unique identifier).
+     * Runs equals for this class.
      *
-     * @param o other object
-     * @return true if both credentials use the same email
+     * @param o value for o
+     *
+     * @return true when the action is valid or successful, otherwise false
      */
     @Override
     public boolean equals(Object o) {
@@ -84,9 +81,9 @@ public class Credentials {
     }
 
     /**
-     * Returns hash code based on email.
+     * Checks whether it has h code.
      *
-     * @return hash code
+     * @return numeric result from this method
      */
     @Override
     public int hashCode() {
@@ -94,9 +91,9 @@ public class Credentials {
     }
 
     /**
-     * Returns safe string representation without password.
+     * Runs to string for this class.
      *
-     * @return string representation
+     * @return text result from this method
      */
     @Override
     public String toString() {

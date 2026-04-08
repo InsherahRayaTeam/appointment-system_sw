@@ -3,6 +3,7 @@ package org.example.service;
 import org.example.domain.Appointment;
 import org.example.domain.AppointmentSlot;
 import org.example.domain.AppointmentStatus;
+import org.example.domain.AppointmentType;
 import org.example.domain.SystemUser;
 import org.example.domain.UserRole;
 import org.example.repository.AppointmentBookingRepository;
@@ -168,6 +169,40 @@ class AppointmentBookingServiceTest {
     }
 
     @Test
+    void bookAppointment_UrgentTypeWithTooLongDuration_ReturnsInvalidAppointmentRules() {
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "alice@example.com",
+                "10:00",
+                60,
+                2,
+                AppointmentType.URGENT
+        );
+
+        assertEquals(BookingStatus.INVALID_APPOINTMENT_RULES, result);
+        verifyNoInteractions(appointmentRepository);
+        verifyNoInteractions(appointmentBookingRepository);
+    }
+
+    @Test
+    void bookAppointment_GroupTypeWithEnoughParticipants_ReturnsSuccessAndSavesGroupType() {
+        AppointmentSlot slot = new AppointmentSlot("10:00");
+        when(appointmentRepository.findAll()).thenReturn(List.of(slot));
+
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "alice@example.com",
+                "10:00",
+                60,
+                3,
+                AppointmentType.GROUP
+        );
+
+        ArgumentCaptor<Appointment> appointmentCaptor = ArgumentCaptor.forClass(Appointment.class);
+        assertEquals(BookingStatus.SUCCESS, result);
+        verify(appointmentBookingRepository).save(appointmentCaptor.capture());
+        assertEquals(AppointmentType.GROUP, appointmentCaptor.getValue().getType());
+    }
+
+    @Test
     void getManagedReservations_WhenAuthenticatedAdmin_ReturnsAllReservations() {
         // Arrange
         authenticateAsAdmin();
@@ -204,7 +239,6 @@ class AppointmentBookingServiceTest {
     void getManagedReservations_WhenNotAdmin_ReturnsEmptyList() {
         // Arrange
         when(sessionManager.isLoggedIn()).thenReturn(false);
-        when(sessionManager.isAdmin()).thenReturn(false);
 
         // Act
         List<Appointment> reservations = appointmentBookingService.getManagedReservations();
@@ -409,9 +443,6 @@ class AppointmentBookingServiceTest {
 
     @Test
     void modifyAppointment_BlankNewSlot_ReturnsBlankSlotTime() {
-        // Arrange
-        authenticateAsAdmin();
-
         // Act
         BookingStatus status = appointmentBookingService.modifyAppointment("apt-41", "  ");
 
@@ -575,7 +606,6 @@ class AppointmentBookingServiceTest {
 
     private void authenticateAsUser(String email) {
         when(sessionManager.isLoggedIn()).thenReturn(true);
-        when(sessionManager.isAdmin()).thenReturn(false);
         when(sessionManager.getCurrentEmail()).thenReturn(email);
     }
 

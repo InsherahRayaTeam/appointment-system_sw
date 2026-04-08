@@ -8,10 +8,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Provides appointment-slot operations such as availability lookup, booking, and reminders.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents appointment service in the system.
  */
 public class AppointmentService {
 
@@ -20,10 +17,10 @@ public class AppointmentService {
 
 
     /**
-     * Creates an appointment service using repository data and an event dispatcher.
+     * Creates a new appointment service object with the given values.
      *
-     * @param appointmentRepository repository source of appointment slots
-     * @param eventManager event dispatcher for booking/reminder notifications
+     * @param appointmentRepository repository used to read and save data
+     * @param eventManager manager object used for shared app state
      */
     public AppointmentService(AppointmentRepository appointmentRepository, EventManager eventManager) {
         AppointmentRepository repository = Objects.requireNonNull(
@@ -35,9 +32,9 @@ public class AppointmentService {
     }
 
     /**
-     * Returns all currently available (not booked) slots.
+     * Returns the available slots.
      *
-     * @return available appointment slots
+     * @return collection with the requested results
      */
     public List<AppointmentSlot> getAvailableSlots() {
         List<AppointmentSlot> available = new ArrayList<>();
@@ -50,11 +47,11 @@ public class AppointmentService {
     }
 
     /**
-     * Books the slot with the given time. Returns true if the slot was found
-     * and successfully booked, false if it does not exist or is already booked.
+     * Books slot when allowed.
      *
-     * @param time slot time identifier
-     * @return true on successful booking, otherwise false
+     * @param time time value used by this method
+     *
+     * @return true when the action is valid or successful, otherwise false
      */
     public boolean bookSlot(String time) {
         if (time == null || time.trim().isEmpty()) {
@@ -77,19 +74,20 @@ public class AppointmentService {
     }
 
     /**
-     * Backward-compatible reminder API that delegates to {@link #sendReminderForSlot(String)}.
+     * Runs send reminder for this class.
      *
-     * @param time slot time identifier
+     * @param time time value used by this method
      */
     public void sendReminder(String time) {
         sendReminderForSlot(time);
     }
 
     /**
-     * Sends a reminder for a booked slot.
+     * Runs send reminder for slot for this class.
      *
-     * @param time slot time identifier
-     * @return true when reminder was sent, otherwise false
+     * @param time time value used by this method
+     *
+     * @return true when the action is valid or successful, otherwise false
      */
     public boolean sendReminderForSlot(String time) {
         if (time == null || time.trim().isEmpty()) {
@@ -108,9 +106,9 @@ public class AppointmentService {
     }
 
     /**
-     * Sends reminders for all booked slots.
+     * Runs send all reminders for this class.
      *
-     * @return number of reminders sent
+     * @return numeric result from this method
      */
     public int sendAllReminders() {
         int sentCount = 0;

@@ -6,40 +6,39 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Repository interface for storing and retrieving booked appointments.
- *
- * @author appointment-system
- * @version 1.0
+ * Defines the operations for appointment booking repository.
  */
 public interface AppointmentBookingRepository {
 
     /**
-     * Saves a booked appointment.
+     * Runs save for this class.
      *
-     * @param appointment the appointment to save
+     * @param appointment value for appointment
      */
     void save(Appointment appointment);
 
     /**
-     * Retrieves all booked appointments.
+     * Finds all using the given input.
      *
-     * @return a list of all booked appointments
+     * @return collection with the requested results
      */
     List<Appointment> findAll();
 
     /**
-     * Finds a booked appointment by identifier.
+     * Finds by id using the given input.
      *
-     * @param appointmentId appointment identifier
-     * @return optional appointment when found
+     * @param appointmentId unique id used to find the record
+     *
+     * @return optional value if data is found
      */
     Optional<Appointment> findById(String appointmentId);
 
     /**
-     * Replaces an existing appointment by id.
+     * Runs update for this class.
      *
-     * @param appointment updated appointment state
-     * @return true when an existing appointment was updated
+     * @param appointment value for appointment
+     *
+     * @return true when the action is valid or successful, otherwise false
      */
     boolean update(Appointment appointment);
 }

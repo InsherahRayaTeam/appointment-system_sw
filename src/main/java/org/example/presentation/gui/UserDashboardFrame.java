@@ -13,10 +13,7 @@ import java.awt.Font;
 import java.awt.FlowLayout;
 
 /**
- * Basic regular-user dashboard screen.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents user dashboard frame in the system.
  */
 public class UserDashboardFrame extends JFrame {
 
@@ -34,10 +31,10 @@ public class UserDashboardFrame extends JFrame {
     private final ReservationsPanel reservationsPanel;
 
     /**
-     * Creates the user dashboard frame.
+     * Creates a new user dashboard frame object with the given values.
      *
-     * @param user authenticated regular user
-     * @param appController app controller used for navigation and service access
+     * @param user user involved in this action
+     * @param appController controller used for navigation and actions
      */
     public UserDashboardFrame(
             SystemUser user,
@@ -60,6 +57,9 @@ public class UserDashboardFrame extends JFrame {
         initializeUi();
     }
 
+    /**
+     * Runs initialize ui for this class.
+     */
     private void initializeUi() {
         setTitle("User Dashboard");
         setSize(900, 520);
@@ -74,7 +74,6 @@ public class UserDashboardFrame extends JFrame {
         contentPanel.add(slotsPanel, CARD_SLOTS);
         contentPanel.add(bookingPanel, CARD_BOOKING);
         contentPanel.add(reservationsPanel, CARD_RESERVATIONS);
-        add(contentPanel, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
 
@@ -96,30 +95,58 @@ public class UserDashboardFrame extends JFrame {
         buttonPanel.add(logoutButton);
 
         add(buttonPanel, BorderLayout.SOUTH);
+        add(contentPanel, BorderLayout.CENTER);
+
+        // Prime reservations data once so dashboard initialization is consistent.
+        reservationsPanel.refreshData();
 
         showSlotsPanel();
     }
 
+    /**
+     * Shows slots panel to the user.
+     */
     private void showSlotsPanel() {
         slotsPanel.refreshData();
         cardLayout.show(contentPanel, CARD_SLOTS);
+        slotsPanel.setVisible(true);
+        bookingPanel.setVisible(false);
+        reservationsPanel.setVisible(false);
     }
 
+    /**
+     * Shows booking panel to the user.
+     */
     private void showBookingPanel() {
         bookingPanel.refreshData();
         cardLayout.show(contentPanel, CARD_BOOKING);
+        slotsPanel.setVisible(false);
+        bookingPanel.setVisible(true);
+        reservationsPanel.setVisible(false);
     }
 
+    /**
+     * Shows reservations panel to the user.
+     */
     private void showReservationsPanel() {
         reservationsPanel.refreshData();
         cardLayout.show(contentPanel, CARD_RESERVATIONS);
+        slotsPanel.setVisible(false);
+        bookingPanel.setVisible(false);
+        reservationsPanel.setVisible(true);
     }
 
+    /**
+     * Reloads and updates panels after booking.
+     */
     private void refreshPanelsAfterBooking() {
         slotsPanel.refreshData();
         reservationsPanel.refreshData();
     }
 
+    /**
+     * Runs on logout for this class.
+     */
     private void onLogout() {
         appController.logoutAndOpenLogin();
     }

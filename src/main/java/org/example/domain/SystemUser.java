@@ -1,14 +1,7 @@
 package org.example.domain;
 
 /**
- * Represents a system user who can log into the application.
- * The email is used as the username for authentication.
- *
- * NOTE: This demo stores plaintext passwords only for simplicity.
- * Replace with hashed storage (bcrypt/argon2) and a secure secret store for production use.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents system user in the system.
  */
 public final class SystemUser {
 
@@ -18,23 +11,23 @@ public final class SystemUser {
     private final UserRole role;
 
     /**
-     * Creates a system user with generated id.
+     * Creates a new system user object with the given values.
      *
-     * @param email user email (used as username)
-     * @param password user password
-     * @param role user role
+     * @param email email address used for login or matching
+     * @param password password text entered by the user
+     * @param role role value used for access control
      */
     public SystemUser(String email, String password, UserRole role) {
         this(email == null ? null : email.trim().toLowerCase() + "-id", email, password, role);
     }
 
     /**
-     * Creates a system user with explicit identity and role.
+     * Creates a new system user object with the given values.
      *
-     * @param id unique identifier
-     * @param email user email
-     * @param password user password
-     * @param role user role
+     * @param id unique id used to find the record
+     * @param email email address used for login or matching
+     * @param password password text entered by the user
+     * @param role role value used for access control
      */
     public SystemUser(String id, String email, String password, UserRole role) {
         if (id == null || id.isBlank()) {
@@ -57,36 +50,36 @@ public final class SystemUser {
     }
 
     /**
-     * Returns unique identifier.
+     * Returns the id.
      *
-     * @return user identifier
+     * @return text result from this method
      */
     public String getId() {
         return id;
     }
 
     /**
-     * Returns email used for login.
+     * Returns the email.
      *
-     * @return email
+     * @return text result from this method
      */
     public String getEmail() {
         return email;
     }
 
     /**
-     * Returns password.
+     * Returns the password.
      *
-     * @return password
+     * @return text result from this method
      */
     public String getPassword() {
         return password;
     }
 
     /**
-     * Returns the user's authorization role.
+     * Returns the role.
      *
-     * @return user role
+     * @return requested value from this object
      */
     public UserRole getRole() {
         return role;

@@ -6,34 +6,30 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Repository interface for accessing system users (admin and regular users).
- *
- * Users are identified by email, which is used as the login username.
- *
- * @author appointment-system
- * @version 1.0
+ * Defines the operations for user repository.
  */
 public interface UserRepository {
 
     /**
-     * Finds a user by email.
+     * Finds by email using the given input.
      *
-     * @param email email to search for
-     * @return optional user
+     * @param email email address used for login or matching
+     *
+     * @return optional value if data is found
      */
     Optional<SystemUser> findByEmail(String email);
 
     /**
-     * Stores or replaces a user entry keyed by email.
+     * Runs save for this class.
      *
-     * @param user user to persist
+     * @param user user involved in this action
      */
     void save(SystemUser user);
 
     /**
-     * Returns all known users.
+     * Finds all using the given input.
      *
-     * @return user list
+     * @return collection with the requested results
      */
     List<SystemUser> findAll();
 }

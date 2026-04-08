@@ -21,10 +21,7 @@ import java.awt.FlowLayout;
 import java.util.List;
 
 /**
- * Allows administrators to view, modify, and cancel reservations.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents admin reservations panel in the system.
  */
 public class AdminReservationsPanel extends JPanel {
 
@@ -38,10 +35,10 @@ public class AdminReservationsPanel extends JPanel {
     private final JButton cancelButton;
 
     /**
-     * Creates an admin reservations management panel.
+     * Creates a new admin reservations panel object with the given values.
      *
-     * @param appointmentBookingService service used to load/manage reservations
-     * @param appointmentService service used to load available replacement slots
+     * @param appointmentBookingService service used to run business logic
+     * @param appointmentService service used to run business logic
      */
     public AdminReservationsPanel(
             AppointmentBookingService appointmentBookingService,
@@ -92,7 +89,7 @@ public class AdminReservationsPanel extends JPanel {
     }
 
     /**
-     * Reloads reservation rows and available slots.
+     * Reloads and updates data.
      */
     public final void refreshData() {
         tableModel.setRowCount(0);
@@ -117,7 +114,11 @@ public class AdminReservationsPanel extends JPanel {
         setActionsEnabled(true);
     }
 
+    /**
+     * Runs on cancel reservation for this class.
+     */
     private void onCancelReservation() {
+        int selectedRow = reservationsTable.getSelectedRow();
         String reservationId = selectedReservationId();
         if (reservationId == null) {
             showWarning("Please select a reservation first.");
@@ -128,10 +129,15 @@ public class AdminReservationsPanel extends JPanel {
         showResult(status, "Cancel Reservation");
 
         if (status == BookingStatus.SUCCESS) {
-            refreshData();
+            if (selectedRow >= 0 && selectedRow < tableModel.getRowCount()) {
+                tableModel.removeRow(selectedRow);
+            }
         }
     }
 
+    /**
+     * Runs on modify reservation for this class.
+     */
     private void onModifyReservation() {
         String reservationId = selectedReservationId();
         if (reservationId == null) {
@@ -143,15 +149,24 @@ public class AdminReservationsPanel extends JPanel {
             return;
         }
 
+        int selectedRow = reservationsTable.getSelectedRow();
         String newSlotTime = slotComboBox.getSelectedItem().toString();
         BookingStatus status = appointmentBookingService.modifyAppointment(reservationId, newSlotTime);
         showResult(status, "Modify Reservation");
 
         if (status == BookingStatus.SUCCESS) {
-            refreshData();
+            if (selectedRow >= 0 && selectedRow < tableModel.getRowCount()) {
+                tableModel.setValueAt(newSlotTime, selectedRow, 2);
+                tableModel.setValueAt("MODIFIED", selectedRow, 5);
+            }
         }
     }
 
+    /**
+     * Runs selected reservation id for this class.
+     *
+     * @return text result from this method
+     */
     private String selectedReservationId() {
         int selectedRow = reservationsTable.getSelectedRow();
         if (selectedRow < 0) {
@@ -162,6 +177,13 @@ public class AdminReservationsPanel extends JPanel {
         return value == null ? null : value.toString();
     }
 
+    /**
+     * Runs to row for this class.
+     *
+     * @param appointment value for appointment
+     *
+     * @return result produced by this method
+     */
     private Object[] toRow(Appointment appointment) {
         return new Object[] {
                 appointment.getId(),
@@ -173,6 +195,12 @@ public class AdminReservationsPanel extends JPanel {
         };
     }
 
+    /**
+     * Shows result to the user.
+     *
+     * @param status status value used for this operation
+     * @param title title text for the dialog or view
+     */
     private void showResult(BookingStatus status, String title) {
         int messageType = status == BookingStatus.SUCCESS
                 ? JOptionPane.INFORMATION_MESSAGE
@@ -181,10 +209,20 @@ public class AdminReservationsPanel extends JPanel {
         JOptionPane.showMessageDialog(this, GuiMessageHelper.toMessage(status), title, messageType);
     }
 
+    /**
+     * Shows warning to the user.
+     *
+     * @param message message text to show or send
+     */
     private void showWarning(String message) {
         JOptionPane.showMessageDialog(this, message, "Input Required", JOptionPane.WARNING_MESSAGE);
     }
 
+    /**
+     * Updates the actions enabled.
+     *
+     * @param enabled flag that tells if this feature is enabled
+     */
     private void setActionsEnabled(boolean enabled) {
         cancelButton.setEnabled(enabled);
         modifyButton.setEnabled(enabled && slotComboBox.getItemCount() > 0);

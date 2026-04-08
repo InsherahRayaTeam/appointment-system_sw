@@ -122,8 +122,6 @@ class ReservationsPanelTest extends GuiTestSupport {
     @Test
     void testCancelReservation_withoutSelection_showsWarning() {
         // Arrange
-        when(appointmentBookingService.getReservationsForCustomer("user@example.com"))
-                .thenReturn(Collections.emptyList());
 
         ReservationsPanel panel = new ReservationsPanel(user, appointmentBookingService);
         AbstractButton cancelButton = findButton(panel, "Cancel Reservation");

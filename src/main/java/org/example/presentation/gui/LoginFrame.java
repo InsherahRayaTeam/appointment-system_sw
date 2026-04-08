@@ -20,12 +20,7 @@ import java.awt.GridLayout;
 import java.util.Objects;
 
 /**
- * Login screen for email/password authentication.
- *
- * Supports both ADMIN and USER accounts.
- *
- * @author appointment-system
- * @version 1.0
+ * Represents login frame in the system.
  */
 public class LoginFrame extends JFrame {
 
@@ -37,6 +32,12 @@ public class LoginFrame extends JFrame {
     private JLabel statusLabel;
     private JButton loginButton;
 
+    /**
+     * Creates a new login frame object with the given values.
+     *
+     * @param authService service used to run business logic
+     * @param appController controller used for navigation and actions
+     */
     public LoginFrame(
             AdminAuthService authService,
             ApplicationController appController
@@ -47,6 +48,9 @@ public class LoginFrame extends JFrame {
         initializeUi();
     }
 
+    /**
+     * Runs initialize ui for this class.
+     */
     private void initializeUi() {
         setTitle("Appointment System - Login");
         setSize(420, 260);
@@ -95,6 +99,9 @@ public class LoginFrame extends JFrame {
         getRootPane().setDefaultButton(loginButton);
     }
 
+    /**
+     * Runs on login for this class.
+     */
     private void onLogin() {
         String email = emailField.getText();
         String password = new String(passwordField.getPassword());
@@ -135,6 +142,9 @@ public class LoginFrame extends JFrame {
         loginButton.setEnabled(true);
     }
 
+    /**
+     * Runs on clear for this class.
+     */
     private void onClear() {
         emailField.setText("");
         passwordField.setText("");
@@ -143,11 +153,21 @@ public class LoginFrame extends JFrame {
         emailField.requestFocusInWindow();
     }
 
+    /**
+     * Shows error to the user.
+     *
+     * @param message message text to show or send
+     */
     private void showError(String message) {
         setStatusMessage(message);
         JOptionPane.showMessageDialog(this, message, "Login Error", JOptionPane.ERROR_MESSAGE);
     }
 
+    /**
+     * Updates the status message.
+     *
+     * @param message message text to show or send
+     */
     private void setStatusMessage(String message) {
         statusLabel.setText(message == null || message.trim().isEmpty() ? " " : message);
     }
