@@ -132,7 +132,7 @@ class AppointmentBookingServiceNotificationTest {
     }
 
     /**
-     * Verifies a successful admin modification triggers an updated notification.
+     * Verifies a successful admin modification triggers a detailed reschedule notification.
      */
     @Test
     void modifyAppointment_Success_SendsModifiedNotification() {
@@ -153,9 +153,12 @@ class AppointmentBookingServiceNotificationTest {
         assertEquals(1, mockNotificationService.getSentMessages().size());
         String message = mockNotificationService.getSentMessages().get(0);
         assertTrue(message.contains("alice@example.com"));
-        assertTrue(message.contains("Appointment Updated"));
-        assertTrue(message.contains("Appointment date/time:"));
+        assertTrue(message.contains("Appointment Rescheduled"));
+        assertTrue(message.contains("Appointment ID: apt-modify"));
+        assertTrue(message.contains("Old date/time:"));
+        assertTrue(message.contains("New date/day/time:"));
         assertTrue(message.contains("11:00"));
+        assertTrue(message.contains("cancel this reservation"));
     }
 
     /**
@@ -180,6 +183,62 @@ class AppointmentBookingServiceNotificationTest {
         assertTrue(mockNotificationService.getSentMessages().isEmpty());
         assertTrue(oldSlot.isBooked());
         assertFalse(newSlot.isBooked());
+    }
+
+    /**
+     * Verifies marking attended triggers an attended notification.
+     */
+    @Test
+    void markAppointmentAsAttended_Success_SendsAttendedNotification() {
+        Appointment appointment = new Appointment(
+                "apt-attend",
+                "alice@example.com",
+                LocalDate.now().plusDays(1).atTime(LocalTime.parse("10:00")),
+                60,
+                1,
+                AppointmentStatus.CONFIRMED
+        );
+
+        when(sessionManager.isLoggedIn()).thenReturn(true);
+        when(sessionManager.isAdmin()).thenReturn(true);
+        when(appointmentBookingRepository.findById(eq("apt-attend"))).thenReturn(Optional.of(appointment));
+        when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
+
+        BookingStatus result = appointmentBookingService.markAppointmentAsAttended("apt-attend");
+
+        assertEquals(BookingStatus.SUCCESS, result);
+        assertEquals(1, mockNotificationService.getSentMessages().size());
+        String message = mockNotificationService.getSentMessages().get(0);
+        assertTrue(message.contains("Appointment Marked as Attended"));
+        assertTrue(message.contains("Booked for:"));
+    }
+
+    /**
+     * Verifies marking completed triggers a completed notification.
+     */
+    @Test
+    void markAppointmentAsCompleted_Success_SendsCompletedNotification() {
+        Appointment appointment = new Appointment(
+                "apt-complete",
+                "alice@example.com",
+                LocalDate.now().plusDays(1).atTime(LocalTime.parse("10:00")),
+                60,
+                1,
+                AppointmentStatus.ATTENDED
+        );
+
+        when(sessionManager.isLoggedIn()).thenReturn(true);
+        when(sessionManager.isAdmin()).thenReturn(true);
+        when(appointmentBookingRepository.findById(eq("apt-complete"))).thenReturn(Optional.of(appointment));
+        when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
+
+        BookingStatus result = appointmentBookingService.markAppointmentAsCompleted("apt-complete");
+
+        assertEquals(BookingStatus.SUCCESS, result);
+        assertEquals(1, mockNotificationService.getSentMessages().size());
+        String message = mockNotificationService.getSentMessages().get(0);
+        assertTrue(message.contains("Appointment Completed"));
+        assertTrue(message.contains("Booked for:"));
     }
 
     private Appointment futureAppointment(String id, String email, String slotTime) {

@@ -64,7 +64,7 @@ public class BookingPanel extends JPanel {
         customerNameField.setEditable(false);
         formPanel.add(customerNameField);
 
-        formPanel.add(new JLabel("Slot:"));
+        formPanel.add(new JLabel("Date/Day/Time:"));
         slotComboBox = new JComboBox<>();
         formPanel.add(slotComboBox);
 
@@ -108,7 +108,7 @@ public class BookingPanel extends JPanel {
 
         List<AppointmentSlot> slots = appointmentService.getAvailableSlots();
         for (AppointmentSlot slot : slots) {
-            slotComboBox.addItem(slot.getTime());
+            slotComboBox.addItem(slot.getDateDayTimeLabel());
         }
 
         if (slotComboBox.getItemCount() == 0) {
@@ -134,7 +134,7 @@ public class BookingPanel extends JPanel {
         }
 
         BookingStatus status = appointmentBookingService.bookAppointment(
-                user.getEmail(),
+                user.getId(),
                 selectedSlot(),
                 durationField.getText(),
                 participantCountField.getText(),

@@ -4,6 +4,7 @@ import org.example.domain.AppointmentSlot;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,6 +28,8 @@ public class InMemoryAppointmentRepositoryTest {
         assertEquals("10:00", all.get(0).getTime());
         assertEquals("11:00", all.get(1).getTime());
         assertEquals("12:00", all.get(2).getTime());
+        assertEquals(LocalDate.now().plusDays(1), all.get(0).getDate());
+        assertTrue(all.get(0).isFutureSlot());
     }
 
     @Test

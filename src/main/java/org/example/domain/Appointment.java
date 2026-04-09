@@ -3,6 +3,7 @@ package org.example.domain;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Locale;
 import java.util.UUID;
@@ -12,6 +13,8 @@ import java.util.UUID;
  */
 public class Appointment {
 
+    private static final DateTimeFormatter SLOT_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
     private final String id;
     private final LocalDateTime startTime;
     private final int duration;
@@ -20,6 +23,7 @@ public class Appointment {
 
     // Optional fields used by booking workflow compatibility.
     private final String customerName;
+    private final String customerEmail;
     private final AppointmentStatus status;
 
     /**
@@ -31,7 +35,7 @@ public class Appointment {
      * @param participants number of people for the appointment
      */
     public Appointment(String id, LocalDateTime startTime, int duration, int participants) {
-        this(id, null, startTime, duration, participants, null, AppointmentType.NORMAL);
+        this(id, null, null, startTime, duration, participants, null, AppointmentType.NORMAL);
     }
 
     /**
@@ -52,7 +56,30 @@ public class Appointment {
             int participants,
             AppointmentStatus status
     ) {
-        this(id, customerName, startTime, duration, participants, status, AppointmentType.NORMAL);
+        this(id, customerName, customerName, startTime, duration, participants, status, AppointmentType.NORMAL);
+    }
+
+    /**
+     * Creates a new appointment object with the given values.
+     *
+     * @param id unique id used to find the record
+     * @param customerName value for customer name
+     * @param customerEmail value for customer email
+     * @param startTime time value used by this method
+     * @param duration appointment duration in minutes
+     * @param participants number of people for the appointment
+     * @param status status value used for this operation
+     */
+    public Appointment(
+            String id,
+            String customerName,
+            String customerEmail,
+            LocalDateTime startTime,
+            int duration,
+            int participants,
+            AppointmentStatus status
+    ) {
+        this(id, customerName, customerEmail, startTime, duration, participants, status, AppointmentType.NORMAL);
     }
 
     /**
@@ -69,6 +96,7 @@ public class Appointment {
     public Appointment(
             String id,
             String customerName,
+            String customerEmail,
             LocalDateTime startTime,
             int duration,
             int participants,
@@ -80,6 +108,9 @@ public class Appointment {
         this.duration = duration;
         this.participants = participants;
         this.customerName = customerName;
+        this.customerEmail = customerEmail == null || customerEmail.trim().isEmpty()
+                ? customerName
+                : customerEmail.trim().toLowerCase();
         this.status = status;
         this.type = type == null ? AppointmentType.NORMAL : type;
     }
@@ -97,12 +128,34 @@ public class Appointment {
         this(
                 UUID.randomUUID().toString(),
                 customerName,
+                customerName,
                 parseSlotTime(slotTime),
                 duration,
                 participants,
                 status,
                 AppointmentType.NORMAL
         );
+    }
+
+    /**
+     * Creates a new appointment object with the given values.
+     *
+     * @param customerName value for customer name
+     * @param startTime time value used by this method
+     * @param duration appointment duration in minutes
+     * @param participants number of people for the appointment
+     * @param status status value used for this operation
+     * @param type value for type
+     */
+    public Appointment(
+            String customerName,
+            LocalDateTime startTime,
+            int duration,
+            int participants,
+            AppointmentStatus status,
+            AppointmentType type
+    ) {
+        this(UUID.randomUUID().toString(), customerName, customerName, startTime, duration, participants, status, type);
     }
 
     /**
@@ -123,7 +176,7 @@ public class Appointment {
             AppointmentStatus status,
             AppointmentType type
     ) {
-        this(UUID.randomUUID().toString(), customerName, parseSlotTime(slotTime), duration, participants, status, type);
+        this(UUID.randomUUID().toString(), customerName, customerName, parseSlotTime(slotTime), duration, participants, status, type);
     }
 
     /**
@@ -224,6 +277,33 @@ public class Appointment {
     }
 
     /**
+     * Returns the slot date.
+     *
+     * @return text result from this method
+     */
+    public String getSlotDate() {
+        return startTime != null ? startTime.toLocalDate().toString() : null;
+    }
+
+    /**
+     * Returns the slot day.
+     *
+     * @return text result from this method
+     */
+    public String getSlotDay() {
+        return startTime != null ? startTime.getDayOfWeek().toString() : null;
+    }
+
+    /**
+     * Returns the slot date-time label.
+     *
+     * @return text result from this method
+     */
+    public String getSlotDateTimeLabel() {
+        return startTime != null ? startTime.format(SLOT_DATE_TIME_FORMATTER) : null;
+    }
+
+    /**
      * Returns the customer name.
      *
      * @return text result from this method
@@ -233,15 +313,25 @@ public class Appointment {
     }
 
     /**
+     * Returns the customer email.
+     *
+     * @return text result from this method
+     */
+    public String getCustomerEmail() {
+        return customerEmail;
+    }
+
+    /**
      * Returns the user data represented by this appointment.
      *
      * @return user involved in this action
      */
     public SystemUser getUser() {
-        if (customerName == null || customerName.trim().isEmpty()) {
+        String identity = customerEmail != null && !customerEmail.trim().isEmpty() ? customerEmail : customerName;
+        if (identity == null || identity.trim().isEmpty()) {
             return null;
         }
-        return new SystemUser(customerName, "notification-only", UserRole.USER);
+        return new SystemUser(identity, identity, "notification-only", UserRole.USER);
     }
 
     /**
@@ -299,7 +389,7 @@ public class Appointment {
      * @return result produced by this method
      */
     public Appointment withStatus(AppointmentStatus newStatus) {
-        return new Appointment(id, customerName, startTime, duration, participants, newStatus, type);
+        return new Appointment(id, customerName, customerEmail, startTime, duration, participants, newStatus, type);
     }
 
     /**
@@ -313,7 +403,28 @@ public class Appointment {
         return new Appointment(
                 id,
                 customerName,
+                customerEmail,
                 parseSlotTime(slotTime),
+                duration,
+                participants,
+                newStatus,
+                type
+        );
+    }
+
+    /**
+     * Runs with start time and status for this class.
+     *
+     * @param newStartTime time value used by this method
+     * @param newStatus status value used for this operation
+     * @return result produced by this method
+     */
+    public Appointment withStartTimeAndStatus(LocalDateTime newStartTime, AppointmentStatus newStatus) {
+        return new Appointment(
+                id,
+                customerName,
+                customerEmail,
+                newStartTime,
                 duration,
                 participants,
                 newStatus,
@@ -332,8 +443,15 @@ public class Appointment {
             return null;
         }
 
+        String normalized = slotTime.trim();
+
+        LocalDateTime parsedDateTime = tryParseDateTime(normalized);
+        if (parsedDateTime != null) {
+            return parsedDateTime;
+        }
+
         try {
-            LocalTime parsedTime = LocalTime.parse(slotTime.trim());
+            LocalTime parsedTime = LocalTime.parse(normalized);
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime candidate = LocalDate.now().atTime(parsedTime);
 
@@ -345,6 +463,31 @@ public class Appointment {
         } catch (DateTimeParseException ex) {
             return null;
         }
+    }
+
+    private static LocalDateTime tryParseDateTime(String value) {
+        try {
+            return LocalDateTime.parse(value);
+        } catch (DateTimeParseException ignored) {
+            // Fallback to custom formats below.
+        }
+
+        try {
+            return LocalDateTime.parse(value, SLOT_DATE_TIME_FORMATTER);
+        } catch (DateTimeParseException ignored) {
+            // Fallback for display formats.
+        }
+
+        if (value.length() >= 16) {
+            String candidate = value.substring(0, 10) + " " + value.substring(value.length() - 5);
+            try {
+                return LocalDateTime.parse(candidate, SLOT_DATE_TIME_FORMATTER);
+            } catch (DateTimeParseException ignored) {
+                return null;
+            }
+        }
+
+        return null;
     }
 
     /**

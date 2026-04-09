@@ -46,8 +46,10 @@ class BookingPanelTest extends GuiTestSupport {
     @Test
     void testBooking_validAppointment_callsService() {
         // Arrange
-        when(appointmentService.getAvailableSlots()).thenReturn(Collections.singletonList(new AppointmentSlot("10:00")));
-        when(appointmentBookingService.bookAppointment("user@example.com", "10:00", "30", "2", AppointmentType.URGENT))
+        AppointmentSlot slot = new AppointmentSlot("10:00");
+        String slotSelection = slot.getDateDayTimeLabel();
+        when(appointmentService.getAvailableSlots()).thenReturn(Collections.singletonList(slot));
+        when(appointmentBookingService.bookAppointment("user-1", slotSelection, "30", "2", AppointmentType.URGENT))
                 .thenReturn(BookingStatus.SUCCESS);
 
         BookingPanel panel = new BookingPanel(user, appointmentService, appointmentBookingService, onBookingSuccess);
@@ -68,7 +70,7 @@ class BookingPanelTest extends GuiTestSupport {
         clickButton(bookButton);
 
         // Assert
-        verify(appointmentBookingService).bookAppointment("user@example.com", "10:00", "30", "2", AppointmentType.URGENT);
+        verify(appointmentBookingService).bookAppointment("user-1", slotSelection, "30", "2", AppointmentType.URGENT);
         verify(onBookingSuccess).run();
         verify(appointmentService, org.mockito.Mockito.times(2)).getAvailableSlots();
     }
@@ -76,8 +78,10 @@ class BookingPanelTest extends GuiTestSupport {
     @Test
     void testBooking_invalidInput_showsError() {
         // Arrange
-        when(appointmentService.getAvailableSlots()).thenReturn(Collections.singletonList(new AppointmentSlot("10:00")));
-        when(appointmentBookingService.bookAppointment("user@example.com", "10:00", "bad", "2", AppointmentType.NORMAL))
+        AppointmentSlot slot = new AppointmentSlot("10:00");
+        String slotSelection = slot.getDateDayTimeLabel();
+        when(appointmentService.getAvailableSlots()).thenReturn(Collections.singletonList(slot));
+        when(appointmentBookingService.bookAppointment("user-1", slotSelection, "bad", "2", AppointmentType.NORMAL))
                 .thenReturn(BookingStatus.INVALID_DURATION);
 
         BookingPanel panel = new BookingPanel(user, appointmentService, appointmentBookingService, onBookingSuccess);
@@ -98,7 +102,7 @@ class BookingPanelTest extends GuiTestSupport {
         clickButton(bookButton);
 
         // Assert
-        verify(appointmentBookingService).bookAppointment("user@example.com", "10:00", "bad", "2", AppointmentType.NORMAL);
+        verify(appointmentBookingService).bookAppointment("user-1", slotSelection, "bad", "2", AppointmentType.NORMAL);
         verifyNoInteractions(onBookingSuccess);
         assertTrue(slotComboBox.isEnabled());
         assertEquals("bad", durationField.getText());

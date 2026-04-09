@@ -23,36 +23,24 @@ public final class GuiMessageHelper {
             return "Operation failed.";
         }
 
-        switch (status) {
-            case SUCCESS:
-                return "Operation completed successfully.";
-            case BLANK_CUSTOMER_NAME:
-                return "Customer name is required.";
-            case BLANK_SLOT_TIME:
-                return "Please select a slot time.";
-            case INVALID_DURATION:
-                return "Duration is invalid. Allowed range is 15-120 minutes.";
-            case INVALID_PARTICIPANT_COUNT:
-                return "Participant count is invalid. Allowed range is 1-10.";
-            case INVALID_APPOINTMENT_RULES:
-                return "Selected appointment type does not satisfy the booking rules.";
-            case SLOT_NOT_FOUND:
-                return "Selected slot was not found.";
-            case SLOT_ALREADY_BOOKED:
-                return "Selected slot is already booked.";
-            case UNAUTHORIZED:
-                return "You are not authorized to perform this action.";
-            case APPOINTMENT_NOT_FOUND:
-                return "Reservation was not found.";
-            case APPOINTMENT_NOT_FUTURE:
-                return "Only future reservations can be changed.";
-            case APPOINTMENT_ALREADY_CANCELLED:
-                return "Reservation is already cancelled.";
-            case UPDATE_FAILED:
-                return "Reservation update failed. Please try again.";
-            default:
-                return "Operation failed.";
-        }
+        return switch (status) {
+            case SUCCESS -> "Operation completed successfully.";
+            case BLANK_CUSTOMER_NAME -> "Customer name is required.";
+            case BLANK_SLOT_TIME -> "Please select an appointment date/day/time slot.";
+            case INVALID_DURATION -> "Duration is invalid. Allowed range is 15-120 minutes.";
+            case INVALID_PARTICIPANT_COUNT -> "Participant count is invalid. Allowed range is 1-10.";
+            case INVALID_APPOINTMENT_RULES -> "Selected appointment type does not satisfy the booking rules.";
+            case SLOT_NOT_FOUND -> "Selected slot was not found.";
+            case SLOT_ALREADY_BOOKED -> "Selected slot is already booked.";
+            case UNAUTHORIZED -> "You are not authorized to perform this action.";
+            case APPOINTMENT_NOT_FOUND -> "Reservation was not found.";
+            case APPOINTMENT_NOT_FUTURE -> "Only future reservations can be changed.";
+            case APPOINTMENT_ALREADY_CANCELLED -> "Reservation is already cancelled.";
+            case APPOINTMENT_ALREADY_ATTENDED -> "Reservation has already been marked as attended.";
+            case APPOINTMENT_ALREADY_COMPLETED -> "Reservation has already been completed.";
+            case APPOINTMENT_NOT_ATTENDED -> "Reservation must be marked as attended before it can be completed.";
+            case UPDATE_FAILED -> "Reservation update failed. Please try again.";
+        };
     }
 }
 

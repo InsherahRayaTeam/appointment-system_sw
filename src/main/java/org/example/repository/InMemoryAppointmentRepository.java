@@ -2,6 +2,8 @@ package org.example.repository;
 
 import org.example.domain.AppointmentSlot;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,9 +18,10 @@ public class InMemoryAppointmentRepository implements AppointmentRepository {
      * Creates a new in memory appointment repository object with the given values.
      */
     public InMemoryAppointmentRepository() {
-        slots.add(new AppointmentSlot("10:00"));
-        slots.add(new AppointmentSlot("11:00"));
-        slots.add(new AppointmentSlot("12:00"));
+        LocalDate firstAvailableDate = LocalDate.now().plusDays(1);
+        slots.add(new AppointmentSlot(firstAvailableDate, LocalTime.of(10, 0)));
+        slots.add(new AppointmentSlot(firstAvailableDate, LocalTime.of(11, 0)));
+        slots.add(new AppointmentSlot(firstAvailableDate, LocalTime.of(12, 0)));
     }
 
     /**

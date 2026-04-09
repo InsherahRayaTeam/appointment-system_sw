@@ -23,12 +23,21 @@ class BookingStatusTest {
                 BookingStatus.APPOINTMENT_ALREADY_CANCELLED,
                 BookingStatus.valueOf("APPOINTMENT_ALREADY_CANCELLED")
         );
+        assertEquals(
+                BookingStatus.APPOINTMENT_ALREADY_ATTENDED,
+                BookingStatus.valueOf("APPOINTMENT_ALREADY_ATTENDED")
+        );
+        assertEquals(
+                BookingStatus.APPOINTMENT_ALREADY_COMPLETED,
+                BookingStatus.valueOf("APPOINTMENT_ALREADY_COMPLETED")
+        );
+        assertEquals(BookingStatus.APPOINTMENT_NOT_ATTENDED, BookingStatus.valueOf("APPOINTMENT_NOT_ATTENDED"));
         assertEquals(BookingStatus.UPDATE_FAILED, BookingStatus.valueOf("UPDATE_FAILED"));
     }
 
     @Test
     void enum_HasExpectedTotalNumberOfValues() {
-        assertEquals(13, BookingStatus.values().length);
+        assertEquals(16, BookingStatus.values().length);
     }
 }
 

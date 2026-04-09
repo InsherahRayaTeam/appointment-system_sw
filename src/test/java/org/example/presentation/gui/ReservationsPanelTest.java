@@ -13,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.swing.AbstractButton;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
@@ -22,7 +21,10 @@ import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -41,7 +43,6 @@ class ReservationsPanelTest extends GuiTestSupport {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void testCancelReservation_updatesState() {
         // Arrange
         Appointment reservation = new Appointment(
@@ -77,46 +78,12 @@ class ReservationsPanelTest extends GuiTestSupport {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
-    void testModifyReservation_validCase() {
-        // Arrange
-        Appointment reservation = new Appointment(
-                "res-1",
-                "user@example.com",
-                LocalDateTime.now().plusDays(1),
-                60,
-                2,
-                AppointmentStatus.CONFIRMED
-        );
-        Appointment modifiedReservation = new Appointment(
-                "res-1",
-                "user@example.com",
-                LocalDateTime.now().plusDays(1),
-                60,
-                2,
-                AppointmentStatus.MODIFIED
-        );
-        AtomicInteger refreshCount = new AtomicInteger();
-        when(appointmentBookingService.getReservationsForCustomer("user@example.com"))
-                .thenAnswer(invocation -> refreshCount.getAndIncrement() == 0
-                        ? Collections.singletonList(reservation)
-                        : Collections.singletonList(modifiedReservation));
-        when(appointmentBookingService.modifyOwnAppointment("res-1", "11:00")).thenReturn(BookingStatus.SUCCESS);
-
+    void testModifyReservationButton_notPresentForUserFlow() {
         ReservationsPanel panel = new ReservationsPanel(user, appointmentBookingService);
-        JTable table = getPrivateField(panel, "reservationsTable", JTable.class);
-        DefaultTableModel model = getPrivateField(panel, "tableModel", DefaultTableModel.class);
         AbstractButton modifyButton = findButton(panel, "Modify Reservation");
 
-        runOnEdt(() -> table.setRowSelectionInterval(0, 0));
-
-        // Act
-        clickButton(modifyButton);
-
-        // Assert
-        verify(appointmentBookingService).modifyOwnAppointment("res-1", "11:00");
-        assertEquals(1, model.getRowCount());
-        assertEquals("11:00", model.getValueAt(0, 2));
+        assertNull(modifyButton);
+        verify(appointmentBookingService, never()).modifyOwnAppointment(anyString(), anyString());
     }
 
     @Test

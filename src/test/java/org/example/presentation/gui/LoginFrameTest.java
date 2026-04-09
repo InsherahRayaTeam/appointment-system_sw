@@ -146,5 +146,23 @@ class LoginFrameTest extends GuiTestSupport {
         assertEquals(" ", statusLabel.getText());
         assertTrue(loginButton.isEnabled());
     }
+
+    @Test
+    void testSignUpButton_opensSignUpScreen() {
+        AbstractButton signUpButton = findButton(frame.getContentPane(), "Sign Up");
+
+        clickButton(signUpButton);
+
+        verify(appController).openSignUpFrame();
+    }
+
+    @Test
+    void testForgotPasswordButton_opensForgotPasswordScreen() {
+        AbstractButton forgotPasswordButton = findButton(frame.getContentPane(), "Forgot Password");
+
+        clickButton(forgotPasswordButton);
+
+        verify(appController).openForgotPasswordFrame();
+    }
 }
 

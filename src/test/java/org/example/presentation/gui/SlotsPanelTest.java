@@ -36,10 +36,10 @@ class SlotsPanelTest extends GuiTestSupport {
         // Assert
         DefaultTableModel model = getPrivateField(panel, "tableModel", DefaultTableModel.class);
         assertEquals(2, model.getRowCount());
-        assertEquals("09:00", model.getValueAt(0, 0));
-        assertEquals("Available", model.getValueAt(0, 1));
-        assertEquals("10:00", model.getValueAt(1, 0));
-        assertEquals("Available", model.getValueAt(1, 1));
+        assertEquals("09:00", model.getValueAt(0, 2));
+        assertEquals("Available", model.getValueAt(0, 3));
+        assertEquals("10:00", model.getValueAt(1, 2));
+        assertEquals("Available", model.getValueAt(1, 3));
         assertFalse(model.isCellEditable(0, 0));
         verify(appointmentService).getAvailableSlots();
     }
@@ -56,7 +56,7 @@ class SlotsPanelTest extends GuiTestSupport {
         DefaultTableModel model = getPrivateField(panel, "tableModel", DefaultTableModel.class);
         assertEquals(1, model.getRowCount());
         assertEquals("-", model.getValueAt(0, 0));
-        assertEquals("No available slots", model.getValueAt(0, 1));
+        assertEquals("No available slots", model.getValueAt(0, 3));
     }
 }
 

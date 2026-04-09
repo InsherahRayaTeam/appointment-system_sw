@@ -61,10 +61,10 @@ public class AppointmentService {
         String normalizedTime = time.trim();
 
         for (AppointmentSlot slot : slots) {
-            if (slot.getTime().equals(normalizedTime) && !slot.isBooked()) {
+            if (slot.matchesSelection(normalizedTime) && !slot.isBooked()) {
                 slot.book();
 
-                eventManager.notifyObservers("Appointment booked successfully at " + normalizedTime);
+                eventManager.notifyObservers("Appointment booked successfully at " + slot.getDateDayTimeLabel());
 
                 return true;
             }
@@ -96,8 +96,8 @@ public class AppointmentService {
 
         String normalizedTime = time.trim();
         for (AppointmentSlot slot : slots) {
-            if (slot.getTime().equals(normalizedTime) && slot.isBooked()) {
-                eventManager.notifyObservers("Reminder: Appointment at " + normalizedTime);
+            if (slot.matchesSelection(normalizedTime) && slot.isBooked()) {
+                eventManager.notifyObservers("Reminder: Appointment at " + slot.getDateDayTimeLabel());
                 return true;
             }
         }
@@ -114,7 +114,7 @@ public class AppointmentService {
         int sentCount = 0;
         for (AppointmentSlot slot : slots) {
             if (slot.isBooked()) {
-                eventManager.notifyObservers("Reminder: Appointment at " + slot.getTime());
+                eventManager.notifyObservers("Reminder: Appointment at " + slot.getDateDayTimeLabel());
                 sentCount++;
             }
         }
