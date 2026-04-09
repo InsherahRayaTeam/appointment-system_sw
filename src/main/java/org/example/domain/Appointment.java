@@ -233,6 +233,18 @@ public class Appointment {
     }
 
     /**
+     * Returns the user data represented by this appointment.
+     *
+     * @return user involved in this action
+     */
+    public SystemUser getUser() {
+        if (customerName == null || customerName.trim().isEmpty()) {
+            return null;
+        }
+        return new SystemUser(customerName, "notification-only", UserRole.USER);
+    }
+
+    /**
      * Returns the status.
      *
      * @return status that explains the operation result

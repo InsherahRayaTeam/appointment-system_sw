@@ -31,6 +31,7 @@ public class AppointmentBookingService {
     private final SessionManager sessionManager;
     private final UserRepository userRepository;
     private final EventManager eventManager;
+    private final AppointmentNotificationCoordinator appointmentNotificationCoordinator;
 
     /**
      * Creates a new appointment booking service object with the given values.
@@ -61,6 +62,34 @@ public class AppointmentBookingService {
             UserRepository userRepository,
             EventManager eventManager
     ) {
+        this(
+                appointmentRepository,
+                appointmentBookingRepository,
+                sessionManager,
+                userRepository,
+                eventManager,
+                null
+        );
+    }
+
+    /**
+     * Creates a new appointment booking service object with the given values.
+     *
+     * @param appointmentRepository repository used to read and save data
+     * @param appointmentBookingRepository repository used to read and save data
+     * @param sessionManager manager object used for shared app state
+     * @param userRepository user involved in this action
+     * @param eventManager manager object used for shared app state
+     * @param appointmentNotificationCoordinator coordinator used to send appointment notifications
+     */
+    public AppointmentBookingService(
+            AppointmentRepository appointmentRepository,
+            AppointmentBookingRepository appointmentBookingRepository,
+            SessionManager sessionManager,
+            UserRepository userRepository,
+            EventManager eventManager,
+            AppointmentNotificationCoordinator appointmentNotificationCoordinator
+    ) {
         this.appointmentRepository = Objects.requireNonNull(
                 appointmentRepository,
                 "appointmentRepository cannot be null"
@@ -84,6 +113,7 @@ public class AppointmentBookingService {
         this.sessionManager = sessionManager;
         this.userRepository = userRepository;
         this.eventManager = eventManager;
+        this.appointmentNotificationCoordinator = appointmentNotificationCoordinator;
     }
 
     /**
@@ -216,14 +246,16 @@ public class AppointmentBookingService {
                 }
 
                 slot.book();
-                appointmentBookingRepository.save(new Appointment(
+                Appointment appointment = new Appointment(
                         normalizedCustomerName,
                         normalizedSlotTime,
                         durationMinutes,
                         participantCount,
                         AppointmentStatus.CONFIRMED,
                         normalizedType
-                ));
+                );
+                appointmentBookingRepository.save(appointment);
+                sendPendingNotificationIfConfigured(appointment);
                 return BookingStatus.SUCCESS;
             }
         }
@@ -296,6 +328,34 @@ public class AppointmentBookingService {
     }
 
     /**
+     * Approves appointment when allowed.
+     *
+     * @param appointmentId unique id used to find the record
+     * @return status that explains the operation result
+     */
+    public BookingStatus approveAppointment(String appointmentId) {
+        Appointment appointment = resolveAuthorizedAppointment(appointmentId, ReservationAccess.ADMIN_ANY);
+        if (appointment == null) {
+            return resolveAuthorizationOrNotFoundStatus(appointmentId, ReservationAccess.ADMIN_ANY);
+        }
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            return BookingStatus.APPOINTMENT_ALREADY_CANCELLED;
+        }
+        if (!appointment.isFutureComparedTo(LocalDateTime.now())) {
+            return BookingStatus.APPOINTMENT_NOT_FUTURE;
+        }
+
+        Appointment updated = appointment.withStatus(AppointmentStatus.CONFIRMED);
+        if (!appointmentBookingRepository.update(updated)) {
+            return BookingStatus.UPDATE_FAILED;
+        }
+
+        notifyEvent("Reservation approved: " + updated.getId());
+        sendApprovedNotificationIfConfigured(updated);
+        return BookingStatus.SUCCESS;
+    }
+
+    /**
      * Checks whether it can cancel own appointment.
      *
      * @param appointmentId unique id used to find the record
@@ -360,6 +420,7 @@ public class AppointmentBookingService {
         }
 
         notifyEvent("Reservation cancelled: " + updated.getId());
+        sendCancelledNotificationIfConfigured(updated);
         return BookingStatus.SUCCESS;
     }
 
@@ -420,6 +481,7 @@ public class AppointmentBookingService {
         }
 
         notifyEvent("Reservation modified: " + updated.getId() + " -> " + normalizedNewSlotTime);
+        sendModifiedNotificationIfConfigured(updated);
         return BookingStatus.SUCCESS;
     }
 
@@ -556,6 +618,50 @@ public class AppointmentBookingService {
     private void notifyEvent(String message) {
         if (eventManager != null && message != null && !message.trim().isEmpty()) {
             eventManager.notifyObservers(message);
+        }
+    }
+
+    /**
+     * Sends a pending notification when the coordinator is configured.
+     *
+     * @param appointment appointment involved in this action
+     */
+    private void sendPendingNotificationIfConfigured(Appointment appointment) {
+        if (appointmentNotificationCoordinator != null && appointment != null) {
+            appointmentNotificationCoordinator.sendPendingNotification(appointment);
+        }
+    }
+
+    /**
+     * Sends an approved notification when the coordinator is configured.
+     *
+     * @param appointment appointment involved in this action
+     */
+    private void sendApprovedNotificationIfConfigured(Appointment appointment) {
+        if (appointmentNotificationCoordinator != null && appointment != null) {
+            appointmentNotificationCoordinator.sendApprovedNotification(appointment);
+        }
+    }
+
+    /**
+     * Sends a cancelled notification when the coordinator is configured.
+     *
+     * @param appointment appointment involved in this action
+     */
+    private void sendCancelledNotificationIfConfigured(Appointment appointment) {
+        if (appointmentNotificationCoordinator != null && appointment != null) {
+            appointmentNotificationCoordinator.sendCancelledNotification(appointment);
+        }
+    }
+
+    /**
+     * Sends a modified notification when the coordinator is configured.
+     *
+     * @param appointment appointment involved in this action
+     */
+    private void sendModifiedNotificationIfConfigured(Appointment appointment) {
+        if (appointmentNotificationCoordinator != null && appointment != null) {
+            appointmentNotificationCoordinator.sendModifiedNotification(appointment);
         }
     }
 

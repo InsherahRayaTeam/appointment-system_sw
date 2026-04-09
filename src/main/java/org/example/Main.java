@@ -1,6 +1,8 @@
 package org.example;
 
 import org.example.notification.LoginNotifier;
+import org.example.notification.EmailNotificationService;
+import org.example.notification.NotificationService;
 import org.example.domain.AppointmentSlot;
 import org.example.presentation.gui.ApplicationController;
 import org.example.repository.AppointmentBookingRepository;
@@ -11,6 +13,7 @@ import org.example.repository.InMemoryUserRepository;
 import org.example.repository.UserRepository;
 import org.example.service.AdminAuthService;
 import org.example.service.AppointmentBookingService;
+import org.example.service.AppointmentNotificationCoordinator;
 import org.example.service.AppointmentService;
 import org.example.service.AuthEventLogger;
 import org.example.service.EventManager;
@@ -67,6 +70,10 @@ public class Main {
             LoginNotifier loginNotifier = new LoginNotifier();
             eventManager.subscribe(loginNotifier);
 
+            NotificationService notificationService = new EmailNotificationService();
+            AppointmentNotificationCoordinator appointmentNotificationCoordinator =
+                    new AppointmentNotificationCoordinator(notificationService);
+
             // ===== SESSION / SECURITY =====
             SessionManager sessionManager = new SessionManager(authEventLogger, eventManager);
 
@@ -86,7 +93,8 @@ public class Main {
                             appointmentBookingRepository,
                             sessionManager,
                             userRepository,
-                            eventManager
+                            eventManager,
+                            appointmentNotificationCoordinator
                     );
 
             // ===== APPLICATION CONTROLLER =====
@@ -114,6 +122,10 @@ public class Main {
         LoginNotifier loginNotifier = new LoginNotifier();
         eventManager.subscribe(loginNotifier);
 
+        NotificationService notificationService = new EmailNotificationService();
+        AppointmentNotificationCoordinator appointmentNotificationCoordinator =
+                new AppointmentNotificationCoordinator(notificationService);
+
         SessionManager sessionManager = new SessionManager(authEventLogger, eventManager);
         LoginAttemptTracker loginAttemptTracker = new LoginAttemptTracker(3, Duration.ofSeconds(30));
 
@@ -124,7 +136,8 @@ public class Main {
                 appointmentBookingRepository,
                 sessionManager,
                 userRepository,
-                eventManager
+                eventManager,
+                appointmentNotificationCoordinator
         );
 
         Scanner scanner = new Scanner(System.in);
