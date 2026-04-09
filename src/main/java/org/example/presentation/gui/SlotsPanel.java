@@ -37,7 +37,7 @@ public class SlotsPanel extends JPanel {
         JLabel noteLabel = new JLabel("Available slots only (booked slots are not selectable).");
         add(noteLabel, BorderLayout.NORTH);
 
-        tableModel = new DefaultTableModel(new Object[] {"Slot Time", "Status"}, 0) {
+        tableModel = new DefaultTableModel(new Object[] {"Date", "Day", "Time", "Status"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -65,11 +65,11 @@ public class SlotsPanel extends JPanel {
 
         List<AppointmentSlot> availableSlots = appointmentService.getAvailableSlots();
         for (AppointmentSlot slot : availableSlots) {
-            tableModel.addRow(new Object[] {slot.getTime(), "Available"});
+            tableModel.addRow(new Object[] {slot.getDate(), slot.getDay(), slot.getTime(), "Available"});
         }
 
         if (availableSlots.isEmpty()) {
-            tableModel.addRow(new Object[] {"-", "No available slots"});
+            tableModel.addRow(new Object[] {"-", "-", "-", "No available slots"});
         }
     }
 }

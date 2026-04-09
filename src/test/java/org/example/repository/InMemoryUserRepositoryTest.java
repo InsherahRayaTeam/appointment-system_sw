@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -60,6 +61,21 @@ class InMemoryUserRepositoryTest {
         Optional<SystemUser> result = repository.findByEmail(null);
 
         // Assert
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void findById_WithExistingUserId_ReturnsUser() {
+        Optional<SystemUser> result = repository.findById("admin-1");
+
+        assertTrue(result.isPresent());
+        assertEquals("admin@gmail.com", result.get().getEmail());
+    }
+
+    @Test
+    void findById_WithUnknownUserId_ReturnsEmpty() {
+        Optional<SystemUser> result = repository.findById("unknown-id");
+
         assertTrue(result.isEmpty());
     }
 
@@ -142,6 +158,21 @@ class InMemoryUserRepositoryTest {
         List<SystemUser> secondSnapshot = repository.findAll();
 
         assertEquals(initialSnapshot.size() + 1, secondSnapshot.size());
+    }
+
+    @Test
+    void updatePassword_WithExistingUser_ChangesStoredPassword() {
+        boolean updated = repository.updatePassword("user-1", "updated123");
+
+        assertTrue(updated);
+        assertEquals("updated123", repository.findByEmail("user@gmail.com").orElseThrow().getPassword());
+    }
+
+    @Test
+    void updatePassword_WithUnknownUser_ReturnsFalse() {
+        boolean updated = repository.updatePassword("missing-user", "updated123");
+
+        assertFalse(updated);
     }
 
     private void invokeSeedUser(String id, String email, String password, UserRole role) throws Exception {

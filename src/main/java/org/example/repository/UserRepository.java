@@ -20,11 +20,30 @@ public interface UserRepository {
     Optional<SystemUser> findByEmail(String email);
 
     /**
+     * Finds by id using the given input.
+     *
+     * @param id unique id used to find the record
+     *
+     * @return optional value if data is found
+     */
+    Optional<SystemUser> findById(String id);
+
+    /**
      * Runs save for this class.
      *
      * @param user user involved in this action
      */
     void save(SystemUser user);
+
+    /**
+     * Updates user password when record exists.
+     *
+     * @param userId unique id used to find the record
+     * @param newPassword password text entered by the user
+     *
+     * @return true when the action is valid or successful, otherwise false
+     */
+    boolean updatePassword(String userId, String newPassword);
 
     /**
      * Finds all using the given input.

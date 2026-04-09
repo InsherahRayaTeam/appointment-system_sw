@@ -17,6 +17,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Represents appointment booking service in the system.
@@ -234,11 +235,24 @@ public class AppointmentBookingService {
         }
 
         String normalizedCustomerName = customerName.trim();
-        String normalizedSlotTime = slotTime.trim();
+        String normalizedSlotSelection = slotTime.trim();
         boolean matchingSlotFound = false;
 
+        String bookingCustomerName = normalizedCustomerName;
+        String bookingCustomerEmail = normalizedCustomerName;
+        if (sessionManager != null && sessionManager.isLoggedIn() && sessionManager.getCurrentUser() != null) {
+            bookingCustomerName = normalize(sessionManager.getCurrentUser().getId());
+            bookingCustomerEmail = normalize(sessionManager.getCurrentUser().getEmail());
+            if (bookingCustomerName == null) {
+                bookingCustomerName = normalizedCustomerName;
+            }
+            if (bookingCustomerEmail == null) {
+                bookingCustomerEmail = normalizedCustomerName;
+            }
+        }
+
         for (AppointmentSlot slot : appointmentRepository.findAll()) {
-            if (slot.getTime().equals(normalizedSlotTime)) {
+            if (slot.matchesSelection(normalizedSlotSelection)) {
                 matchingSlotFound = true;
 
                 if (!slot.isAvailable()) {
@@ -247,8 +261,10 @@ public class AppointmentBookingService {
 
                 slot.book();
                 Appointment appointment = new Appointment(
-                        normalizedCustomerName,
-                        normalizedSlotTime,
+                        UUID.randomUUID().toString(),
+                        bookingCustomerName,
+                        bookingCustomerEmail,
+                        slot.getDateTime(),
                         durationMinutes,
                         participantCount,
                         AppointmentStatus.CONFIRMED,
@@ -307,10 +323,20 @@ public class AppointmentBookingService {
             return Collections.emptyList();
         }
 
+        String resolvedCustomerId = null;
+        if (userRepository != null) {
+            resolvedCustomerId = userRepository.findByEmail(normalizedCustomerEmail)
+                    .map(user -> normalize(user.getId()))
+                    .orElse(null);
+        }
+
         List<Appointment> results = new ArrayList<>();
         for (Appointment appointment : appointmentBookingRepository.findAll()) {
-            String bookingCustomer = normalize(appointment.getCustomerName());
-            if (normalizedCustomerEmail.equalsIgnoreCase(bookingCustomer)) {
+            String bookingCustomerName = normalize(appointment.getCustomerName());
+            String bookingCustomerEmail = normalize(appointment.getCustomerEmail());
+            if (normalizedCustomerEmail.equalsIgnoreCase(bookingCustomerEmail)
+                    || normalizedCustomerEmail.equalsIgnoreCase(bookingCustomerName)
+                    || (resolvedCustomerId != null && resolvedCustomerId.equalsIgnoreCase(bookingCustomerName))) {
                 results.add(appointment);
             }
         }
@@ -388,6 +414,68 @@ public class AppointmentBookingService {
     }
 
     /**
+     * Marks appointment as attended when allowed.
+     *
+     * @param appointmentId unique id used to find the record
+     * @return status that explains the operation result
+     */
+    public BookingStatus markAppointmentAsAttended(String appointmentId) {
+        Appointment appointment = resolveAuthorizedAppointment(appointmentId, ReservationAccess.ADMIN_ANY);
+        if (appointment == null) {
+            return resolveAuthorizationOrNotFoundStatus(appointmentId, ReservationAccess.ADMIN_ANY);
+        }
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            return BookingStatus.APPOINTMENT_ALREADY_CANCELLED;
+        }
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
+            return BookingStatus.APPOINTMENT_ALREADY_COMPLETED;
+        }
+        if (appointment.getStatus() == AppointmentStatus.ATTENDED) {
+            return BookingStatus.APPOINTMENT_ALREADY_ATTENDED;
+        }
+
+        Appointment updated = appointment.withStatus(AppointmentStatus.ATTENDED);
+        if (!appointmentBookingRepository.update(updated)) {
+            return BookingStatus.UPDATE_FAILED;
+        }
+
+        notifyEvent("Reservation attended: " + updated.getId());
+        sendAttendedNotificationIfConfigured(updated);
+        return BookingStatus.SUCCESS;
+    }
+
+    /**
+     * Marks appointment as completed when allowed.
+     *
+     * @param appointmentId unique id used to find the record
+     * @return status that explains the operation result
+     */
+    public BookingStatus markAppointmentAsCompleted(String appointmentId) {
+        Appointment appointment = resolveAuthorizedAppointment(appointmentId, ReservationAccess.ADMIN_ANY);
+        if (appointment == null) {
+            return resolveAuthorizationOrNotFoundStatus(appointmentId, ReservationAccess.ADMIN_ANY);
+        }
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            return BookingStatus.APPOINTMENT_ALREADY_CANCELLED;
+        }
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
+            return BookingStatus.APPOINTMENT_ALREADY_COMPLETED;
+        }
+        if (appointment.getStatus() != AppointmentStatus.ATTENDED) {
+            return BookingStatus.APPOINTMENT_NOT_ATTENDED;
+        }
+
+        Appointment updated = appointment.withStatus(AppointmentStatus.COMPLETED);
+        if (!appointmentBookingRepository.update(updated)) {
+            return BookingStatus.UPDATE_FAILED;
+        }
+
+        notifyEvent("Reservation completed: " + updated.getId());
+        sendCompletedNotificationIfConfigured(updated);
+        return BookingStatus.SUCCESS;
+    }
+
+    /**
      * Checks whether it can cancel reservation internal.
      *
      * @param appointmentId unique id used to find the record
@@ -402,11 +490,14 @@ public class AppointmentBookingService {
         if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
             return BookingStatus.APPOINTMENT_ALREADY_CANCELLED;
         }
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
+            return BookingStatus.APPOINTMENT_ALREADY_COMPLETED;
+        }
         if (!appointment.isFutureComparedTo(LocalDateTime.now())) {
             return BookingStatus.APPOINTMENT_NOT_FUTURE;
         }
 
-        AppointmentSlot slot = findSlotByTime(appointment.getSlotTime());
+        AppointmentSlot slot = findSlotForAppointment(appointment);
         if (slot != null) {
             slot.release();
         }
@@ -452,24 +543,27 @@ public class AppointmentBookingService {
             return BookingStatus.APPOINTMENT_NOT_FUTURE;
         }
 
-        String normalizedNewSlotTime = newSlotTime.trim();
-        AppointmentSlot targetSlot = findSlotByTime(normalizedNewSlotTime);
+        String normalizedNewSlotSelection = newSlotTime.trim();
+        AppointmentSlot targetSlot = findSlotBySelection(normalizedNewSlotSelection);
         if (targetSlot == null) {
             return BookingStatus.SLOT_NOT_FOUND;
+        }
+        if (!targetSlot.isFutureSlot()) {
+            return BookingStatus.APPOINTMENT_NOT_FUTURE;
         }
         if (!targetSlot.isAvailable()) {
             return BookingStatus.SLOT_ALREADY_BOOKED;
         }
 
-        AppointmentSlot currentSlot = findSlotByTime(appointment.getSlotTime());
+        AppointmentSlot currentSlot = findSlotForAppointment(appointment);
         if (currentSlot != null) {
             currentSlot.release();
         }
 
         targetSlot.book();
-        Appointment updated = appointment.withSlotTimeAndStatus(
-                normalizedNewSlotTime,
-                AppointmentStatus.MODIFIED
+        Appointment updated = appointment.withStartTimeAndStatus(
+                targetSlot.getDateTime(),
+                AppointmentStatus.RESCHEDULED
         );
 
         if (!appointmentBookingRepository.update(updated)) {
@@ -480,8 +574,8 @@ public class AppointmentBookingService {
             return BookingStatus.UPDATE_FAILED;
         }
 
-        notifyEvent("Reservation modified: " + updated.getId() + " -> " + normalizedNewSlotTime);
-        sendModifiedNotificationIfConfigured(updated);
+        notifyEvent("Reservation modified: " + updated.getId() + " -> " + updated.getSlotDateTimeLabel());
+        sendRescheduledNotificationIfConfigured(appointment, updated);
         return BookingStatus.SUCCESS;
     }
 
@@ -546,18 +640,50 @@ public class AppointmentBookingService {
      * @param slotTime slot time text like 10:00
      * @return result produced by this method
      */
-    private AppointmentSlot findSlotByTime(String slotTime) {
-        String normalized = normalize(slotTime);
+    private AppointmentSlot findSlotBySelection(String slotSelection) {
+        String normalized = normalize(slotSelection);
         if (normalized == null) {
             return null;
         }
 
         for (AppointmentSlot slot : appointmentRepository.findAll()) {
-            if (normalized.equals(slot.getTime())) {
+            if (slot.matchesSelection(normalized)) {
                 return slot;
             }
         }
         return null;
+    }
+
+    /**
+     * Finds a slot that matches an existing appointment start date-time.
+     *
+     * @param appointment appointment value used by this method
+     * @return result produced by this method
+     */
+    private AppointmentSlot findSlotForAppointment(Appointment appointment) {
+        if (appointment == null || appointment.getStartTime() == null) {
+            return null;
+        }
+
+        for (AppointmentSlot slot : appointmentRepository.findAll()) {
+            if (appointment.getStartTime().equals(slot.getDateTime())) {
+                return slot;
+            }
+        }
+
+        return findSlotBySelection(appointment.getSlotDateTimeLabel());
+    }
+
+    private void sendAttendedNotificationIfConfigured(Appointment appointment) {
+        if (appointmentNotificationCoordinator != null && appointment != null) {
+            appointmentNotificationCoordinator.sendAttendedNotification(appointment);
+        }
+    }
+
+    private void sendCompletedNotificationIfConfigured(Appointment appointment) {
+        if (appointmentNotificationCoordinator != null && appointment != null) {
+            appointmentNotificationCoordinator.sendCompletedNotification(appointment);
+        }
     }
 
     /**
@@ -659,9 +785,9 @@ public class AppointmentBookingService {
      *
      * @param appointment appointment involved in this action
      */
-    private void sendModifiedNotificationIfConfigured(Appointment appointment) {
-        if (appointmentNotificationCoordinator != null && appointment != null) {
-            appointmentNotificationCoordinator.sendModifiedNotification(appointment);
+    private void sendRescheduledNotificationIfConfigured(Appointment previousAppointment, Appointment updatedAppointment) {
+        if (appointmentNotificationCoordinator != null && previousAppointment != null && updatedAppointment != null) {
+            appointmentNotificationCoordinator.sendRescheduledNotification(previousAppointment, updatedAppointment);
         }
     }
 

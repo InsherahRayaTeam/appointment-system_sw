@@ -2,7 +2,9 @@ package org.example.domain;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -114,6 +116,38 @@ public class AppointmentTest {
         assertEquals(AppointmentStatus.MODIFIED, modified.getStatus());
         assertEquals("11:00", modified.getSlotTime());
         assertEquals(original.getId(), modified.getId());
+    }
+
+    @Test
+    void shouldExposeSlotDateDayAndDateTimeLabel() {
+        LocalDateTime start = LocalDate.of(2026, 4, 20).atTime(LocalTime.of(15, 30));
+        Appointment appointment = new Appointment("apt-date", "alice@example.com", start, 60, 1, AppointmentStatus.CONFIRMED);
+
+        assertEquals("2026-04-20", appointment.getSlotDate());
+        assertEquals("MONDAY", appointment.getSlotDay());
+        assertEquals("2026-04-20 15:30", appointment.getSlotDateTimeLabel());
+    }
+
+    @Test
+    void withStartTimeAndStatus_ShouldReturnCopyWithUpdatedDateTimeAndStatus() {
+        Appointment original = new Appointment(
+                "apt-start-update",
+                "alice@example.com",
+                LocalDate.of(2026, 4, 20).atTime(10, 0),
+                60,
+                2,
+                AppointmentStatus.CONFIRMED
+        );
+
+        Appointment updated = original.withStartTimeAndStatus(
+                LocalDate.of(2026, 4, 22).atTime(11, 15),
+                AppointmentStatus.MODIFIED
+        );
+
+        assertEquals(AppointmentStatus.MODIFIED, updated.getStatus());
+        assertEquals("2026-04-22", updated.getSlotDate());
+        assertEquals("11:15", updated.getSlotTime());
+        assertEquals(original.getId(), updated.getId());
     }
 }
 

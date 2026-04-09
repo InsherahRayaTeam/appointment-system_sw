@@ -14,7 +14,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
-import java.awt.GraphicsEnvironment;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.util.List;
@@ -47,7 +46,7 @@ public class ReservationsPanel extends JPanel {
         add(infoLabel, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(
-                new Object[] {"Reservation ID", "Customer", "Slot", "Duration", "Participants", "Status"},
+                new Object[] {"Reservation ID", "Customer", "Date", "Day", "Time", "Duration", "Participants", "Status"},
                 0
         ) {
             @Override
@@ -70,15 +69,12 @@ public class ReservationsPanel extends JPanel {
 
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton refreshButton = new JButton("Refresh");
-        JButton modifyButton = new JButton("Modify Reservation");
         JButton cancelButton = new JButton("Cancel Reservation");
 
         refreshButton.addActionListener(e -> refreshData());
-        modifyButton.addActionListener(e -> onModifyReservation());
         cancelButton.addActionListener(e -> onCancelReservation());
 
         actionPanel.add(refreshButton);
-        actionPanel.add(modifyButton);
         actionPanel.add(cancelButton);
         add(actionPanel, BorderLayout.SOUTH);
 
@@ -118,40 +114,6 @@ public class ReservationsPanel extends JPanel {
         if (status == BookingStatus.SUCCESS) {
             if (selectedRow >= 0 && selectedRow < tableModel.getRowCount()) {
                 tableModel.removeRow(selectedRow);
-            }
-            updateInfoLabel();
-        }
-    }
-
-    /**
-     * Runs on modify reservation for this class.
-     */
-    private void onModifyReservation() {
-        String reservationId = selectedReservationId();
-        if (reservationId == null) {
-            showWarning("Please select a reservation first.");
-            return;
-        }
-        String newSlotTime = (GraphicsEnvironment.isHeadless() || !isShowing())
-                ? "11:00"
-                : JOptionPane.showInputDialog(
-                        this,
-                        "Enter replacement slot time (for example, 11:00):",
-                        "Modify Reservation",
-                        JOptionPane.QUESTION_MESSAGE
-                );
-        if (newSlotTime == null || newSlotTime.trim().isEmpty()) {
-            showWarning("Please provide a replacement slot time.");
-            return;
-        }
-        String normalizedSlotTime = newSlotTime.trim();
-        BookingStatus status = appointmentBookingService.modifyOwnAppointment(reservationId, normalizedSlotTime);
-        showResult(status, "Modify Reservation");
-        if (status == BookingStatus.SUCCESS) {
-            int selectedRow = reservationsTable.getSelectedRow();
-            if (selectedRow >= 0 && selectedRow < tableModel.getRowCount()) {
-                tableModel.setValueAt(normalizedSlotTime, selectedRow, 2);
-                tableModel.setValueAt("MODIFIED", selectedRow, 5);
             }
             updateInfoLabel();
         }
@@ -219,6 +181,8 @@ public class ReservationsPanel extends JPanel {
         return new Object[] {
                 appointment.getId(),
                 appointment.getCustomerName(),
+                appointment.getSlotDate(),
+                appointment.getSlotDay(),
                 appointment.getSlotTime(),
                 appointment.getDurationMinutes(),
                 appointment.getParticipantCount(),

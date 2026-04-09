@@ -98,6 +98,29 @@ public class InMemoryUserRepository implements UserRepository {
     }
 
     /**
+     * Finds by id using the given input.
+     *
+     * @param id unique id used to find the record
+     *
+     * @return optional value if data is found
+     */
+    @Override
+    public Optional<SystemUser> findById(String id) {
+        if (id == null || id.trim().isEmpty()) {
+            return Optional.empty();
+        }
+
+        String normalizedId = id.trim();
+        for (SystemUser user : usersByEmail.values()) {
+            if (normalizedId.equalsIgnoreCase(user.getId())) {
+                return Optional.of(user);
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    /**
      * Runs save for this class.
      *
      * @param user user involved in this action
@@ -108,6 +131,36 @@ public class InMemoryUserRepository implements UserRepository {
             return;
         }
         usersByEmail.put(user.getEmail().trim().toLowerCase(), user);
+    }
+
+    /**
+     * Updates user password when record exists.
+     *
+     * @param userId unique id used to find the record
+     * @param newPassword password text entered by the user
+     *
+     * @return true when the action is valid or successful, otherwise false
+     */
+    @Override
+    public boolean updatePassword(String userId, String newPassword) {
+        if (userId == null || userId.trim().isEmpty() || newPassword == null || newPassword.trim().isEmpty()) {
+            return false;
+        }
+
+        Optional<SystemUser> existing = findById(userId);
+        if (existing.isEmpty()) {
+            return false;
+        }
+
+        SystemUser current = existing.get();
+        SystemUser updated = new SystemUser(
+                current.getId(),
+                current.getEmail(),
+                newPassword.trim(),
+                current.getRole()
+        );
+        usersByEmail.put(current.getEmail().toLowerCase(), updated);
+        return true;
     }
 
     /**

@@ -6,6 +6,9 @@ package org.example.domain;
 public enum AppointmentStatus {
     CONFIRMED,
     MODIFIED,
+    RESCHEDULED,
+    ATTENDED,
+    COMPLETED,
     CANCELLED
 }
 

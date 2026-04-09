@@ -23,8 +23,11 @@ class DomainEnumsTest {
     void appointmentStatus_ContainsExpectedValues() {
         assertEquals(AppointmentStatus.CONFIRMED, AppointmentStatus.valueOf("CONFIRMED"));
         assertEquals(AppointmentStatus.MODIFIED, AppointmentStatus.valueOf("MODIFIED"));
+        assertEquals(AppointmentStatus.RESCHEDULED, AppointmentStatus.valueOf("RESCHEDULED"));
+        assertEquals(AppointmentStatus.ATTENDED, AppointmentStatus.valueOf("ATTENDED"));
+        assertEquals(AppointmentStatus.COMPLETED, AppointmentStatus.valueOf("COMPLETED"));
         assertEquals(AppointmentStatus.CANCELLED, AppointmentStatus.valueOf("CANCELLED"));
-        assertEquals(3, AppointmentStatus.values().length);
+        assertEquals(6, AppointmentStatus.values().length);
     }
 
     @Test

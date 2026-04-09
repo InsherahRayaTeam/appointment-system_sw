@@ -89,6 +89,7 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
         return new Appointment(
                 appointment.getId(),
                 appointment.getCustomerName(),
+                appointment.getCustomerEmail(),
                 appointment.getStartTime(),
                 appointment.getDurationMinutes(),
                 appointment.getParticipantCount(),

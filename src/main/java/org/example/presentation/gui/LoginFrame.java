@@ -83,14 +83,20 @@ public class LoginFrame extends JFrame {
         JPanel buttonPanel = new JPanel();
 
         loginButton = new JButton("Login");
+        JButton signUpButton = new JButton("Sign Up");
+        JButton forgotPasswordButton = new JButton("Forgot Password");
         JButton clearButton = new JButton("Clear");
         JButton exitButton = new JButton("Exit");
 
         loginButton.addActionListener(e -> onLogin());
+        signUpButton.addActionListener(e -> appController.openSignUpFrame());
+        forgotPasswordButton.addActionListener(e -> appController.openForgotPasswordFrame());
         clearButton.addActionListener(e -> onClear());
         exitButton.addActionListener(e -> System.exit(0));
 
         buttonPanel.add(loginButton);
+        buttonPanel.add(signUpButton);
+        buttonPanel.add(forgotPasswordButton);
         buttonPanel.add(clearButton);
         buttonPanel.add(exitButton);
 

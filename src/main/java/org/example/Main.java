@@ -18,7 +18,9 @@ import org.example.service.AppointmentService;
 import org.example.service.AuthEventLogger;
 import org.example.service.EventManager;
 import org.example.service.LoginAttemptTracker;
+import org.example.service.PasswordRecoveryService;
 import org.example.service.SessionManager;
+import org.example.service.UserRegistrationService;
 
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -74,6 +76,12 @@ public class Main {
             AppointmentNotificationCoordinator appointmentNotificationCoordinator =
                     new AppointmentNotificationCoordinator(notificationService);
 
+            UserRegistrationService userRegistrationService =
+                    new UserRegistrationService(userRepository, eventManager);
+
+            PasswordRecoveryService passwordRecoveryService =
+                    new PasswordRecoveryService(userRepository, notificationService, eventManager);
+
             // ===== SESSION / SECURITY =====
             SessionManager sessionManager = new SessionManager(authEventLogger, eventManager);
 
@@ -102,7 +110,9 @@ public class Main {
                     authService,
                     appointmentService,
                     appointmentBookingService,
-                    sessionManager
+                    sessionManager,
+                    userRegistrationService,
+                    passwordRecoveryService
             );
 
             appController.start();
@@ -173,7 +183,7 @@ public class Main {
                         System.out.println("Available Appointment Slots");
                         List<AppointmentSlot> availableSlots = appointmentService.getAvailableSlots();
                         for (AppointmentSlot slot : availableSlots) {
-                            System.out.println(slot.getTime());
+                            System.out.println(slot.getDateDayTimeLabel());
                         }
                         break;
                     case "8":

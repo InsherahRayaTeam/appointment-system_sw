@@ -16,7 +16,10 @@ class GuiMessageHelperTest {
     void toMessage_ReturnsExpectedMessageForEachStatus() {
         assertEquals("Operation completed successfully.", GuiMessageHelper.toMessage(BookingStatus.SUCCESS));
         assertEquals("Customer name is required.", GuiMessageHelper.toMessage(BookingStatus.BLANK_CUSTOMER_NAME));
-        assertEquals("Please select a slot time.", GuiMessageHelper.toMessage(BookingStatus.BLANK_SLOT_TIME));
+        assertEquals(
+                "Please select an appointment date/day/time slot.",
+                GuiMessageHelper.toMessage(BookingStatus.BLANK_SLOT_TIME)
+        );
         assertEquals("Duration is invalid. Allowed range is 15-120 minutes.", GuiMessageHelper.toMessage(BookingStatus.INVALID_DURATION));
         assertEquals(
                 "Participant count is invalid. Allowed range is 1-10.",
@@ -40,6 +43,18 @@ class GuiMessageHelperTest {
         assertEquals(
                 "Reservation is already cancelled.",
                 GuiMessageHelper.toMessage(BookingStatus.APPOINTMENT_ALREADY_CANCELLED)
+        );
+        assertEquals(
+                "Reservation has already been marked as attended.",
+                GuiMessageHelper.toMessage(BookingStatus.APPOINTMENT_ALREADY_ATTENDED)
+        );
+        assertEquals(
+                "Reservation has already been completed.",
+                GuiMessageHelper.toMessage(BookingStatus.APPOINTMENT_ALREADY_COMPLETED)
+        );
+        assertEquals(
+                "Reservation must be marked as attended before it can be completed.",
+                GuiMessageHelper.toMessage(BookingStatus.APPOINTMENT_NOT_ATTENDED)
         );
         assertEquals(
                 "Reservation update failed. Please try again.",

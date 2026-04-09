@@ -6,7 +6,11 @@ import org.example.service.AdminAuthService;
 import org.example.service.AppointmentBookingService;
 import org.example.service.AppointmentService;
 import org.example.service.AuthenticationAttemptResult;
+import org.example.service.ForgotPasswordStatus;
 import org.example.service.SessionManager;
+import org.example.service.SignUpStatus;
+import org.example.service.PasswordRecoveryService;
+import org.example.service.UserRegistrationService;
 
 import javax.swing.JFrame;
 import java.util.Objects;
@@ -20,6 +24,8 @@ public class ApplicationController {
     private final AppointmentService appointmentService;
     private final AppointmentBookingService appointmentBookingService;
     private final SessionManager sessionManager;
+    private final UserRegistrationService userRegistrationService;
+    private final PasswordRecoveryService passwordRecoveryService;
 
     private JFrame currentFrame;
 
@@ -35,7 +41,9 @@ public class ApplicationController {
             AdminAuthService authService,
             AppointmentService appointmentService,
             AppointmentBookingService appointmentBookingService,
-            SessionManager sessionManager
+            SessionManager sessionManager,
+            UserRegistrationService userRegistrationService,
+            PasswordRecoveryService passwordRecoveryService
     ) {
         this.authService = Objects.requireNonNull(authService, "authService cannot be null");
         this.appointmentService = Objects.requireNonNull(
@@ -47,6 +55,14 @@ public class ApplicationController {
                 "appointmentBookingService cannot be null"
         );
         this.sessionManager = Objects.requireNonNull(sessionManager, "sessionManager cannot be null");
+        this.userRegistrationService = Objects.requireNonNull(
+                userRegistrationService,
+                "userRegistrationService cannot be null"
+        );
+        this.passwordRecoveryService = Objects.requireNonNull(
+                passwordRecoveryService,
+                "passwordRecoveryService cannot be null"
+        );
     }
 
     /**
@@ -61,6 +77,61 @@ public class ApplicationController {
      */
     public void openLoginFrame() {
         switchFrame(new LoginFrame(authService, this));
+    }
+
+    /**
+     * Opens sign up frame in the user interface.
+     */
+    public void openSignUpFrame() {
+        switchFrame(new org.example.presentation.gui.SignUpFrame(this));
+    }
+
+    /**
+     * Opens forgot password frame in the user interface.
+     */
+    public void openForgotPasswordFrame() {
+        switchFrame(new org.example.presentation.gui.ForgotPasswordFrame(this));
+    }
+
+    /**
+     * Registers a user through registration service.
+     *
+     * @param username unique username for login identity
+     * @param email email address used for login or matching
+     * @param password password text entered by the user
+     * @param confirmPassword password confirmation text entered by the user
+     * @return status that explains the operation result
+     */
+    public SignUpStatus registerUser(String username, String email, String password, String confirmPassword) {
+        return userRegistrationService.registerUser(username, email, password, confirmPassword);
+    }
+
+    /**
+     * Requests a password reset code for a user.
+     *
+     * @param usernameOrEmail username or email used for identity
+     * @return status that explains the operation result
+     */
+    public ForgotPasswordStatus requestPasswordReset(String usernameOrEmail) {
+        return passwordRecoveryService.requestReset(usernameOrEmail);
+    }
+
+    /**
+     * Resets password after validating reset data.
+     *
+     * @param usernameOrEmail username or email used for identity
+     * @param resetCode reset verification code
+     * @param newPassword password text entered by the user
+     * @param confirmPassword password confirmation text entered by the user
+     * @return status that explains the operation result
+     */
+    public ForgotPasswordStatus resetPassword(
+            String usernameOrEmail,
+            String resetCode,
+            String newPassword,
+            String confirmPassword
+    ) {
+        return passwordRecoveryService.resetPassword(usernameOrEmail, resetCode, newPassword, confirmPassword);
     }
 
     /**

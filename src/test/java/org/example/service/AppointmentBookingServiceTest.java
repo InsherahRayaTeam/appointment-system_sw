@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -417,6 +418,28 @@ class AppointmentBookingServiceTest {
     }
 
     @Test
+    void cancelOwnAppointment_ThenBookNewSlot_UserCanBookAgainAndReleasedSlotIsAvailable() {
+        authenticateAsUser("alice@example.com");
+
+        AppointmentSlot releasedSlot = new AppointmentSlot("10:00");
+        releasedSlot.book();
+        AppointmentSlot freshSlot = new AppointmentSlot("11:00");
+
+        Appointment reservation = futureReservation("apt-user-rebook", "10:00", "alice@example.com");
+        when(appointmentBookingRepository.findById(eq("apt-user-rebook"))).thenReturn(Optional.of(reservation));
+        when(appointmentRepository.findAll()).thenReturn(List.of(releasedSlot, freshSlot));
+        when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
+
+        BookingStatus cancelStatus = appointmentBookingService.cancelOwnAppointment("apt-user-rebook");
+        BookingStatus rebookStatus = appointmentBookingService.bookAppointment("alice@example.com", "11:00", 60, 1);
+
+        assertEquals(BookingStatus.SUCCESS, cancelStatus);
+        assertTrue(releasedSlot.isAvailable());
+        assertEquals(BookingStatus.SUCCESS, rebookStatus);
+        assertFalse(freshSlot.isAvailable());
+    }
+
+    @Test
     void cancelOwnAppointment_UserOtherReservation_ReturnsUnauthorized() {
         // Arrange
         authenticateAsUser("alice@example.com");
@@ -511,8 +534,8 @@ class AppointmentBookingServiceTest {
         ArgumentCaptor<Appointment> captor = ArgumentCaptor.forClass(Appointment.class);
         verify(appointmentBookingRepository).update(captor.capture());
         assertEquals("11:00", captor.getValue().getSlotTime());
-        assertEquals(AppointmentStatus.MODIFIED, captor.getValue().getStatus());
-        verify(eventManager).notifyObservers("Reservation modified: apt-42 -> 11:00");
+        assertEquals(AppointmentStatus.RESCHEDULED, captor.getValue().getStatus());
+        verify(eventManager).notifyObservers(contains("Reservation modified: apt-42 ->"));
     }
 
     @Test
@@ -595,6 +618,26 @@ class AppointmentBookingServiceTest {
     }
 
     @Test
+    void modifyAppointment_TargetSlotInPast_ReturnsAppointmentNotFuture() {
+        authenticateAsAdmin();
+
+        AppointmentSlot oldSlot = new AppointmentSlot("10:00");
+        oldSlot.book();
+        AppointmentSlot pastSlot = new AppointmentSlot(LocalDate.now().minusDays(1), LocalTime.parse("11:00"));
+
+        when(appointmentBookingRepository.findById(eq("apt-46-past")))
+                .thenReturn(Optional.of(futureReservation("apt-46-past", "10:00", "alice@example.com")));
+        when(appointmentRepository.findAll()).thenReturn(List.of(oldSlot, pastSlot));
+
+        BookingStatus result = appointmentBookingService.modifyAppointment("apt-46-past", pastSlot.getDateDayTimeLabel());
+
+        assertEquals(BookingStatus.APPOINTMENT_NOT_FUTURE, result);
+        assertFalse(oldSlot.isAvailable());
+        assertTrue(pastSlot.isAvailable());
+        verify(appointmentBookingRepository, never()).update(any(Appointment.class));
+    }
+
+    @Test
     void modifyAppointment_WhenUpdateFails_RollsBackSlotChanges() {
         // Arrange
         authenticateAsAdmin();
@@ -638,7 +681,7 @@ class AppointmentBookingServiceTest {
         assertEquals(BookingStatus.SUCCESS, result);
         assertTrue(oldSlot.isAvailable());
         assertFalse(newSlot.isAvailable());
-        verify(eventManager).notifyObservers("Reservation modified: apt-user-5 -> 11:00");
+        verify(eventManager).notifyObservers(contains("Reservation modified: apt-user-5 ->"));
     }
 
     @Test
@@ -688,6 +731,112 @@ class AppointmentBookingServiceTest {
 
         // Assert
         assertEquals(BookingStatus.UNAUTHORIZED, result);
+    }
+
+    @Test
+    void markAppointmentAsAttended_AdminCanMarkExistingReservation_ReturnsSuccess() {
+        authenticateAsAdmin();
+
+        Appointment appointment = futureReservation("apt-attend", "10:00", "alice@example.com");
+        when(appointmentBookingRepository.findById(eq("apt-attend"))).thenReturn(Optional.of(appointment));
+        when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
+
+        BookingStatus result = appointmentBookingService.markAppointmentAsAttended("apt-attend");
+
+        assertEquals(BookingStatus.SUCCESS, result);
+        verify(appointmentBookingRepository).update(any(Appointment.class));
+        verify(eventManager).notifyObservers(contains("Reservation attended: apt-attend"));
+    }
+
+    @Test
+    void markAppointmentAsAttended_WhenUnauthorized_ReturnsUnauthorized() {
+        when(sessionManager.isLoggedIn()).thenReturn(false);
+
+        BookingStatus result = appointmentBookingService.markAppointmentAsAttended("apt-attend-unauth");
+
+        assertEquals(BookingStatus.UNAUTHORIZED, result);
+    }
+
+    @Test
+    void markAppointmentAsCompleted_AdminCanCompleteAttendedReservation_ReturnsSuccess() {
+        authenticateAsAdmin();
+
+        Appointment appointment = new Appointment(
+                "apt-complete",
+                "alice@example.com",
+                LocalDate.now().plusDays(1).atTime(LocalTime.parse("10:00")),
+                60,
+                2,
+                AppointmentStatus.ATTENDED
+        );
+        when(appointmentBookingRepository.findById(eq("apt-complete"))).thenReturn(Optional.of(appointment));
+        when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
+
+        BookingStatus result = appointmentBookingService.markAppointmentAsCompleted("apt-complete");
+
+        assertEquals(BookingStatus.SUCCESS, result);
+        verify(appointmentBookingRepository).update(any(Appointment.class));
+        verify(eventManager).notifyObservers(contains("Reservation completed: apt-complete"));
+    }
+
+    @Test
+    void markAppointmentAsCompleted_WhenUnauthorized_ReturnsUnauthorized() {
+        when(sessionManager.isLoggedIn()).thenReturn(false);
+
+        BookingStatus result = appointmentBookingService.markAppointmentAsCompleted("apt-complete-unauth");
+
+        assertEquals(BookingStatus.UNAUTHORIZED, result);
+    }
+
+    @Test
+    void markAppointmentAsCompleted_CancelledReservation_ReturnsAlreadyCancelled() {
+        authenticateAsAdmin();
+
+        Appointment cancelled = new Appointment(
+                "apt-complete-cancelled",
+                "alice@example.com",
+                LocalDate.now().plusDays(1).atTime(LocalTime.parse("10:00")),
+                60,
+                2,
+                AppointmentStatus.CANCELLED
+        );
+        when(appointmentBookingRepository.findById(eq("apt-complete-cancelled"))).thenReturn(Optional.of(cancelled));
+
+        BookingStatus result = appointmentBookingService.markAppointmentAsCompleted("apt-complete-cancelled");
+
+        assertEquals(BookingStatus.APPOINTMENT_ALREADY_CANCELLED, result);
+        verify(appointmentBookingRepository, never()).update(any(Appointment.class));
+    }
+
+    @Test
+    void markAppointmentAsAttended_WhenReservationMissing_ReturnsNotFound() {
+        authenticateAsAdmin();
+        when(appointmentBookingRepository.findById(eq("missing-attend"))).thenReturn(Optional.empty());
+
+        BookingStatus result = appointmentBookingService.markAppointmentAsAttended("missing-attend");
+
+        assertEquals(BookingStatus.APPOINTMENT_NOT_FOUND, result);
+        verify(appointmentBookingRepository, never()).update(any(Appointment.class));
+    }
+
+    @Test
+    void modifyAppointment_WhenCompletedReservation_ReturnsAlreadyCompleted() {
+        authenticateAsAdmin();
+
+        Appointment completed = new Appointment(
+                "apt-completed",
+                "alice@example.com",
+                LocalDate.now().plusDays(1).atTime(LocalTime.parse("10:00")),
+                60,
+                2,
+                AppointmentStatus.COMPLETED
+        );
+        when(appointmentBookingRepository.findById(eq("apt-completed"))).thenReturn(Optional.of(completed));
+
+        BookingStatus result = appointmentBookingService.modifyAppointment("apt-completed", "11:00");
+
+        assertEquals(BookingStatus.APPOINTMENT_ALREADY_COMPLETED, result);
+        verify(appointmentBookingRepository, never()).update(any(Appointment.class));
     }
 
     @Test

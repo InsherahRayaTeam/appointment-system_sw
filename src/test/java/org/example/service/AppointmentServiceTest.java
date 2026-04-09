@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -78,7 +79,7 @@ class AppointmentServiceTest {
         boolean reminderSent = appointmentService.sendReminderForSlot("10:00");
 
         assertTrue(reminderSent);
-        verify(observer, times(1)).update("Reminder: Appointment at 10:00");
+        verify(observer, times(1)).update(contains("Reminder: Appointment at"));
     }
 
     @Test
@@ -102,8 +103,8 @@ class AppointmentServiceTest {
         appointmentService.bookSlot("11:00");
         appointmentService.sendReminderForSlot("11:00");
 
-        verify(observer1, times(1)).update("Reminder: Appointment at 11:00");
-        verify(observer2, times(1)).update("Reminder: Appointment at 11:00");
+        verify(observer1, times(1)).update(contains("Reminder: Appointment at"));
+        verify(observer2, times(1)).update(contains("Reminder: Appointment at"));
     }
 
     @Test
@@ -128,7 +129,6 @@ class AppointmentServiceTest {
         int sentCount = appointmentService.sendAllReminders();
 
         assertEquals(2, sentCount);
-        verify(observer, times(1)).update("Reminder: Appointment at 10:00");
-        verify(observer, times(1)).update("Reminder: Appointment at 11:00");
+        verify(observer, times(2)).update(contains("Reminder: Appointment at"));
     }
 }
