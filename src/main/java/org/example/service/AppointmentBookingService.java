@@ -24,6 +24,9 @@ import java.util.UUID;
  */
 public class AppointmentBookingService {
 
+    private static final String LEGACY_PHONE_PLACEHOLDER = "N/A";
+    private static final String PHONE_PATTERN = "^\\+?[0-9][0-9\\s-]{6,14}$";
+
     private final AppointmentRepository appointmentRepository;
     private final AppointmentBookingRepository appointmentBookingRepository;
     private final BookingRuleStrategy durationRule;
@@ -132,12 +135,42 @@ public class AppointmentBookingService {
             String durationMinutesInput,
             String participantCountInput
     ) {
-        return bookAppointment(
+        return bookAppointmentInternal(
                 customerName,
+                LEGACY_PHONE_PLACEHOLDER,
                 slotTime,
                 durationMinutesInput,
                 participantCountInput,
-                AppointmentType.NORMAL
+                AppointmentType.NORMAL,
+                false
+        );
+    }
+
+    /**
+     * Books appointment when allowed.
+     *
+     * @param customerName value for customer name
+     * @param customerPhoneNumber value for customer phone number
+     * @param slotTime slot time text like 10:00
+     * @param durationMinutesInput appointment duration in minutes
+     * @param participantCountInput number of people for the appointment
+     * @return status that explains the operation result
+     */
+    public BookingStatus bookAppointment(
+            String customerName,
+            String customerPhoneNumber,
+            String slotTime,
+            String durationMinutesInput,
+            String participantCountInput
+    ) {
+        return bookAppointmentInternal(
+                customerName,
+                customerPhoneNumber,
+                slotTime,
+                durationMinutesInput,
+                participantCountInput,
+                AppointmentType.NORMAL,
+                true
         );
     }
 
@@ -158,8 +191,73 @@ public class AppointmentBookingService {
             String participantCountInput,
             AppointmentType appointmentType
     ) {
+        return bookAppointmentInternal(
+                customerName,
+                LEGACY_PHONE_PLACEHOLDER,
+                slotTime,
+                durationMinutesInput,
+                participantCountInput,
+                appointmentType,
+                false
+        );
+    }
+
+    /**
+     * Books appointment when allowed.
+     *
+     * @param customerName value for customer name
+     * @param customerPhoneNumber value for customer phone number
+     * @param slotTime slot time text like 10:00
+     * @param durationMinutesInput appointment duration in minutes
+     * @param participantCountInput number of people for the appointment
+     * @param appointmentType value for appointment type
+     * @return status that explains the operation result
+     */
+    public BookingStatus bookAppointment(
+            String customerName,
+            String customerPhoneNumber,
+            String slotTime,
+            String durationMinutesInput,
+            String participantCountInput,
+            AppointmentType appointmentType
+    ) {
+        return bookAppointmentInternal(
+                customerName,
+                customerPhoneNumber,
+                slotTime,
+                durationMinutesInput,
+                participantCountInput,
+                appointmentType,
+                true
+        );
+    }
+
+    /**
+     * Books appointment when allowed.
+     *
+     * @param customerName value for customer name
+     * @param customerPhoneNumber value for customer phone number
+     * @param slotTime slot time text like 10:00
+     * @param durationMinutesInput appointment duration in minutes
+     * @param participantCountInput number of people for the appointment
+     * @param appointmentType value for appointment type
+     * @param strictPhoneValidation flag that enables strict phone validation
+     * @return status that explains the operation result
+     */
+    private BookingStatus bookAppointmentInternal(
+            String customerName,
+            String customerPhoneNumber,
+            String slotTime,
+            String durationMinutesInput,
+            String participantCountInput,
+            AppointmentType appointmentType,
+            boolean strictPhoneValidation
+    ) {
         if (customerName == null || customerName.trim().isEmpty()) {
             return BookingStatus.BLANK_CUSTOMER_NAME;
+        }
+        if (strictPhoneValidation && (customerPhoneNumber == null || customerPhoneNumber.trim().isEmpty())) {
+            return BookingStatus.BLANK_PHONE_NUMBER;
         }
         if (slotTime == null || slotTime.trim().isEmpty()) {
             return BookingStatus.BLANK_SLOT_TIME;
@@ -175,7 +273,19 @@ public class AppointmentBookingService {
             return BookingStatus.INVALID_PARTICIPANT_COUNT;
         }
 
-        return bookAppointment(customerName, slotTime, durationMinutes, participantCount, appointmentType);
+        if (strictPhoneValidation && !isValidPhoneNumber(customerPhoneNumber)) {
+            return BookingStatus.INVALID_PHONE_NUMBER;
+        }
+
+        return bookAppointmentInternal(
+                customerName,
+                customerPhoneNumber,
+                slotTime,
+                durationMinutes,
+                participantCount,
+                appointmentType,
+                strictPhoneValidation
+        );
     }
 
     /**
@@ -193,7 +303,43 @@ public class AppointmentBookingService {
             int durationMinutes,
             int participantCount
     ) {
-        return bookAppointment(customerName, slotTime, durationMinutes, participantCount, AppointmentType.NORMAL);
+        return bookAppointmentInternal(
+                customerName,
+                LEGACY_PHONE_PLACEHOLDER,
+                slotTime,
+                durationMinutes,
+                participantCount,
+                AppointmentType.NORMAL,
+                false
+        );
+    }
+
+    /**
+     * Books appointment when allowed.
+     *
+     * @param customerName value for customer name
+     * @param customerPhoneNumber value for customer phone number
+     * @param slotTime slot time text like 10:00
+     * @param durationMinutes appointment duration in minutes
+     * @param participantCount number of people for the appointment
+     * @return status that explains the operation result
+     */
+    public BookingStatus bookAppointment(
+            String customerName,
+            String customerPhoneNumber,
+            String slotTime,
+            int durationMinutes,
+            int participantCount
+    ) {
+        return bookAppointmentInternal(
+                customerName,
+                customerPhoneNumber,
+                slotTime,
+                durationMinutes,
+                participantCount,
+                AppointmentType.NORMAL,
+                true
+        );
     }
 
     /**
@@ -213,11 +359,79 @@ public class AppointmentBookingService {
             int participantCount,
             AppointmentType appointmentType
     ) {
+        return bookAppointmentInternal(
+                customerName,
+                LEGACY_PHONE_PLACEHOLDER,
+                slotTime,
+                durationMinutes,
+                participantCount,
+                appointmentType,
+                false
+        );
+    }
+
+    /**
+     * Books appointment when allowed.
+     *
+     * @param customerName value for customer name
+     * @param customerPhoneNumber value for customer phone number
+     * @param slotTime slot time text like 10:00
+     * @param durationMinutes appointment duration in minutes
+     * @param participantCount number of people for the appointment
+     * @param appointmentType value for appointment type
+     * @return status that explains the operation result
+     */
+    public BookingStatus bookAppointment(
+            String customerName,
+            String customerPhoneNumber,
+            String slotTime,
+            int durationMinutes,
+            int participantCount,
+            AppointmentType appointmentType
+    ) {
+        return bookAppointmentInternal(
+                customerName,
+                customerPhoneNumber,
+                slotTime,
+                durationMinutes,
+                participantCount,
+                appointmentType,
+                true
+        );
+    }
+
+    /**
+     * Books appointment when allowed.
+     *
+     * @param customerName value for customer name
+     * @param customerPhoneNumber value for customer phone number
+     * @param slotTime slot time text like 10:00
+     * @param durationMinutes appointment duration in minutes
+     * @param participantCount number of people for the appointment
+     * @param appointmentType value for appointment type
+     * @param strictPhoneValidation flag that enables strict phone validation
+     * @return status that explains the operation result
+     */
+    private BookingStatus bookAppointmentInternal(
+            String customerName,
+            String customerPhoneNumber,
+            String slotTime,
+            int durationMinutes,
+            int participantCount,
+            AppointmentType appointmentType,
+            boolean strictPhoneValidation
+    ) {
         if (customerName == null || customerName.trim().isEmpty()) {
             return BookingStatus.BLANK_CUSTOMER_NAME;
         }
+        if (strictPhoneValidation && (customerPhoneNumber == null || customerPhoneNumber.trim().isEmpty())) {
+            return BookingStatus.BLANK_PHONE_NUMBER;
+        }
         if (slotTime == null || slotTime.trim().isEmpty()) {
             return BookingStatus.BLANK_SLOT_TIME;
+        }
+        if (strictPhoneValidation && !isValidPhoneNumber(customerPhoneNumber)) {
+            return BookingStatus.INVALID_PHONE_NUMBER;
         }
 
         Appointment probe = validationProbe(durationMinutes, participantCount);
@@ -240,12 +454,9 @@ public class AppointmentBookingService {
 
         String bookingCustomerName = normalizedCustomerName;
         String bookingCustomerEmail = normalizedCustomerName;
+        String normalizedPhone = normalize(customerPhoneNumber);
         if (sessionManager != null && sessionManager.isLoggedIn() && sessionManager.getCurrentUser() != null) {
-            bookingCustomerName = normalize(sessionManager.getCurrentUser().getId());
             bookingCustomerEmail = normalize(sessionManager.getCurrentUser().getEmail());
-            if (bookingCustomerName == null) {
-                bookingCustomerName = normalizedCustomerName;
-            }
             if (bookingCustomerEmail == null) {
                 bookingCustomerEmail = normalizedCustomerName;
             }
@@ -267,9 +478,9 @@ public class AppointmentBookingService {
                         slot.getDateTime(),
                         durationMinutes,
                         participantCount,
-                        AppointmentStatus.CONFIRMED,
-                        normalizedType
-                );
+                        AppointmentStatus.CONFIRMED
+                ).withCustomerPhoneNumber(normalizedPhone);
+                appointment.setType(normalizedType);
                 appointmentBookingRepository.save(appointment);
                 sendPendingNotificationIfConfigured(appointment);
                 return BookingStatus.SUCCESS;
@@ -333,10 +544,11 @@ public class AppointmentBookingService {
         List<Appointment> results = new ArrayList<>();
         for (Appointment appointment : appointmentBookingRepository.findAll()) {
             String bookingCustomerName = normalize(appointment.getCustomerName());
-            String bookingCustomerEmail = normalize(appointment.getCustomerEmail());
+            String bookingCustomerEmail = appointment.getUser() == null ? null : normalize(appointment.getUser().getEmail());
             if (normalizedCustomerEmail.equalsIgnoreCase(bookingCustomerEmail)
                     || normalizedCustomerEmail.equalsIgnoreCase(bookingCustomerName)
-                    || (resolvedCustomerId != null && resolvedCustomerId.equalsIgnoreCase(bookingCustomerName))) {
+                    || (resolvedCustomerId != null && resolvedCustomerId.equalsIgnoreCase(bookingCustomerName))
+                    || (resolvedCustomerId != null && resolvedCustomerId.equalsIgnoreCase(bookingCustomerEmail))) {
                 results.add(appointment);
             }
         }
@@ -433,6 +645,9 @@ public class AppointmentBookingService {
         if (appointment.getStatus() == AppointmentStatus.ATTENDED) {
             return BookingStatus.APPOINTMENT_ALREADY_ATTENDED;
         }
+        if (appointment.getStatus() == AppointmentStatus.NOT_ATTENDED) {
+            return BookingStatus.APPOINTMENT_ALREADY_NOT_ATTENDED;
+        }
 
         Appointment updated = appointment.withStatus(AppointmentStatus.ATTENDED);
         if (!appointmentBookingRepository.update(updated)) {
@@ -461,6 +676,9 @@ public class AppointmentBookingService {
         if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
             return BookingStatus.APPOINTMENT_ALREADY_COMPLETED;
         }
+        if (appointment.getStatus() == AppointmentStatus.NOT_ATTENDED) {
+            return BookingStatus.APPOINTMENT_ALREADY_NOT_ATTENDED;
+        }
         if (appointment.getStatus() != AppointmentStatus.ATTENDED) {
             return BookingStatus.APPOINTMENT_NOT_ATTENDED;
         }
@@ -472,6 +690,40 @@ public class AppointmentBookingService {
 
         notifyEvent("Reservation completed: " + updated.getId());
         sendCompletedNotificationIfConfigured(updated);
+        return BookingStatus.SUCCESS;
+    }
+
+    /**
+     * Marks appointment as not attended when allowed.
+     *
+     * @param appointmentId unique id used to find the record
+     * @return status that explains the operation result
+     */
+    public BookingStatus markAppointmentAsNotAttended(String appointmentId) {
+        Appointment appointment = resolveAuthorizedAppointment(appointmentId, ReservationAccess.ADMIN_ANY);
+        if (appointment == null) {
+            return resolveAuthorizationOrNotFoundStatus(appointmentId, ReservationAccess.ADMIN_ANY);
+        }
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            return BookingStatus.APPOINTMENT_ALREADY_CANCELLED;
+        }
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
+            return BookingStatus.APPOINTMENT_ALREADY_COMPLETED;
+        }
+        if (appointment.getStatus() == AppointmentStatus.ATTENDED) {
+            return BookingStatus.APPOINTMENT_ALREADY_ATTENDED;
+        }
+        if (appointment.getStatus() == AppointmentStatus.NOT_ATTENDED) {
+            return BookingStatus.APPOINTMENT_ALREADY_NOT_ATTENDED;
+        }
+
+        Appointment updated = appointment.withStatus(AppointmentStatus.NOT_ATTENDED);
+        if (!appointmentBookingRepository.update(updated)) {
+            return BookingStatus.UPDATE_FAILED;
+        }
+
+        notifyEvent("Reservation marked as not attended: " + updated.getId());
+        sendNotAttendedNotificationIfConfigured(updated);
         return BookingStatus.SUCCESS;
     }
 
@@ -538,6 +790,15 @@ public class AppointmentBookingService {
         }
         if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
             return BookingStatus.APPOINTMENT_ALREADY_CANCELLED;
+        }
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
+            return BookingStatus.APPOINTMENT_ALREADY_COMPLETED;
+        }
+        if (appointment.getStatus() == AppointmentStatus.ATTENDED) {
+            return BookingStatus.APPOINTMENT_ALREADY_ATTENDED;
+        }
+        if (appointment.getStatus() == AppointmentStatus.NOT_ATTENDED) {
+            return BookingStatus.APPOINTMENT_ALREADY_NOT_ATTENDED;
         }
         if (!appointment.isFutureComparedTo(LocalDateTime.now())) {
             return BookingStatus.APPOINTMENT_NOT_FUTURE;
@@ -686,6 +947,12 @@ public class AppointmentBookingService {
         }
     }
 
+    private void sendNotAttendedNotificationIfConfigured(Appointment appointment) {
+        if (appointmentNotificationCoordinator != null && appointment != null) {
+            appointmentNotificationCoordinator.sendNotAttendedNotification(appointment);
+        }
+    }
+
     /**
      * Checks whether current user admin is true.
      *
@@ -732,8 +999,9 @@ public class AppointmentBookingService {
 
         String currentEmail = normalize(sessionManager.getCurrentEmail());
         String ownerIdentity = normalize(appointment.getCustomerName());
-        return ownerIdentity != null
-                && ownerIdentity.equalsIgnoreCase(currentEmail);
+        String ownerEmail = appointment.getUser() == null ? null : normalize(appointment.getUser().getEmail());
+        return (ownerIdentity != null && ownerIdentity.equalsIgnoreCase(currentEmail))
+                || (ownerEmail != null && ownerEmail.equalsIgnoreCase(currentEmail));
     }
 
     /**
@@ -802,6 +1070,11 @@ public class AppointmentBookingService {
             return null;
         }
         return value.trim();
+    }
+
+    private boolean isValidPhoneNumber(String phoneNumber) {
+        String normalizedPhone = normalize(phoneNumber);
+        return normalizedPhone != null && normalizedPhone.matches(PHONE_PATTERN);
     }
 
     /**

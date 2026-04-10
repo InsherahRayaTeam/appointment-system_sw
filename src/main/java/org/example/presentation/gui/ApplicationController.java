@@ -107,6 +107,17 @@ public class ApplicationController {
     }
 
     /**
+     * Registers a user with email and password.
+     *
+     * @param email email address used for login or matching
+     * @param password password text entered by the user
+     * @return status that explains the operation result
+     */
+    public SignUpStatus signUp(String email, String password) {
+        return userRegistrationService.signUp(email, password);
+    }
+
+    /**
      * Requests a password reset code for a user.
      *
      * @param usernameOrEmail username or email used for identity
@@ -132,6 +143,17 @@ public class ApplicationController {
             String confirmPassword
     ) {
         return passwordRecoveryService.resetPassword(usernameOrEmail, resetCode, newPassword, confirmPassword);
+    }
+
+    /**
+     * Resets password directly with email and new password.
+     *
+     * @param email email address used for login or matching
+     * @param newPassword password text entered by the user
+     * @return status that explains the operation result
+     */
+    public ForgotPasswordStatus resetPassword(String email, String newPassword) {
+        return passwordRecoveryService.resetPassword(email, newPassword);
     }
 
     /**

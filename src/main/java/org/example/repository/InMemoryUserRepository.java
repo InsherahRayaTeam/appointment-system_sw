@@ -17,6 +17,18 @@ import java.util.Properties;
 public class InMemoryUserRepository implements UserRepository {
 
     private static final String RESOURCE = "/admin.properties";
+    private static final String ADMIN_ID_KEY = "admin.id";
+    private static final String ADMIN_EMAIL_KEY = "admin.email";
+    private static final String ADMIN_PASSWORD_KEY = "admin.password";
+    private static final String USER_ID_KEY = "user.id";
+    private static final String USER_EMAIL_KEY = "user.email";
+    private static final String USER_PASSWORD_KEY = "user.password";
+    private static final String DEFAULT_ADMIN_ID = "admin-1";
+    private static final String DEFAULT_ADMIN_EMAIL = "admin@gmail.com";
+    private static final String DEFAULT_ADMIN_PASSWORD = "admin123";
+    private static final String DEFAULT_USER_ID = "user-1";
+    private static final String DEFAULT_USER_EMAIL = "user@gmail.com";
+    private static final String DEFAULT_USER_PASSWORD = "user123";
     private final Map<String, SystemUser> usersByEmail = new HashMap<>();
 
     /**
@@ -33,15 +45,15 @@ public class InMemoryUserRepository implements UserRepository {
             if (in != null) {
                 p.load(in);
                 seedUser(
-                        p.getProperty("admin.id", "admin-1"),
-                        p.getProperty("admin.email"),
-                        p.getProperty("admin.password"),
+                        p.getProperty(ADMIN_ID_KEY, DEFAULT_ADMIN_ID),
+                        p.getProperty(ADMIN_EMAIL_KEY),
+                        p.getProperty(ADMIN_PASSWORD_KEY),
                         UserRole.ADMIN
                 );
                 seedUser(
-                        p.getProperty("user.id", "user-1"),
-                        p.getProperty("user.email"),
-                        p.getProperty("user.password"),
+                        p.getProperty(USER_ID_KEY, DEFAULT_USER_ID),
+                        p.getProperty(USER_EMAIL_KEY),
+                        p.getProperty(USER_PASSWORD_KEY),
                         UserRole.USER
                 );
             }
@@ -50,16 +62,16 @@ public class InMemoryUserRepository implements UserRepository {
         }
 
         // Defaults when properties are missing or incomplete.
-        if (!usersByEmail.containsKey("admin@gmail.com")) {
+        if (!usersByEmail.containsKey(DEFAULT_ADMIN_EMAIL)) {
             usersByEmail.put(
-                    "admin@gmail.com",
-                    new SystemUser("admin-1", "admin@gmail.com", "admin123", UserRole.ADMIN)
+                    DEFAULT_ADMIN_EMAIL,
+                    new SystemUser(DEFAULT_ADMIN_ID, DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD, UserRole.ADMIN)
             );
         }
-        if (!usersByEmail.containsKey("user@gmail.com")) {
+        if (!usersByEmail.containsKey(DEFAULT_USER_EMAIL)) {
             usersByEmail.put(
-                    "user@gmail.com",
-                    new SystemUser("user-1", "user@gmail.com", "user123", UserRole.USER)
+                    DEFAULT_USER_EMAIL,
+                    new SystemUser(DEFAULT_USER_ID, DEFAULT_USER_EMAIL, DEFAULT_USER_PASSWORD, UserRole.USER)
             );
         }
     }
@@ -134,6 +146,28 @@ public class InMemoryUserRepository implements UserRepository {
     }
 
     /**
+     * Updates an existing user record.
+     *
+     * @param user user entity with updated values
+     *
+     * @return true when the action is valid or successful, otherwise false
+     */
+    @Override
+    public boolean update(SystemUser user) {
+        if (user == null || user.getEmail() == null || user.getEmail().trim().isEmpty()) {
+            return false;
+        }
+
+        String normalizedEmail = user.getEmail().trim().toLowerCase();
+        if (!usersByEmail.containsKey(normalizedEmail)) {
+            return false;
+        }
+
+        usersByEmail.put(normalizedEmail, user);
+        return true;
+    }
+
+    /**
      * Updates user password when record exists.
      *
      * @param userId unique id used to find the record
@@ -159,8 +193,8 @@ public class InMemoryUserRepository implements UserRepository {
                 newPassword.trim(),
                 current.getRole()
         );
-        usersByEmail.put(current.getEmail().toLowerCase(), updated);
-        return true;
+
+        return update(updated);
     }
 
     /**

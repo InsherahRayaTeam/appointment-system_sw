@@ -16,6 +16,7 @@ class GuiMessageHelperTest {
     void toMessage_ReturnsExpectedMessageForEachStatus() {
         assertEquals("Operation completed successfully.", GuiMessageHelper.toMessage(BookingStatus.SUCCESS));
         assertEquals("Customer name is required.", GuiMessageHelper.toMessage(BookingStatus.BLANK_CUSTOMER_NAME));
+        assertEquals("Phone number is required.", GuiMessageHelper.toMessage(BookingStatus.BLANK_PHONE_NUMBER));
         assertEquals(
                 "Please select an appointment date/day/time slot.",
                 GuiMessageHelper.toMessage(BookingStatus.BLANK_SLOT_TIME)
@@ -26,9 +27,18 @@ class GuiMessageHelperTest {
                 GuiMessageHelper.toMessage(BookingStatus.INVALID_PARTICIPANT_COUNT)
         );
         assertEquals(
+                "Phone number is invalid. Use a valid local or international format.",
+                GuiMessageHelper.toMessage(BookingStatus.INVALID_PHONE_NUMBER)
+        );
+        assertEquals(
+                "Slot date/time is invalid. Please choose a future date and time.",
+                GuiMessageHelper.toMessage(BookingStatus.INVALID_SLOT_DATE_TIME)
+        );
+        assertEquals(
                 "Selected appointment type does not satisfy the booking rules.",
                 GuiMessageHelper.toMessage(BookingStatus.INVALID_APPOINTMENT_RULES)
         );
+        assertEquals("The selected slot already exists.", GuiMessageHelper.toMessage(BookingStatus.DUPLICATE_SLOT));
         assertEquals("Selected slot was not found.", GuiMessageHelper.toMessage(BookingStatus.SLOT_NOT_FOUND));
         assertEquals("Selected slot is already booked.", GuiMessageHelper.toMessage(BookingStatus.SLOT_ALREADY_BOOKED));
         assertEquals(
@@ -47,6 +57,10 @@ class GuiMessageHelperTest {
         assertEquals(
                 "Reservation has already been marked as attended.",
                 GuiMessageHelper.toMessage(BookingStatus.APPOINTMENT_ALREADY_ATTENDED)
+        );
+        assertEquals(
+                "Reservation has already been marked as not attended.",
+                GuiMessageHelper.toMessage(BookingStatus.APPOINTMENT_ALREADY_NOT_ATTENDED)
         );
         assertEquals(
                 "Reservation has already been completed.",

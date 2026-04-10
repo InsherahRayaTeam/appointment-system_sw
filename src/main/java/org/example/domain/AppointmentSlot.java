@@ -14,10 +14,12 @@ import java.util.Locale;
 public class AppointmentSlot {
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter COMPACT_DISPLAY_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private static final DateTimeFormatter DISPLAY_FORMATTER = DateTimeFormatter.ofPattern(
             "yyyy-MM-dd (EEEE) HH:mm",
             Locale.ENGLISH
     );
+    private static final String NOT_AVAILABLE = "N/A";
 
     private final LocalDate date;
     private final LocalTime time;
@@ -72,16 +74,6 @@ public class AppointmentSlot {
     }
 
     /**
-     * Returns the day label.
-     *
-     * @return text result from this method
-     */
-    public String getDayLabel() {
-        DayOfWeek day = getDay();
-        return day == null ? null : day.toString();
-    }
-
-    /**
      * Returns the slot start date-time.
      *
      * @return requested value from this object
@@ -100,7 +92,7 @@ public class AppointmentSlot {
      */
     public String getDateDayTimeLabel() {
         LocalDateTime dateTime = getDateTime();
-        return dateTime == null ? "N/A" : dateTime.format(DISPLAY_FORMATTER);
+        return dateTime == null ? NOT_AVAILABLE : dateTime.format(DISPLAY_FORMATTER);
     }
 
     /**
@@ -163,7 +155,7 @@ public class AppointmentSlot {
         }
 
         return normalized.equals(dateTime.toString())
-                || normalized.equals(dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+                || normalized.equals(dateTime.format(COMPACT_DISPLAY_FORMATTER));
     }
 
     /**

@@ -86,16 +86,17 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
     }
 
     private Appointment copyOf(Appointment appointment) {
+        String customerEmail = appointment.getUser() == null ? null : appointment.getUser().getEmail();
         return new Appointment(
                 appointment.getId(),
                 appointment.getCustomerName(),
-                appointment.getCustomerEmail(),
+                customerEmail,
                 appointment.getStartTime(),
                 appointment.getDurationMinutes(),
                 appointment.getParticipantCount(),
                 appointment.getStatus(),
                 appointment.getType() == null ? AppointmentType.NORMAL : appointment.getType()
-        );
+        ).withCustomerPhoneNumber(appointment.getCustomerPhoneNumber());
     }
 }
 

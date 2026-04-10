@@ -3,6 +3,9 @@ package org.example.service;
 import org.example.domain.AppointmentSlot;
 import org.example.repository.AppointmentRepository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -12,7 +15,10 @@ import java.util.Objects;
  */
 public class AppointmentService {
 
-    private final List<AppointmentSlot> slots = new ArrayList<>();
+    private static final String BOOKED_SUCCESS_PREFIX = "Appointment booked successfully at ";
+    private static final String REMINDER_PREFIX = "Reminder: Appointment at ";
+
+    private final AppointmentRepository appointmentRepository;
     private final EventManager eventManager;
 
 
@@ -23,12 +29,11 @@ public class AppointmentService {
      * @param eventManager manager object used for shared app state
      */
     public AppointmentService(AppointmentRepository appointmentRepository, EventManager eventManager) {
-        AppointmentRepository repository = Objects.requireNonNull(
+        this.appointmentRepository = Objects.requireNonNull(
                 appointmentRepository,
                 "appointmentRepository cannot be null"
         );
         this.eventManager = Objects.requireNonNull(eventManager, "eventManager cannot be null");
-        this.slots.addAll(repository.findAll());
     }
 
     /**
@@ -38,7 +43,7 @@ public class AppointmentService {
      */
     public List<AppointmentSlot> getAvailableSlots() {
         List<AppointmentSlot> available = new ArrayList<>();
-        for (AppointmentSlot slot : slots) {
+        for (AppointmentSlot slot : appointmentRepository.findAll()) {
             if (!slot.isBooked()) {
                 available.add(slot);
             }
@@ -60,11 +65,11 @@ public class AppointmentService {
 
         String normalizedTime = time.trim();
 
-        for (AppointmentSlot slot : slots) {
+        for (AppointmentSlot slot : appointmentRepository.findAll()) {
             if (slot.matchesSelection(normalizedTime) && !slot.isBooked()) {
                 slot.book();
 
-                eventManager.notifyObservers("Appointment booked successfully at " + slot.getDateDayTimeLabel());
+                eventManager.notifyObservers(BOOKED_SUCCESS_PREFIX + slot.getDateDayTimeLabel());
 
                 return true;
             }
@@ -74,12 +79,62 @@ public class AppointmentService {
     }
 
     /**
-     * Runs send reminder for this class.
+     * Adds a future slot when the date/time input is valid and unique.
      *
-     * @param time time value used by this method
+     * @param dateText slot date text in yyyy-MM-dd format
+     * @param timeText slot time text in HH:mm format
+     * @return status that explains the operation result
      */
-    public void sendReminder(String time) {
-        sendReminderForSlot(time);
+    public BookingStatus addSlot(String dateText, String timeText) {
+        if (dateText == null || dateText.trim().isEmpty()) {
+            return BookingStatus.INVALID_SLOT_DATE_TIME;
+        }
+        if (timeText == null || timeText.trim().isEmpty()) {
+            return BookingStatus.BLANK_SLOT_TIME;
+        }
+
+        LocalDate date;
+        LocalTime time;
+        try {
+            date = LocalDate.parse(dateText.trim());
+            time = LocalTime.parse(timeText.trim());
+        } catch (RuntimeException ex) {
+            return BookingStatus.INVALID_SLOT_DATE_TIME;
+        }
+
+        return addSlot(date, time);
+    }
+
+    /**
+     * Adds a future slot when the values are valid and unique.
+     *
+     * @param date slot date
+     * @param time slot time
+     * @return status that explains the operation result
+     */
+    public BookingStatus addSlot(LocalDate date, LocalTime time) {
+        if (date == null || time == null) {
+            return BookingStatus.INVALID_SLOT_DATE_TIME;
+        }
+
+        LocalDateTime slotDateTime = date.atTime(time);
+        if (!slotDateTime.isAfter(LocalDateTime.now())) {
+            return BookingStatus.INVALID_SLOT_DATE_TIME;
+        }
+
+        for (AppointmentSlot existing : appointmentRepository.findAll()) {
+            if (slotDateTime.equals(existing.getDateTime())) {
+                return BookingStatus.DUPLICATE_SLOT;
+            }
+        }
+
+        boolean added = appointmentRepository.addSlot(new AppointmentSlot(date, time));
+        if (!added) {
+            return BookingStatus.DUPLICATE_SLOT;
+        }
+
+        eventManager.notifyObservers("Appointment slot added: " + slotDateTime);
+        return BookingStatus.SUCCESS;
     }
 
     /**
@@ -95,9 +150,9 @@ public class AppointmentService {
         }
 
         String normalizedTime = time.trim();
-        for (AppointmentSlot slot : slots) {
+        for (AppointmentSlot slot : appointmentRepository.findAll()) {
             if (slot.matchesSelection(normalizedTime) && slot.isBooked()) {
-                eventManager.notifyObservers("Reminder: Appointment at " + slot.getDateDayTimeLabel());
+                eventManager.notifyObservers(REMINDER_PREFIX + slot.getDateDayTimeLabel());
                 return true;
             }
         }
@@ -112,12 +167,13 @@ public class AppointmentService {
      */
     public int sendAllReminders() {
         int sentCount = 0;
-        for (AppointmentSlot slot : slots) {
+        for (AppointmentSlot slot : appointmentRepository.findAll()) {
             if (slot.isBooked()) {
-                eventManager.notifyObservers("Reminder: Appointment at " + slot.getDateDayTimeLabel());
+                eventManager.notifyObservers(REMINDER_PREFIX + slot.getDateDayTimeLabel());
                 sentCount++;
             }
         }
         return sentCount;
     }
+
 }

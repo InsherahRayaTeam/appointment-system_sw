@@ -39,9 +39,9 @@ public class AppointmentNotificationCoordinator {
         SystemUser user = requireUser(appointment);
         String appointmentDateTime = formatAppointmentDateTime(appointment);
         String subject = "Appointment Request Received";
-        String body = "Your appointment request is under review and is being processed."
-                + " Booked for: " + displayBookedUserName(appointment)
-                + " Appointment date/time: " + appointmentDateTime;
+        String body = "Your appointment request has been received and is pending review."
+                + " Name: " + displayBookedUserName(appointment)
+                + " Date/time: " + appointmentDateTime;
 
         notificationService.send(user.getEmail(), subject, body);
     }
@@ -56,8 +56,8 @@ public class AppointmentNotificationCoordinator {
         String appointmentDateTime = formatAppointmentDateTime(appointment);
         String subject = "Appointment Approved";
         String body = "Your appointment has been approved."
-                + " Booked for: " + displayBookedUserName(appointment)
-                + " Appointment date/time: " + appointmentDateTime;
+                + " Name: " + displayBookedUserName(appointment)
+                + " Date/time: " + appointmentDateTime;
 
         notificationService.send(user.getEmail(), subject, body);
     }
@@ -71,9 +71,9 @@ public class AppointmentNotificationCoordinator {
         SystemUser user = requireUser(appointment);
         String appointmentDateTime = formatAppointmentDateTime(appointment);
         String subject = "Appointment Cancelled";
-        String body = "Your appointment has been cancelled/rejected."
-                + " Booked for: " + displayBookedUserName(appointment)
-                + " Appointment date/time: " + appointmentDateTime;
+        String body = "Your appointment has been cancelled."
+                + " Name: " + displayBookedUserName(appointment)
+                + " Date/time: " + appointmentDateTime;
 
         notificationService.send(user.getEmail(), subject, body);
     }
@@ -87,9 +87,9 @@ public class AppointmentNotificationCoordinator {
         SystemUser user = requireUser(appointment);
         String appointmentDateTime = formatAppointmentDateTime(appointment);
         String subject = "Appointment Updated";
-        String body = "Your appointment has been updated."
-                + " Booked for: " + displayBookedUserName(appointment)
-                + " Appointment date/time: " + appointmentDateTime;
+        String body = "Your appointment details have been updated."
+                + " Name: " + displayBookedUserName(appointment)
+                + " Date/time: " + appointmentDateTime;
 
         notificationService.send(user.getEmail(), subject, body);
     }
@@ -122,13 +122,14 @@ public class AppointmentNotificationCoordinator {
      *
      * @param appointment appointment involved in this action
      */
+    @SuppressWarnings("unused")
     public void sendAttendedNotification(Appointment appointment) {
         SystemUser user = requireUser(appointment);
         String appointmentDateTime = formatAppointmentDateTime(appointment);
         String subject = "Appointment Marked as Attended";
-        String body = "The appointment has been marked as attended."
-                + " Booked for: " + displayBookedUserName(appointment)
-                + " Appointment date/time: " + appointmentDateTime;
+        String body = "Your appointment has been marked as attended."
+                + " Name: " + displayBookedUserName(appointment)
+                + " Date/time: " + appointmentDateTime;
 
         notificationService.send(user.getEmail(), subject, body);
     }
@@ -138,13 +139,31 @@ public class AppointmentNotificationCoordinator {
      *
      * @param appointment appointment involved in this action
      */
+    @SuppressWarnings("unused")
     public void sendCompletedNotification(Appointment appointment) {
         SystemUser user = requireUser(appointment);
         String appointmentDateTime = formatAppointmentDateTime(appointment);
         String subject = "Appointment Completed";
-        String body = "The appointment has been completed."
-                + " Booked for: " + displayBookedUserName(appointment)
-                + " Appointment date/time: " + appointmentDateTime;
+        String body = "Your appointment has been completed."
+                + " Name: " + displayBookedUserName(appointment)
+                + " Date/time: " + appointmentDateTime;
+
+        notificationService.send(user.getEmail(), subject, body);
+    }
+
+    /**
+     * Sends a notification for a missed appointment.
+     *
+     * @param appointment appointment involved in this action
+     */
+    public void sendNotAttendedNotification(Appointment appointment) {
+        SystemUser user = requireUser(appointment);
+        String appointmentDateTime = formatAppointmentDateTime(appointment);
+        String subject = "Appointment Marked as Not Attended";
+        String body = "Your appointment has been marked as not attended."
+                + " Name: " + displayBookedUserName(appointment)
+                + " Date/time: " + appointmentDateTime
+                + " Please contact the office if you need to reschedule.";
 
         notificationService.send(user.getEmail(), subject, body);
     }
@@ -176,4 +195,3 @@ public class AppointmentNotificationCoordinator {
         return bookedName == null || bookedName.trim().isEmpty() ? "N/A" : bookedName;
     }
 }
-

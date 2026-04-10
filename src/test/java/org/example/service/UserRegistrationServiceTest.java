@@ -2,6 +2,7 @@ package org.example.service;
 
 import org.example.domain.SystemUser;
 import org.example.domain.UserRole;
+import org.example.repository.InMemoryUserRepository;
 import org.example.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -137,6 +139,32 @@ class UserRegistrationServiceTest {
         assertEquals(SignUpStatus.SUCCESS, status);
         verify(eventManager).notifyObservers("User registered successfully: new@example.com");
         assertSame(SignUpStatus.SUCCESS, status);
+    }
+
+    @Test
+    void signUp_WithValidInput_SavesUserInRepository() {
+        InMemoryUserRepository inMemoryUserRepository = new InMemoryUserRepository();
+        UserRegistrationService registrationService = new UserRegistrationService(inMemoryUserRepository, new EventManager());
+
+        SignUpStatus status = registrationService.signUp("fresh@example.com", "fresh123");
+
+        assertEquals(SignUpStatus.SUCCESS, status);
+        Optional<SystemUser> saved = inMemoryUserRepository.findByEmail("fresh@example.com");
+        assertTrue(saved.isPresent());
+        assertEquals("fresh@example.com", saved.get().getEmail());
+        assertEquals(UserRole.USER, saved.get().getRole());
+    }
+
+    @Test
+    void signUp_WithDuplicateEmail_RejectsRegistration() {
+        InMemoryUserRepository inMemoryUserRepository = new InMemoryUserRepository();
+        UserRegistrationService registrationService = new UserRegistrationService(inMemoryUserRepository, new EventManager());
+
+        SignUpStatus first = registrationService.signUp("dup@example.com", "dup1234");
+        SignUpStatus second = registrationService.signUp("dup@example.com", "other1234");
+
+        assertEquals(SignUpStatus.SUCCESS, first);
+        assertEquals(SignUpStatus.EMAIL_ALREADY_EXISTS, second);
     }
 }
 

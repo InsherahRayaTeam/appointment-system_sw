@@ -36,65 +36,43 @@ class ForgotPasswordFrameTest extends GuiTestSupport {
     }
 
     @Test
-    void sendResetCodeButton_WithKnownUser_DelegatesToController() {
-        JTextField identifierField = getPrivateField(frame, "identifierField", JTextField.class);
-        AbstractButton requestButton = findButton(frame.getContentPane(), "Send Reset Code");
-
-        when(appController.requestPasswordReset("alice@example.com")).thenReturn(ForgotPasswordStatus.RESET_REQUESTED);
-
-        runOnEdt(() -> identifierField.setText("alice@example.com"));
-
-        clickButton(requestButton);
-
-        verify(appController).requestPasswordReset("alice@example.com");
-    }
-
-    @Test
     void resetPasswordButton_WithValidInput_DelegatesToController() {
         JTextField identifierField = getPrivateField(frame, "identifierField", JTextField.class);
-        JTextField resetCodeField = getPrivateField(frame, "resetCodeField", JTextField.class);
         JPasswordField newPasswordField = getPrivateField(frame, "newPasswordField", JPasswordField.class);
-        JPasswordField confirmPasswordField = getPrivateField(frame, "confirmPasswordField", JPasswordField.class);
         AbstractButton resetButton = findButton(frame.getContentPane(), "Reset Password");
 
-        when(appController.resetPassword("alice@example.com", "123456", "new1234", "new1234"))
+        when(appController.resetPassword("alice@example.com", "new1234"))
                 .thenReturn(ForgotPasswordStatus.PASSWORD_RESET_SUCCESS);
 
         runOnEdt(() -> {
             identifierField.setText("alice@example.com");
-            resetCodeField.setText("123456");
             newPasswordField.setText("new1234");
-            confirmPasswordField.setText("new1234");
         });
 
         clickButton(resetButton);
 
-        verify(appController).resetPassword("alice@example.com", "123456", "new1234", "new1234");
+        verify(appController).resetPassword("alice@example.com", "new1234");
         verify(appController).openLoginFrame();
     }
 
     @Test
-    void resetPasswordButton_WithInvalidCode_ShowsErrorMessage() {
+    void resetPasswordButton_WithWeakPassword_ShowsErrorMessage() {
         JTextField identifierField = getPrivateField(frame, "identifierField", JTextField.class);
-        JTextField resetCodeField = getPrivateField(frame, "resetCodeField", JTextField.class);
         JPasswordField newPasswordField = getPrivateField(frame, "newPasswordField", JPasswordField.class);
-        JPasswordField confirmPasswordField = getPrivateField(frame, "confirmPasswordField", JPasswordField.class);
         JLabel statusLabel = getPrivateField(frame, "statusLabel", JLabel.class);
         AbstractButton resetButton = findButton(frame.getContentPane(), "Reset Password");
 
-        when(appController.resetPassword("alice@example.com", "bad", "new1234", "new1234"))
-                .thenReturn(ForgotPasswordStatus.INVALID_RESET_CODE);
+        when(appController.resetPassword("alice@example.com", "weak"))
+                .thenReturn(ForgotPasswordStatus.WEAK_PASSWORD);
 
         runOnEdt(() -> {
             identifierField.setText("alice@example.com");
-            resetCodeField.setText("bad");
-            newPasswordField.setText("new1234");
-            confirmPasswordField.setText("new1234");
+            newPasswordField.setText("weak");
         });
 
         clickButton(resetButton);
 
-        assertEquals("Reset code is invalid.", statusLabel.getText());
+        assertEquals("Password must be at least 6 characters and include letters and numbers.", statusLabel.getText());
     }
 
     @Test

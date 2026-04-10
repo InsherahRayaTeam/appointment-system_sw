@@ -49,10 +49,19 @@ class BookingPanelTest extends GuiTestSupport {
         AppointmentSlot slot = new AppointmentSlot("10:00");
         String slotSelection = slot.getDateDayTimeLabel();
         when(appointmentService.getAvailableSlots()).thenReturn(Collections.singletonList(slot));
-        when(appointmentBookingService.bookAppointment("user-1", slotSelection, "30", "2", AppointmentType.URGENT))
+        when(appointmentBookingService.bookAppointment(
+                "user@example.com",
+                "+1 202-555-0199",
+                slotSelection,
+                "30",
+                "2",
+                AppointmentType.URGENT
+        ))
                 .thenReturn(BookingStatus.SUCCESS);
 
         BookingPanel panel = new BookingPanel(user, appointmentService, appointmentBookingService, onBookingSuccess);
+        JTextField bookedForNameField = getPrivateField(panel, "bookedForNameField", JTextField.class);
+        JTextField phoneNumberField = getPrivateField(panel, "phoneNumberField", JTextField.class);
         JComboBox<?> slotComboBox = getPrivateField(panel, "slotComboBox", JComboBox.class);
         JComboBox<?> typeComboBox = getPrivateField(panel, "typeComboBox", JComboBox.class);
         JTextField durationField = getPrivateField(panel, "durationField", JTextField.class);
@@ -60,6 +69,8 @@ class BookingPanelTest extends GuiTestSupport {
         AbstractButton bookButton = findButton(panel, "Book Appointment");
 
         runOnEdt(() -> {
+            bookedForNameField.setText("user@example.com");
+            phoneNumberField.setText("+1 202-555-0199");
             slotComboBox.setSelectedIndex(0);
             typeComboBox.setSelectedItem(AppointmentType.URGENT);
             durationField.setText("30");
@@ -70,7 +81,14 @@ class BookingPanelTest extends GuiTestSupport {
         clickButton(bookButton);
 
         // Assert
-        verify(appointmentBookingService).bookAppointment("user-1", slotSelection, "30", "2", AppointmentType.URGENT);
+        verify(appointmentBookingService).bookAppointment(
+                "user@example.com",
+                "+1 202-555-0199",
+                slotSelection,
+                "30",
+                "2",
+                AppointmentType.URGENT
+        );
         verify(onBookingSuccess).run();
         verify(appointmentService, org.mockito.Mockito.times(2)).getAvailableSlots();
     }
@@ -81,10 +99,19 @@ class BookingPanelTest extends GuiTestSupport {
         AppointmentSlot slot = new AppointmentSlot("10:00");
         String slotSelection = slot.getDateDayTimeLabel();
         when(appointmentService.getAvailableSlots()).thenReturn(Collections.singletonList(slot));
-        when(appointmentBookingService.bookAppointment("user-1", slotSelection, "bad", "2", AppointmentType.NORMAL))
+        when(appointmentBookingService.bookAppointment(
+                "user@example.com",
+                "+1 202-555-0100",
+                slotSelection,
+                "bad",
+                "2",
+                AppointmentType.NORMAL
+        ))
                 .thenReturn(BookingStatus.INVALID_DURATION);
 
         BookingPanel panel = new BookingPanel(user, appointmentService, appointmentBookingService, onBookingSuccess);
+        JTextField bookedForNameField = getPrivateField(panel, "bookedForNameField", JTextField.class);
+        JTextField phoneNumberField = getPrivateField(panel, "phoneNumberField", JTextField.class);
         JComboBox<?> slotComboBox = getPrivateField(panel, "slotComboBox", JComboBox.class);
         JComboBox<?> typeComboBox = getPrivateField(panel, "typeComboBox", JComboBox.class);
         JTextField durationField = getPrivateField(panel, "durationField", JTextField.class);
@@ -92,6 +119,8 @@ class BookingPanelTest extends GuiTestSupport {
         AbstractButton bookButton = findButton(panel, "Book Appointment");
 
         runOnEdt(() -> {
+            bookedForNameField.setText("user@example.com");
+            phoneNumberField.setText("+1 202-555-0100");
             slotComboBox.setSelectedIndex(0);
             typeComboBox.setSelectedItem(AppointmentType.NORMAL);
             durationField.setText("bad");
@@ -102,7 +131,14 @@ class BookingPanelTest extends GuiTestSupport {
         clickButton(bookButton);
 
         // Assert
-        verify(appointmentBookingService).bookAppointment("user-1", slotSelection, "bad", "2", AppointmentType.NORMAL);
+        verify(appointmentBookingService).bookAppointment(
+                "user@example.com",
+                "+1 202-555-0100",
+                slotSelection,
+                "bad",
+                "2",
+                AppointmentType.NORMAL
+        );
         verifyNoInteractions(onBookingSuccess);
         assertTrue(slotComboBox.isEnabled());
         assertEquals("bad", durationField.getText());

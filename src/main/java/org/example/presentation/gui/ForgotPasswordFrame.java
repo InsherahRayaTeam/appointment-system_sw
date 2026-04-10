@@ -24,9 +24,7 @@ public class ForgotPasswordFrame extends JFrame {
     private final ApplicationController appController;
 
     private JTextField identifierField;
-    private JTextField resetCodeField;
     private JPasswordField newPasswordField;
-    private JPasswordField confirmPasswordField;
     private JLabel statusLabel;
 
     /**
@@ -50,24 +48,16 @@ public class ForgotPasswordFrame extends JFrame {
         titleLabel.setBorder(BorderFactory.createEmptyBorder(15, 10, 10, 10));
         add(titleLabel, BorderLayout.NORTH);
 
-        JPanel formPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+        JPanel formPanel = new JPanel(new GridLayout(3, 2, 10, 10));
         formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
 
         formPanel.add(new JLabel("Username or Email:"));
         identifierField = new JTextField();
         formPanel.add(identifierField);
 
-        formPanel.add(new JLabel("Reset Code:"));
-        resetCodeField = new JTextField();
-        formPanel.add(resetCodeField);
-
         formPanel.add(new JLabel("New Password:"));
         newPasswordField = new JPasswordField();
         formPanel.add(newPasswordField);
-
-        formPanel.add(new JLabel("Confirm Password:"));
-        confirmPasswordField = new JPasswordField();
-        formPanel.add(confirmPasswordField);
 
         formPanel.add(new JLabel(""));
         statusLabel = new JLabel(" ");
@@ -77,43 +67,26 @@ public class ForgotPasswordFrame extends JFrame {
         add(formPanel, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel();
-        JButton requestButton = new JButton("Send Reset Code");
         JButton resetButton = new JButton("Reset Password");
         JButton clearButton = new JButton("Clear");
         JButton backButton = new JButton("Back to Login");
 
-        requestButton.addActionListener(e -> onRequestResetCode());
         resetButton.addActionListener(e -> onResetPassword());
         clearButton.addActionListener(e -> clearInputs());
         backButton.addActionListener(e -> appController.openLoginFrame());
 
-        buttonPanel.add(requestButton);
         buttonPanel.add(resetButton);
         buttonPanel.add(clearButton);
         buttonPanel.add(backButton);
 
         add(buttonPanel, BorderLayout.SOUTH);
-        getRootPane().setDefaultButton(requestButton);
-    }
-
-    private void onRequestResetCode() {
-        ForgotPasswordStatus status = appController.requestPasswordReset(identifierField.getText());
-        if (status == ForgotPasswordStatus.RESET_REQUESTED) {
-            String message = "A reset code has been sent if the account exists.";
-            statusLabel.setText(message);
-            JOptionPane.showMessageDialog(this, message, "Forgot Password", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
-        showError(status);
+        getRootPane().setDefaultButton(resetButton);
     }
 
     private void onResetPassword() {
         ForgotPasswordStatus status = appController.resetPassword(
                 identifierField.getText(),
-                resetCodeField.getText(),
-                new String(newPasswordField.getPassword()),
-                new String(confirmPasswordField.getPassword())
+                new String(newPasswordField.getPassword())
         );
 
         if (status == ForgotPasswordStatus.PASSWORD_RESET_SUCCESS) {
@@ -132,9 +105,7 @@ public class ForgotPasswordFrame extends JFrame {
 
     private void clearInputs() {
         identifierField.setText("");
-        resetCodeField.setText("");
         newPasswordField.setText("");
-        confirmPasswordField.setText("");
         statusLabel.setText(" ");
         identifierField.requestFocusInWindow();
     }
@@ -153,9 +124,7 @@ public class ForgotPasswordFrame extends JFrame {
         return switch (status) {
             case BLANK_IDENTIFIER -> "Username or email is required.";
             case UNKNOWN_USER -> "Account was not found.";
-            case INVALID_RESET_CODE -> "Reset code is invalid.";
             case BLANK_NEW_PASSWORD -> "New password is required.";
-            case PASSWORD_MISMATCH -> "Password confirmation does not match.";
             case WEAK_PASSWORD -> "Password must be at least 6 characters and include letters and numbers.";
             case UPDATE_FAILED -> "Unable to update password. Please try again.";
             default -> "Unable to process password reset.";
