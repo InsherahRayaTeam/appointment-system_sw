@@ -182,5 +182,21 @@ class ApplicationControllerTest extends GuiTestSupport {
         verify(passwordRecoveryService).requestReset("alice@example.com");
         verify(passwordRecoveryService).resetPassword("alice@example.com", "123456", "new123", "new123");
     }
+
+    @Test
+    void signUpAndDirectReset_delegateToServices() {
+        when(userRegistrationService.signUp("new@example.com", "pass123"))
+                .thenReturn(SignUpStatus.SUCCESS);
+        when(passwordRecoveryService.resetPassword("new@example.com", "new1234"))
+                .thenReturn(ForgotPasswordStatus.PASSWORD_RESET_SUCCESS);
+
+        SignUpStatus signUpStatus = controller.signUp("new@example.com", "pass123");
+        ForgotPasswordStatus resetStatus = controller.resetPassword("new@example.com", "new1234");
+
+        assertSame(SignUpStatus.SUCCESS, signUpStatus);
+        assertSame(ForgotPasswordStatus.PASSWORD_RESET_SUCCESS, resetStatus);
+        verify(userRegistrationService).signUp("new@example.com", "pass123");
+        verify(passwordRecoveryService).resetPassword("new@example.com", "new1234");
+    }
 }
 

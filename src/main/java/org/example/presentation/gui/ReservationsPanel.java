@@ -23,6 +23,11 @@ import java.util.List;
  */
 public class ReservationsPanel extends JPanel {
 
+    private static final String REFRESH_BUTTON_LABEL = "Refresh";
+    private static final String CANCEL_RESERVATION_TITLE = "Cancel Reservation";
+    private static final String PLEASE_SELECT_RESERVATION_FIRST = "Please select a reservation first.";
+    private static final String INPUT_REQUIRED_TITLE = "Input Required";
+
     private final SystemUser user;
     private final AppointmentBookingService appointmentBookingService;
     private final DefaultTableModel tableModel;
@@ -68,8 +73,8 @@ public class ReservationsPanel extends JPanel {
         add(new JScrollPane(reservationsTable), BorderLayout.CENTER);
 
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton refreshButton = new JButton("Refresh");
-        JButton cancelButton = new JButton("Cancel Reservation");
+        JButton refreshButton = new JButton(REFRESH_BUTTON_LABEL);
+        JButton cancelButton = new JButton(CANCEL_RESERVATION_TITLE);
 
         refreshButton.addActionListener(e -> refreshData());
         cancelButton.addActionListener(e -> onCancelReservation());
@@ -105,12 +110,12 @@ public class ReservationsPanel extends JPanel {
         int selectedRow = reservationsTable.getSelectedRow();
         String reservationId = selectedReservationId();
         if (reservationId == null) {
-            showWarning("Please select a reservation first.");
+            showSelectionWarning();
             return;
         }
 
         BookingStatus status = appointmentBookingService.cancelOwnAppointment(reservationId);
-        showResult(status, "Cancel Reservation");
+        showCancelResult(status);
         if (status == BookingStatus.SUCCESS) {
             if (selectedRow >= 0 && selectedRow < tableModel.getRowCount()) {
                 tableModel.removeRow(selectedRow);
@@ -138,22 +143,24 @@ public class ReservationsPanel extends JPanel {
      * Shows result to the user.
      *
      * @param status status value used for this operation
-     * @param title title text for the dialog or view
      */
-    private void showResult(BookingStatus status, String title) {
+    private void showCancelResult(BookingStatus status) {
         int messageType = status == BookingStatus.SUCCESS
                 ? JOptionPane.INFORMATION_MESSAGE
                 : JOptionPane.ERROR_MESSAGE;
-        JOptionPane.showMessageDialog(this, GuiMessageHelper.toMessage(status), title, messageType);
+        JOptionPane.showMessageDialog(this, GuiMessageHelper.toMessage(status), CANCEL_RESERVATION_TITLE, messageType);
     }
 
     /**
      * Shows warning to the user.
-     *
-     * @param message message text to show or send
      */
-    private void showWarning(String message) {
-        JOptionPane.showMessageDialog(this, message, "Input Required", JOptionPane.WARNING_MESSAGE);
+    private void showSelectionWarning() {
+        JOptionPane.showMessageDialog(
+                this,
+                PLEASE_SELECT_RESERVATION_FIRST,
+                INPUT_REQUIRED_TITLE,
+                JOptionPane.WARNING_MESSAGE
+        );
     }
 
     /**

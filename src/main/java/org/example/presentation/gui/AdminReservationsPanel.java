@@ -14,6 +14,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
@@ -25,6 +26,29 @@ import java.util.List;
  */
 public class AdminReservationsPanel extends JPanel {
 
+    private static final String REFRESH_BUTTON_LABEL = "Refresh";
+    private static final String MANAGE_RESERVATIONS_INFO =
+            "Manage reservations (future reservations only for modify/cancel).";
+    private static final String ONLY_ADMINS_CAN_MANAGE_RESERVATIONS = "Only admins can manage reservations.";
+    private static final String NEW_DATE_TIME_LABEL = "New Date/Time:";
+    private static final String CANCEL_RESERVATION_TITLE = "Cancel Reservation";
+    private static final String MODIFY_APPOINTMENT_TITLE = "Modify Appointment";
+    private static final String MARK_AS_ATTENDED_TITLE = "Mark as Attended";
+    private static final String MARK_AS_NOT_ATTENDED_TITLE = "Mark as Not Attended";
+    private static final String MARK_AS_COMPLETED_TITLE = "Mark as Completed";
+    private static final String ADD_SLOT_TITLE = "Add Slot";
+    private static final String SLOT_DATE_LABEL = "Date:";
+    private static final String SLOT_TIME_LABEL = "Time:";
+    private static final String ADD_SLOT_BUTTON_LABEL = "Add Slot";
+    private static final String PLEASE_SELECT_RESERVATION_FIRST = "Please select a reservation first.";
+    private static final String PLEASE_SELECT_A_REPLACEMENT_SLOT = "Please select a replacement slot.";
+    private static final String INPUT_REQUIRED_TITLE = "Input Required";
+
+    private static final int DATE_COLUMN_INDEX = 3;
+    private static final int DAY_COLUMN_INDEX = 4;
+    private static final int TIME_COLUMN_INDEX = 5;
+    private static final int STATUS_COLUMN_INDEX = 8;
+
     private final AppointmentBookingService appointmentBookingService;
     private final AppointmentService appointmentService;
     private final DefaultTableModel tableModel;
@@ -33,8 +57,11 @@ public class AdminReservationsPanel extends JPanel {
     private final JLabel infoLabel;
     private final JButton modifyButton;
     private final JButton attendedButton;
+    private final JButton notAttendedButton;
     private final JButton completedButton;
     private final JButton cancelButton;
+    private final JTextField slotDateField;
+    private final JTextField slotTimeField;
 
     /**
      * Creates a new admin reservations panel object with the given values.
@@ -52,11 +79,21 @@ public class AdminReservationsPanel extends JPanel {
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        infoLabel = new JLabel("Manage reservations (future reservations only for modify/cancel).");
+        infoLabel = new JLabel(MANAGE_RESERVATIONS_INFO);
         add(infoLabel, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(
-                new Object[] {"Reservation ID", "Booked By", "Date", "Day", "Time", "Duration", "Participants", "Status"},
+                new Object[] {
+                        "Reservation ID",
+                        "Booked For",
+                        "Phone",
+                        "Date",
+                        "Day",
+                        "Time",
+                        "Duration",
+                        "Participants",
+                        "Status"
+                },
                 0
         ) {
             @Override
@@ -71,25 +108,37 @@ public class AdminReservationsPanel extends JPanel {
 
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         slotComboBox = new JComboBox<>();
-        JButton refreshButton = new JButton("Refresh");
-        modifyButton = new JButton("Modify Appointment");
-        attendedButton = new JButton("Mark as Attended");
-        completedButton = new JButton("Mark as Completed");
-        cancelButton = new JButton("Cancel Reservation");
+        JButton refreshButton = new JButton(REFRESH_BUTTON_LABEL);
+        modifyButton = new JButton(MODIFY_APPOINTMENT_TITLE);
+        attendedButton = new JButton(MARK_AS_ATTENDED_TITLE);
+        notAttendedButton = new JButton(MARK_AS_NOT_ATTENDED_TITLE);
+        completedButton = new JButton(MARK_AS_COMPLETED_TITLE);
+        cancelButton = new JButton(CANCEL_RESERVATION_TITLE);
+        slotDateField = new JTextField(10);
+        slotTimeField = new JTextField(6);
+        JButton addSlotButton = new JButton(ADD_SLOT_BUTTON_LABEL);
 
         refreshButton.addActionListener(e -> refreshData());
         modifyButton.addActionListener(e -> onModifyReservation());
         attendedButton.addActionListener(e -> onMarkAttended());
+        notAttendedButton.addActionListener(e -> onMarkNotAttended());
         completedButton.addActionListener(e -> onMarkCompleted());
         cancelButton.addActionListener(e -> onCancelReservation());
+        addSlotButton.addActionListener(e -> onAddSlot());
 
-        actionPanel.add(new JLabel("New Date/Time:"));
+        actionPanel.add(new JLabel(NEW_DATE_TIME_LABEL));
         actionPanel.add(slotComboBox);
         actionPanel.add(refreshButton);
         actionPanel.add(modifyButton);
         actionPanel.add(attendedButton);
+        actionPanel.add(notAttendedButton);
         actionPanel.add(completedButton);
         actionPanel.add(cancelButton);
+        actionPanel.add(new JLabel(SLOT_DATE_LABEL));
+        actionPanel.add(slotDateField);
+        actionPanel.add(new JLabel(SLOT_TIME_LABEL));
+        actionPanel.add(slotTimeField);
+        actionPanel.add(addSlotButton);
 
         add(actionPanel, BorderLayout.SOUTH);
 
@@ -104,7 +153,7 @@ public class AdminReservationsPanel extends JPanel {
         slotComboBox.removeAllItems();
 
         if (!appointmentBookingService.canCurrentUserManageReservations()) {
-            infoLabel.setText("Only admins can manage reservations.");
+            infoLabel.setText(ONLY_ADMINS_CAN_MANAGE_RESERVATIONS);
             setActionsEnabled(false);
             return;
         }
@@ -120,7 +169,7 @@ public class AdminReservationsPanel extends JPanel {
             }
         }
 
-        infoLabel.setText("Manage reservations (future reservations only for modify/cancel).");
+        infoLabel.setText(MANAGE_RESERVATIONS_INFO);
         setActionsEnabled(true);
     }
 
@@ -131,12 +180,12 @@ public class AdminReservationsPanel extends JPanel {
         int selectedRow = reservationsTable.getSelectedRow();
         String reservationId = selectedReservationId();
         if (reservationId == null) {
-            showWarning("Please select a reservation first.");
+            showWarning(PLEASE_SELECT_RESERVATION_FIRST);
             return;
         }
 
         BookingStatus status = appointmentBookingService.cancelAppointment(reservationId);
-        showResult(status, "Cancel Reservation");
+        showResult(status, CANCEL_RESERVATION_TITLE);
 
         if (status == BookingStatus.SUCCESS) {
             if (selectedRow >= 0 && selectedRow < tableModel.getRowCount()) {
@@ -151,26 +200,26 @@ public class AdminReservationsPanel extends JPanel {
     private void onModifyReservation() {
         String reservationId = selectedReservationId();
         if (reservationId == null) {
-            showWarning("Please select a reservation first.");
+            showWarning(PLEASE_SELECT_RESERVATION_FIRST);
             return;
         }
         if (slotComboBox.getSelectedItem() == null) {
-            showWarning("Please select a replacement slot.");
+            showWarning(PLEASE_SELECT_A_REPLACEMENT_SLOT);
             return;
         }
 
         int selectedRow = reservationsTable.getSelectedRow();
         String newSlotTime = slotComboBox.getSelectedItem().toString();
         BookingStatus status = appointmentBookingService.modifyAppointment(reservationId, newSlotTime);
-        showResult(status, "Modify Appointment");
+        showResult(status, MODIFY_APPOINTMENT_TITLE);
 
         if (status == BookingStatus.SUCCESS) {
             if (selectedRow >= 0 && selectedRow < tableModel.getRowCount()) {
                 String[] parts = splitSlotLabel(newSlotTime);
-                tableModel.setValueAt(parts[0], selectedRow, 2);
-                tableModel.setValueAt(parts[1], selectedRow, 3);
-                tableModel.setValueAt(parts[2], selectedRow, 4);
-                tableModel.setValueAt("RESCHEDULED", selectedRow, 7);
+                tableModel.setValueAt(parts[0], selectedRow, DATE_COLUMN_INDEX);
+                tableModel.setValueAt(parts[1], selectedRow, DAY_COLUMN_INDEX);
+                tableModel.setValueAt(parts[2], selectedRow, TIME_COLUMN_INDEX);
+                tableModel.setValueAt("RESCHEDULED", selectedRow, STATUS_COLUMN_INDEX);
             }
         }
     }
@@ -181,12 +230,12 @@ public class AdminReservationsPanel extends JPanel {
     private void onMarkAttended() {
         String reservationId = selectedReservationId();
         if (reservationId == null) {
-            showWarning("Please select a reservation first.");
+            showWarning(PLEASE_SELECT_RESERVATION_FIRST);
             return;
         }
 
         BookingStatus status = appointmentBookingService.markAppointmentAsAttended(reservationId);
-        showResult(status, "Mark as Attended");
+        showResult(status, MARK_AS_ATTENDED_TITLE);
         if (status == BookingStatus.SUCCESS) {
             updateSelectedStatus("ATTENDED");
         }
@@ -198,14 +247,44 @@ public class AdminReservationsPanel extends JPanel {
     private void onMarkCompleted() {
         String reservationId = selectedReservationId();
         if (reservationId == null) {
-            showWarning("Please select a reservation first.");
+            showWarning(PLEASE_SELECT_RESERVATION_FIRST);
             return;
         }
 
         BookingStatus status = appointmentBookingService.markAppointmentAsCompleted(reservationId);
-        showResult(status, "Mark as Completed");
+        showResult(status, MARK_AS_COMPLETED_TITLE);
         if (status == BookingStatus.SUCCESS) {
             updateSelectedStatus("COMPLETED");
+        }
+    }
+
+    /**
+     * Runs on mark not attended for this class.
+     */
+    private void onMarkNotAttended() {
+        String reservationId = selectedReservationId();
+        if (reservationId == null) {
+            showWarning(PLEASE_SELECT_RESERVATION_FIRST);
+            return;
+        }
+
+        BookingStatus status = appointmentBookingService.markAppointmentAsNotAttended(reservationId);
+        showResult(status, MARK_AS_NOT_ATTENDED_TITLE);
+        if (status == BookingStatus.SUCCESS) {
+            updateSelectedStatus("NOT_ATTENDED");
+        }
+    }
+
+    private void onAddSlot() {
+        BookingStatus status = appointmentService.addSlot(
+                slotDateField.getText(),
+                slotTimeField.getText()
+        );
+        showResult(status, ADD_SLOT_TITLE);
+        if (status == BookingStatus.SUCCESS) {
+            slotDateField.setText("");
+            slotTimeField.setText("");
+            refreshData();
         }
     }
 
@@ -235,6 +314,7 @@ public class AdminReservationsPanel extends JPanel {
         return new Object[] {
                 appointment.getId(),
                 appointment.getCustomerName(),
+                appointment.getCustomerPhoneNumber(),
                 appointment.getSlotDate(),
                 appointment.getSlotDay(),
                 appointment.getSlotTime(),
@@ -286,13 +366,13 @@ public class AdminReservationsPanel extends JPanel {
      * @param message message text to show or send
      */
     private void showWarning(String message) {
-        JOptionPane.showMessageDialog(this, message, "Input Required", JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(this, message, INPUT_REQUIRED_TITLE, JOptionPane.WARNING_MESSAGE);
     }
 
     private void updateSelectedStatus(String status) {
         int selectedRow = reservationsTable.getSelectedRow();
         if (selectedRow >= 0 && selectedRow < tableModel.getRowCount()) {
-            tableModel.setValueAt(status, selectedRow, 7);
+            tableModel.setValueAt(status, selectedRow, STATUS_COLUMN_INDEX);
         }
     }
 
@@ -306,6 +386,7 @@ public class AdminReservationsPanel extends JPanel {
         modifyButton.setEnabled(enabled && slotComboBox.getItemCount() > 0);
         slotComboBox.setEnabled(enabled && slotComboBox.getItemCount() > 0);
         attendedButton.setEnabled(enabled);
+        notAttendedButton.setEnabled(enabled);
         completedButton.setEnabled(enabled);
     }
 }

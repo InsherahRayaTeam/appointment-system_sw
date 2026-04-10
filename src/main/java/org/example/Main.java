@@ -35,6 +35,14 @@ import java.util.Scanner;
  */
 public class Main {
 
+    private static final String CONSOLE_EXIT_COMMAND = "exit";
+    private static final String CONSOLE_ADMIN_ALIAS = "admin";
+    private static final String CONSOLE_ADMIN_EMAIL = "admin@gmail.com";
+    private static final String CONSOLE_ADMIN_PASSWORD = "admin123";
+    private static final String MENU_OPTION_SHOW_SLOTS = "7";
+    private static final String MENU_OPTION_BOOK_SLOT = "8";
+    private static final String MENU_OPTION_LOGOUT = "9";
+
     /**
      * Creates a new main object with the given values.
      *
@@ -155,7 +163,7 @@ public class Main {
         while (true) {
             System.out.println("Administrator Login");
             String username = scanner.nextLine().trim();
-            if ("exit".equalsIgnoreCase(username)) {
+            if (CONSOLE_EXIT_COMMAND.equalsIgnoreCase(username)) {
                 System.out.println("Thank you for using Appointment System.");
                 return;
             }
@@ -163,9 +171,9 @@ public class Main {
             String password = scanner.nextLine().trim();
             String authEmail = username;
             String authPassword = password;
-            if ("admin".equalsIgnoreCase(username) && "admin".equals(password)) {
-                authEmail = "admin@gmail.com";
-                authPassword = "admin123";
+            if (CONSOLE_ADMIN_ALIAS.equalsIgnoreCase(username) && CONSOLE_ADMIN_ALIAS.equals(password)) {
+                authEmail = CONSOLE_ADMIN_EMAIL;
+                authPassword = CONSOLE_ADMIN_PASSWORD;
             }
 
             if (!authService.authenticate(authEmail, authPassword)) {
@@ -179,14 +187,14 @@ public class Main {
             while (loggedIn) {
                 String choice = scanner.nextLine().trim();
                 switch (choice) {
-                    case "7":
+                    case MENU_OPTION_SHOW_SLOTS:
                         System.out.println("Available Appointment Slots");
                         List<AppointmentSlot> availableSlots = appointmentService.getAvailableSlots();
                         for (AppointmentSlot slot : availableSlots) {
                             System.out.println(slot.getDateDayTimeLabel());
                         }
                         break;
-                    case "8":
+                    case MENU_OPTION_BOOK_SLOT:
                         String requestedTime = scanner.nextLine().trim();
                         if (appointmentService.bookSlot(requestedTime)) {
                             System.out.println("Success: Appointment booked for " + requestedTime + ".");
@@ -194,7 +202,7 @@ public class Main {
                             System.out.println("Unable to book appointment for " + requestedTime + ".");
                         }
                         break;
-                    case "9":
+                    case MENU_OPTION_LOGOUT:
                         loginNotifier.notifyLogout(username);
                         loggedIn = false;
                         break;

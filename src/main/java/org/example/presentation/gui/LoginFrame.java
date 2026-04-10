@@ -24,6 +24,8 @@ import java.util.Objects;
  */
 public class LoginFrame extends JFrame {
 
+    private static final String LOGIN_SUCCESS_TITLE = GuiText.LOGIN_SUCCESS_TITLE;
+
     private final AdminAuthService authService;
     private final ApplicationController appController;
 
@@ -52,12 +54,12 @@ public class LoginFrame extends JFrame {
      * Runs initialize ui for this class.
      */
     private void initializeUi() {
-        setTitle("Appointment System - Login");
+        setTitle(GuiText.APP_LOGIN_TITLE);
         setSize(420, 260);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        JLabel titleLabel = new JLabel("Appointment Scheduling System", JLabel.CENTER);
+        JLabel titleLabel = new JLabel(GuiText.APP_LOGIN_HEADER, JLabel.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
         titleLabel.setBorder(BorderFactory.createEmptyBorder(15, 10, 10, 10));
         add(titleLabel, BorderLayout.NORTH);
@@ -65,16 +67,16 @@ public class LoginFrame extends JFrame {
         JPanel formPanel = new JPanel(new GridLayout(3, 2, 10, 10));
         formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
 
-        formPanel.add(new JLabel("Email:"));
+        formPanel.add(new JLabel(GuiText.EMAIL_LABEL));
         emailField = new JTextField();
         formPanel.add(emailField);
 
-        formPanel.add(new JLabel("Password:"));
+        formPanel.add(new JLabel(GuiText.PASSWORD_LABEL));
         passwordField = new JPasswordField();
         formPanel.add(passwordField);
 
         formPanel.add(new JLabel(""));
-        statusLabel = new JLabel(" ");
+        statusLabel = new JLabel(GuiText.EMPTY_STATUS_TEXT);
         statusLabel.setForeground(new Color(170, 0, 0));
         formPanel.add(statusLabel);
 
@@ -82,11 +84,11 @@ public class LoginFrame extends JFrame {
 
         JPanel buttonPanel = new JPanel();
 
-        loginButton = new JButton("Login");
-        JButton signUpButton = new JButton("Sign Up");
-        JButton forgotPasswordButton = new JButton("Forgot Password");
-        JButton clearButton = new JButton("Clear");
-        JButton exitButton = new JButton("Exit");
+        loginButton = new JButton(GuiText.LOGIN_BUTTON);
+        JButton signUpButton = new JButton(GuiText.SIGN_UP_BUTTON);
+        JButton forgotPasswordButton = new JButton(GuiText.FORGOT_PASSWORD_BUTTON);
+        JButton clearButton = new JButton(GuiText.CLEAR_BUTTON);
+        JButton exitButton = new JButton(GuiText.EXIT_BUTTON);
 
         loginButton.addActionListener(e -> onLogin());
         signUpButton.addActionListener(e -> appController.openSignUpFrame());
@@ -117,13 +119,13 @@ public class LoginFrame extends JFrame {
         try {
             result = authService.authenticateWithPolicy(new Credentials(email, password));
         } catch (IllegalArgumentException ex) {
-            showError("Email and password are required.");
+            showError(GuiText.EMAIL_AND_PASSWORD_REQUIRED);
             loginButton.setEnabled(true);
             return;
         }
 
         if (result.isLocked()) {
-            showError("Account locked. Try again in " + result.getRemainingLockSeconds() + " seconds.");
+            showError(GuiText.ACCOUNT_LOCKED_PREFIX + result.getRemainingLockSeconds() + " seconds.");
             loginButton.setEnabled(true);
             return;
         }
@@ -131,8 +133,8 @@ public class LoginFrame extends JFrame {
         if (result.isSuccess()) {
             JOptionPane.showMessageDialog(
                     this,
-                    "Login successful: " + result.getAuthenticatedRole(),
-                    "Success",
+                    GuiText.LOGIN_SUCCESS_PREFIX + result.getAuthenticatedRole(),
+                    LOGIN_SUCCESS_TITLE,
                     JOptionPane.INFORMATION_MESSAGE
             );
             appController.handleSuccessfulLogin(result);
@@ -140,9 +142,9 @@ public class LoginFrame extends JFrame {
         }
 
         if (result.getStatus() == LoginStatus.BLANK_INPUT) {
-            showError("Email and password cannot be blank.");
+            showError(GuiText.EMAIL_AND_PASSWORD_CANNOT_BE_BLANK);
         } else {
-            showError("Invalid email or password. Attempts remaining: " + result.getAttemptsRemaining());
+            showError(GuiText.INVALID_CREDENTIALS_PREFIX + result.getAttemptsRemaining());
         }
 
         loginButton.setEnabled(true);
@@ -166,7 +168,7 @@ public class LoginFrame extends JFrame {
      */
     private void showError(String message) {
         setStatusMessage(message);
-        JOptionPane.showMessageDialog(this, message, "Login Error", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(this, message, GuiText.LOGIN_ERROR_TITLE, JOptionPane.ERROR_MESSAGE);
     }
 
     /**
@@ -175,6 +177,6 @@ public class LoginFrame extends JFrame {
      * @param message message text to show or send
      */
     private void setStatusMessage(String message) {
-        statusLabel.setText(message == null || message.trim().isEmpty() ? " " : message);
+        statusLabel.setText(message == null || message.trim().isEmpty() ? GuiText.EMPTY_STATUS_TEXT : message);
     }
 }

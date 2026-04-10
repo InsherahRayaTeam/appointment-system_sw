@@ -49,4 +49,26 @@ public class InMemoryAppointmentRepository implements AppointmentRepository {
         }
         return available;
     }
+
+    /**
+     * Adds a slot when it is valid and unique by date-time.
+     *
+     * @param slot slot value used by this method
+     * @return true when the action is valid or successful, otherwise false
+     */
+    @Override
+    public boolean addSlot(AppointmentSlot slot) {
+        if (slot == null || slot.getDateTime() == null || !slot.isFutureSlot()) {
+            return false;
+        }
+
+        for (AppointmentSlot existing : slots) {
+            if (existing.getDateTime() != null && existing.getDateTime().equals(slot.getDateTime())) {
+                return false;
+            }
+        }
+
+        slots.add(slot);
+        return true;
+    }
 }

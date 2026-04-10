@@ -24,12 +24,24 @@ import java.util.List;
  */
 public class BookingPanel extends JPanel {
 
+    private static final String REFRESH_SLOTS_BUTTON = "Refresh Slots";
+    private static final String CLEAR_BUTTON = "Clear";
+    private static final String BOOK_APPOINTMENT_BUTTON = "Book Appointment";
+    private static final String NO_AVAILABLE_SLOTS_PLACEHOLDER = "No available slots";
+    private static final String NO_SLOTS_AVAILABLE_MESSAGE = "No slots are currently available.";
+    private static final String BOOKING_DIALOG_TITLE = "Booking";
+    private static final String BOOKING_ERROR_TITLE = "Booking Error";
+    private static final String BOOK_APPOINTMENT_SUCCESS_MESSAGE = "Appointment booked successfully.";
+    private static final String BOOKED_FOR_NAME_LABEL = "Booked For (name):";
+    private static final String PHONE_NUMBER_LABEL = "Phone Number:";
+
     private final SystemUser user;
     private final AppointmentService appointmentService;
     private final AppointmentBookingService appointmentBookingService;
     private final Runnable onBookingSuccess;
 
-    private final JTextField customerNameField;
+    private final JTextField bookedForNameField;
+    private final JTextField phoneNumberField;
     private final JComboBox<String> slotComboBox;
     private final JComboBox<AppointmentType> typeComboBox;
     private final JTextField durationField;
@@ -57,12 +69,15 @@ public class BookingPanel extends JPanel {
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JPanel formPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+        JPanel formPanel = new JPanel(new GridLayout(6, 2, 10, 10));
 
-        formPanel.add(new JLabel("Customer (email):"));
-        customerNameField = new JTextField(user.getEmail());
-        customerNameField.setEditable(false);
-        formPanel.add(customerNameField);
+        formPanel.add(new JLabel(BOOKED_FOR_NAME_LABEL));
+        bookedForNameField = new JTextField(user.getEmail());
+        formPanel.add(bookedForNameField);
+
+        formPanel.add(new JLabel(PHONE_NUMBER_LABEL));
+        phoneNumberField = new JTextField();
+        formPanel.add(phoneNumberField);
 
         formPanel.add(new JLabel("Date/Day/Time:"));
         slotComboBox = new JComboBox<>();
@@ -83,9 +98,9 @@ public class BookingPanel extends JPanel {
         add(formPanel, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton refreshButton = new JButton("Refresh Slots");
-        JButton clearButton = new JButton("Clear");
-        JButton bookButton = new JButton("Book Appointment");
+        JButton refreshButton = new JButton(REFRESH_SLOTS_BUTTON);
+        JButton clearButton = new JButton(CLEAR_BUTTON);
+        JButton bookButton = new JButton(BOOK_APPOINTMENT_BUTTON);
 
         refreshButton.addActionListener(e -> refreshData());
         clearButton.addActionListener(e -> clearInputs());
@@ -112,7 +127,7 @@ public class BookingPanel extends JPanel {
         }
 
         if (slotComboBox.getItemCount() == 0) {
-            slotComboBox.addItem("No available slots");
+            slotComboBox.addItem(NO_AVAILABLE_SLOTS_PLACEHOLDER);
             slotComboBox.setEnabled(false);
         } else {
             slotComboBox.setEnabled(true);
@@ -126,15 +141,16 @@ public class BookingPanel extends JPanel {
         if (!slotComboBox.isEnabled()) {
             JOptionPane.showMessageDialog(
                     this,
-                    "No slots are currently available.",
-                    "Booking",
+                    NO_SLOTS_AVAILABLE_MESSAGE,
+                    BOOKING_DIALOG_TITLE,
                     JOptionPane.WARNING_MESSAGE
             );
             return;
         }
 
         BookingStatus status = appointmentBookingService.bookAppointment(
-                user.getId(),
+                bookedForNameField.getText(),
+                phoneNumberField.getText(),
                 selectedSlot(),
                 durationField.getText(),
                 participantCountField.getText(),
@@ -144,8 +160,8 @@ public class BookingPanel extends JPanel {
         if (status == BookingStatus.SUCCESS) {
             JOptionPane.showMessageDialog(
                     this,
-                    "Appointment booked successfully.",
-                    "Booking",
+                    BOOK_APPOINTMENT_SUCCESS_MESSAGE,
+                    BOOKING_DIALOG_TITLE,
                     JOptionPane.INFORMATION_MESSAGE
             );
             refreshData();
@@ -158,7 +174,7 @@ public class BookingPanel extends JPanel {
         JOptionPane.showMessageDialog(
                 this,
                 GuiMessageHelper.toMessage(status),
-                "Booking Error",
+                BOOKING_ERROR_TITLE,
                 JOptionPane.ERROR_MESSAGE
         );
     }
@@ -187,7 +203,8 @@ public class BookingPanel extends JPanel {
      * Clears inputs.
      */
     private void clearInputs() {
-        customerNameField.setText(user.getEmail());
+        bookedForNameField.setText(user.getEmail());
+        phoneNumberField.setText("");
         durationField.setText("60");
         participantCountField.setText("1");
         typeComboBox.setSelectedItem(AppointmentType.NORMAL);

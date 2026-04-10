@@ -37,45 +37,37 @@ class SignUpFrameTest extends GuiTestSupport {
 
     @Test
     void signUpButton_WithValidInput_DelegatesToController() {
-        JTextField usernameField = getPrivateField(frame, "usernameField", JTextField.class);
         JTextField emailField = getPrivateField(frame, "emailField", JTextField.class);
         JPasswordField passwordField = getPrivateField(frame, "passwordField", JPasswordField.class);
-        JPasswordField confirmPasswordField = getPrivateField(frame, "confirmPasswordField", JPasswordField.class);
         AbstractButton signUpButton = findButton(frame.getContentPane(), "Sign Up");
 
-        when(appController.registerUser("alice", "alice@example.com", "pass123", "pass123"))
+        when(appController.signUp("alice@example.com", "pass123"))
                 .thenReturn(SignUpStatus.SUCCESS);
 
         runOnEdt(() -> {
-            usernameField.setText("alice");
             emailField.setText("alice@example.com");
             passwordField.setText("pass123");
-            confirmPasswordField.setText("pass123");
         });
 
         clickButton(signUpButton);
 
-        verify(appController).registerUser("alice", "alice@example.com", "pass123", "pass123");
+        verify(appController).signUp("alice@example.com", "pass123");
         verify(appController).openLoginFrame();
     }
 
     @Test
     void signUpButton_WithValidationError_ShowsStatusMessage() {
-        JTextField usernameField = getPrivateField(frame, "usernameField", JTextField.class);
         JTextField emailField = getPrivateField(frame, "emailField", JTextField.class);
         JPasswordField passwordField = getPrivateField(frame, "passwordField", JPasswordField.class);
-        JPasswordField confirmPasswordField = getPrivateField(frame, "confirmPasswordField", JPasswordField.class);
         JLabel statusLabel = getPrivateField(frame, "statusLabel", JLabel.class);
         AbstractButton signUpButton = findButton(frame.getContentPane(), "Sign Up");
 
-        when(appController.registerUser("alice", "bad-email", "pass123", "pass123"))
+        when(appController.signUp("bad-email", "pass123"))
                 .thenReturn(SignUpStatus.INVALID_EMAIL);
 
         runOnEdt(() -> {
-            usernameField.setText("alice");
             emailField.setText("bad-email");
             passwordField.setText("pass123");
-            confirmPasswordField.setText("pass123");
         });
 
         clickButton(signUpButton);

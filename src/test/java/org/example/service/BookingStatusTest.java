@@ -6,38 +6,39 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class BookingStatusTest {
 
+    private static final int EXPECTED_STATUS_COUNT = 21;
+
+    private void assertStatus(String name, BookingStatus expected) {
+        assertEquals(expected, BookingStatus.valueOf(name));
+    }
+
     @Test
     void enum_ContainsExpectedStatuses() {
-        assertEquals(BookingStatus.SUCCESS, BookingStatus.valueOf("SUCCESS"));
-        assertEquals(BookingStatus.BLANK_CUSTOMER_NAME, BookingStatus.valueOf("BLANK_CUSTOMER_NAME"));
-        assertEquals(BookingStatus.BLANK_SLOT_TIME, BookingStatus.valueOf("BLANK_SLOT_TIME"));
-        assertEquals(BookingStatus.INVALID_DURATION, BookingStatus.valueOf("INVALID_DURATION"));
-        assertEquals(BookingStatus.INVALID_PARTICIPANT_COUNT, BookingStatus.valueOf("INVALID_PARTICIPANT_COUNT"));
-        assertEquals(BookingStatus.INVALID_APPOINTMENT_RULES, BookingStatus.valueOf("INVALID_APPOINTMENT_RULES"));
-        assertEquals(BookingStatus.SLOT_NOT_FOUND, BookingStatus.valueOf("SLOT_NOT_FOUND"));
-        assertEquals(BookingStatus.SLOT_ALREADY_BOOKED, BookingStatus.valueOf("SLOT_ALREADY_BOOKED"));
-        assertEquals(BookingStatus.UNAUTHORIZED, BookingStatus.valueOf("UNAUTHORIZED"));
-        assertEquals(BookingStatus.APPOINTMENT_NOT_FOUND, BookingStatus.valueOf("APPOINTMENT_NOT_FOUND"));
-        assertEquals(BookingStatus.APPOINTMENT_NOT_FUTURE, BookingStatus.valueOf("APPOINTMENT_NOT_FUTURE"));
-        assertEquals(
-                BookingStatus.APPOINTMENT_ALREADY_CANCELLED,
-                BookingStatus.valueOf("APPOINTMENT_ALREADY_CANCELLED")
-        );
-        assertEquals(
-                BookingStatus.APPOINTMENT_ALREADY_ATTENDED,
-                BookingStatus.valueOf("APPOINTMENT_ALREADY_ATTENDED")
-        );
-        assertEquals(
-                BookingStatus.APPOINTMENT_ALREADY_COMPLETED,
-                BookingStatus.valueOf("APPOINTMENT_ALREADY_COMPLETED")
-        );
-        assertEquals(BookingStatus.APPOINTMENT_NOT_ATTENDED, BookingStatus.valueOf("APPOINTMENT_NOT_ATTENDED"));
-        assertEquals(BookingStatus.UPDATE_FAILED, BookingStatus.valueOf("UPDATE_FAILED"));
+        assertStatus("SUCCESS", BookingStatus.SUCCESS);
+        assertStatus("BLANK_CUSTOMER_NAME", BookingStatus.BLANK_CUSTOMER_NAME);
+        assertStatus("BLANK_PHONE_NUMBER", BookingStatus.BLANK_PHONE_NUMBER);
+        assertStatus("BLANK_SLOT_TIME", BookingStatus.BLANK_SLOT_TIME);
+        assertStatus("INVALID_DURATION", BookingStatus.INVALID_DURATION);
+        assertStatus("INVALID_PARTICIPANT_COUNT", BookingStatus.INVALID_PARTICIPANT_COUNT);
+        assertStatus("INVALID_PHONE_NUMBER", BookingStatus.INVALID_PHONE_NUMBER);
+        assertStatus("INVALID_SLOT_DATE_TIME", BookingStatus.INVALID_SLOT_DATE_TIME);
+        assertStatus("INVALID_APPOINTMENT_RULES", BookingStatus.INVALID_APPOINTMENT_RULES);
+        assertStatus("DUPLICATE_SLOT", BookingStatus.DUPLICATE_SLOT);
+        assertStatus("SLOT_NOT_FOUND", BookingStatus.SLOT_NOT_FOUND);
+        assertStatus("SLOT_ALREADY_BOOKED", BookingStatus.SLOT_ALREADY_BOOKED);
+        assertStatus("UNAUTHORIZED", BookingStatus.UNAUTHORIZED);
+        assertStatus("APPOINTMENT_NOT_FOUND", BookingStatus.APPOINTMENT_NOT_FOUND);
+        assertStatus("APPOINTMENT_NOT_FUTURE", BookingStatus.APPOINTMENT_NOT_FUTURE);
+        assertStatus("APPOINTMENT_ALREADY_CANCELLED", BookingStatus.APPOINTMENT_ALREADY_CANCELLED);
+        assertStatus("APPOINTMENT_ALREADY_ATTENDED", BookingStatus.APPOINTMENT_ALREADY_ATTENDED);
+        assertStatus("APPOINTMENT_ALREADY_NOT_ATTENDED", BookingStatus.APPOINTMENT_ALREADY_NOT_ATTENDED);
+        assertStatus("APPOINTMENT_ALREADY_COMPLETED", BookingStatus.APPOINTMENT_ALREADY_COMPLETED);
+        assertStatus("APPOINTMENT_NOT_ATTENDED", BookingStatus.APPOINTMENT_NOT_ATTENDED);
+        assertStatus("UPDATE_FAILED", BookingStatus.UPDATE_FAILED);
     }
 
     @Test
     void enum_HasExpectedTotalNumberOfValues() {
-        assertEquals(16, BookingStatus.values().length);
+        assertEquals(EXPECTED_STATUS_COUNT, BookingStatus.values().length);
     }
 }
-

@@ -126,7 +126,48 @@ public class PasswordRecoveryService {
             return ForgotPasswordStatus.WEAK_PASSWORD;
         }
 
-        boolean updated = userRepository.updatePassword(user.getId(), newPassword);
+        ForgotPasswordStatus updateStatus = resetPassword(user.getEmail(), newPassword);
+        if (updateStatus != ForgotPasswordStatus.PASSWORD_RESET_SUCCESS) {
+            return ForgotPasswordStatus.UPDATE_FAILED;
+        }
+
+        resetCodesByEmail.remove(user.getEmail());
+        return ForgotPasswordStatus.PASSWORD_RESET_SUCCESS;
+    }
+
+    /**
+     * Resets a password directly by user email.
+     *
+     * @param email email address used for login or matching
+     * @param newPassword password text entered by the user
+     * @return status that explains the operation result
+     */
+    public ForgotPasswordStatus resetPassword(String email, String newPassword) {
+        if (email == null || email.trim().isEmpty()) {
+            return ForgotPasswordStatus.BLANK_IDENTIFIER;
+        }
+
+        SystemUser user = resolveUser(email);
+        if (user == null) {
+            return ForgotPasswordStatus.UNKNOWN_USER;
+        }
+
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            return ForgotPasswordStatus.BLANK_NEW_PASSWORD;
+        }
+
+        if (!isStrongPassword(newPassword)) {
+            return ForgotPasswordStatus.WEAK_PASSWORD;
+        }
+
+        SystemUser updatedUser = new SystemUser(
+                user.getId(),
+                user.getEmail(),
+                newPassword.trim(),
+                user.getRole()
+        );
+
+        boolean updated = userRepository.update(updatedUser);
         if (!updated) {
             return ForgotPasswordStatus.UPDATE_FAILED;
         }

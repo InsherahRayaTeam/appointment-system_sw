@@ -20,6 +20,11 @@ import java.util.List;
  */
 public class SlotsPanel extends JPanel {
 
+    private static final String AVAILABLE_SLOTS_NOTE = "Available slots only (booked slots are not selectable).";
+    private static final String REFRESH_BUTTON_LABEL = "Refresh";
+    private static final String AVAILABLE_STATUS = "Available";
+    private static final String NO_AVAILABLE_SLOTS = "No available slots";
+
     private final AppointmentService appointmentService;
     private final DefaultTableModel tableModel;
 
@@ -34,7 +39,7 @@ public class SlotsPanel extends JPanel {
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JLabel noteLabel = new JLabel("Available slots only (booked slots are not selectable).");
+        JLabel noteLabel = new JLabel(AVAILABLE_SLOTS_NOTE);
         add(noteLabel, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(new Object[] {"Date", "Day", "Time", "Status"}, 0) {
@@ -49,7 +54,7 @@ public class SlotsPanel extends JPanel {
         add(new JScrollPane(slotsTable), BorderLayout.CENTER);
 
         JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton refreshButton = new JButton("Refresh");
+        JButton refreshButton = new JButton(REFRESH_BUTTON_LABEL);
         refreshButton.addActionListener(e -> refreshData());
         footerPanel.add(refreshButton);
         add(footerPanel, BorderLayout.SOUTH);
@@ -65,11 +70,11 @@ public class SlotsPanel extends JPanel {
 
         List<AppointmentSlot> availableSlots = appointmentService.getAvailableSlots();
         for (AppointmentSlot slot : availableSlots) {
-            tableModel.addRow(new Object[] {slot.getDate(), slot.getDay(), slot.getTime(), "Available"});
+            tableModel.addRow(new Object[] {slot.getDate(), slot.getDay(), slot.getTime(), AVAILABLE_STATUS});
         }
 
         if (availableSlots.isEmpty()) {
-            tableModel.addRow(new Object[] {"-", "-", "-", "No available slots"});
+            tableModel.addRow(new Object[] {"-", "-", "-", NO_AVAILABLE_SLOTS});
         }
     }
 }

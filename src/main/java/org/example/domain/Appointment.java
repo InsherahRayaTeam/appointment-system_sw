@@ -24,6 +24,7 @@ public class Appointment {
     // Optional fields used by booking workflow compatibility.
     private final String customerName;
     private final String customerEmail;
+    private final String customerPhoneNumber;
     private final AppointmentStatus status;
 
     /**
@@ -103,6 +104,43 @@ public class Appointment {
             AppointmentStatus status,
             AppointmentType type
     ) {
+        this(
+                id,
+                customerName,
+                customerEmail,
+                null,
+                startTime,
+                duration,
+                participants,
+                status,
+                type
+        );
+    }
+
+    /**
+     * Creates a new appointment object with the given values.
+     *
+     * @param id unique id used to find the record
+     * @param customerName value for customer name
+     * @param customerEmail value for customer email
+     * @param customerPhoneNumber value for customer phone number
+     * @param startTime time value used by this method
+     * @param duration appointment duration in minutes
+     * @param participants number of people for the appointment
+     * @param status status value used for this operation
+     * @param type value for type
+     */
+    public Appointment(
+            String id,
+            String customerName,
+            String customerEmail,
+            String customerPhoneNumber,
+            LocalDateTime startTime,
+            int duration,
+            int participants,
+            AppointmentStatus status,
+            AppointmentType type
+    ) {
         this.id = id;
         this.startTime = startTime;
         this.duration = duration;
@@ -111,6 +149,9 @@ public class Appointment {
         this.customerEmail = customerEmail == null || customerEmail.trim().isEmpty()
                 ? customerName
                 : customerEmail.trim().toLowerCase();
+        this.customerPhoneNumber = customerPhoneNumber == null || customerPhoneNumber.trim().isEmpty()
+                ? null
+                : customerPhoneNumber.trim();
         this.status = status;
         this.type = type == null ? AppointmentType.NORMAL : type;
     }
@@ -312,13 +353,14 @@ public class Appointment {
         return customerName;
     }
 
+
     /**
-     * Returns the customer email.
+     * Returns the customer phone number.
      *
      * @return text result from this method
      */
-    public String getCustomerEmail() {
-        return customerEmail;
+    public String getCustomerPhoneNumber() {
+        return customerPhoneNumber;
     }
 
     /**
@@ -361,14 +403,6 @@ public class Appointment {
         this.type = type == null ? AppointmentType.NORMAL : type;
     }
 
-    /**
-     * Returns the status value.
-     *
-     * @return text result from this method
-     */
-    public String getStatusValue() {
-        return status == null ? null : status.name();
-    }
 
     /**
      * Checks whether future compared to is true.
@@ -389,7 +423,37 @@ public class Appointment {
      * @return result produced by this method
      */
     public Appointment withStatus(AppointmentStatus newStatus) {
-        return new Appointment(id, customerName, customerEmail, startTime, duration, participants, newStatus, type);
+        return new Appointment(
+                id,
+                customerName,
+                customerEmail,
+                customerPhoneNumber,
+                startTime,
+                duration,
+                participants,
+                newStatus,
+                type
+        );
+    }
+
+    /**
+     * Runs with customer phone number for this class.
+     *
+     * @param newCustomerPhoneNumber phone number text used for this appointment
+     * @return result produced by this method
+     */
+    public Appointment withCustomerPhoneNumber(String newCustomerPhoneNumber) {
+        return new Appointment(
+                id,
+                customerName,
+                customerEmail,
+                newCustomerPhoneNumber,
+                startTime,
+                duration,
+                participants,
+                status,
+                type
+        );
     }
 
     /**
@@ -404,6 +468,7 @@ public class Appointment {
                 id,
                 customerName,
                 customerEmail,
+                customerPhoneNumber,
                 parseSlotTime(slotTime),
                 duration,
                 participants,
@@ -424,6 +489,7 @@ public class Appointment {
                 id,
                 customerName,
                 customerEmail,
+                customerPhoneNumber,
                 newStartTime,
                 duration,
                 participants,

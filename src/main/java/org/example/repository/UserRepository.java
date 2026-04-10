@@ -36,6 +36,15 @@ public interface UserRepository {
     void save(SystemUser user);
 
     /**
+     * Updates an existing user record.
+     *
+     * @param user user entity with updated values
+     *
+     * @return true when the action is valid or successful, otherwise false
+     */
+    boolean update(SystemUser user);
+
+    /**
      * Updates user password when record exists.
      *
      * @param userId unique id used to find the record

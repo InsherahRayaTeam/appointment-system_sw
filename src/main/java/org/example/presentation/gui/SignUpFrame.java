@@ -23,10 +23,8 @@ public class SignUpFrame extends JFrame {
 
     private final ApplicationController appController;
 
-    private JTextField usernameField;
     private JTextField emailField;
     private JPasswordField passwordField;
-    private JPasswordField confirmPasswordField;
     private JLabel statusLabel;
 
     /**
@@ -50,12 +48,8 @@ public class SignUpFrame extends JFrame {
         titleLabel.setBorder(BorderFactory.createEmptyBorder(15, 10, 10, 10));
         add(titleLabel, BorderLayout.NORTH);
 
-        JPanel formPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+        JPanel formPanel = new JPanel(new GridLayout(3, 2, 10, 10));
         formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
-
-        formPanel.add(new JLabel("Username:"));
-        usernameField = new JTextField();
-        formPanel.add(usernameField);
 
         formPanel.add(new JLabel("Email:"));
         emailField = new JTextField();
@@ -64,10 +58,6 @@ public class SignUpFrame extends JFrame {
         formPanel.add(new JLabel("Password:"));
         passwordField = new JPasswordField();
         formPanel.add(passwordField);
-
-        formPanel.add(new JLabel("Confirm Password:"));
-        confirmPasswordField = new JPasswordField();
-        formPanel.add(confirmPasswordField);
 
         formPanel.add(new JLabel(""));
         statusLabel = new JLabel(" ");
@@ -94,11 +84,9 @@ public class SignUpFrame extends JFrame {
     }
 
     private void onSignUp() {
-        SignUpStatus status = appController.registerUser(
-                usernameField.getText(),
+        SignUpStatus status = appController.signUp(
                 emailField.getText(),
-                new String(passwordField.getPassword()),
-                new String(confirmPasswordField.getPassword())
+                new String(passwordField.getPassword())
         );
 
         if (status == SignUpStatus.SUCCESS) {
@@ -117,14 +105,6 @@ public class SignUpFrame extends JFrame {
         JOptionPane.showMessageDialog(this, message, "Sign Up Error", JOptionPane.ERROR_MESSAGE);
     }
 
-    private void clearInputs() {
-        usernameField.setText("");
-        emailField.setText("");
-        passwordField.setText("");
-        confirmPasswordField.setText("");
-        statusLabel.setText(" ");
-        usernameField.requestFocusInWindow();
-    }
 
     private String toMessage(SignUpStatus status) {
         if (status == null) {
@@ -132,16 +112,20 @@ public class SignUpFrame extends JFrame {
         }
 
         return switch (status) {
-            case BLANK_USERNAME -> "Username is required.";
             case BLANK_EMAIL -> "Email is required.";
             case BLANK_PASSWORD -> "Password is required.";
-            case PASSWORD_MISMATCH -> "Password confirmation does not match.";
             case INVALID_EMAIL -> "Please provide a valid email address.";
             case WEAK_PASSWORD -> "Password must be at least 6 characters and include letters and numbers.";
-            case USERNAME_ALREADY_EXISTS -> "Username already exists. Please choose another username.";
             case EMAIL_ALREADY_EXISTS -> "An account with this email already exists.";
             default -> "Unable to create account.";
         };
+    }
+
+    private void clearInputs() {
+        emailField.setText("");
+        passwordField.setText("");
+        statusLabel.setText(" ");
+        emailField.requestFocusInWindow();
     }
 }
 

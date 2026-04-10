@@ -758,6 +758,21 @@ class AppointmentBookingServiceTest {
     }
 
     @Test
+    void markAppointmentAsNotAttended_AdminCanMarkExistingReservation_ReturnsSuccess() {
+        authenticateAsAdmin();
+
+        Appointment appointment = futureReservation("apt-not-attended", "10:00", "alice@example.com");
+        when(appointmentBookingRepository.findById(eq("apt-not-attended"))).thenReturn(Optional.of(appointment));
+        when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
+
+        BookingStatus result = appointmentBookingService.markAppointmentAsNotAttended("apt-not-attended");
+
+        assertEquals(BookingStatus.SUCCESS, result);
+        verify(appointmentBookingRepository).update(any(Appointment.class));
+        verify(eventManager).notifyObservers(contains("Reservation marked as not attended: apt-not-attended"));
+    }
+
+    @Test
     void markAppointmentAsCompleted_AdminCanCompleteAttendedReservation_ReturnsSuccess() {
         authenticateAsAdmin();
 
@@ -1039,6 +1054,55 @@ class AppointmentBookingServiceTest {
 
         // Assert
         assertEquals(BookingStatus.SUCCESS, result);
+    }
+
+    @Test
+    void bookAppointment_WithPhone_ValidRequest_SavesCustomerPhoneNumber() {
+        AppointmentSlot slot = new AppointmentSlot("10:00");
+        when(appointmentRepository.findAll()).thenReturn(List.of(slot));
+
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "Alice Johnson",
+                "+1 202-555-0199",
+                "10:00",
+                60,
+                1
+        );
+
+        ArgumentCaptor<Appointment> appointmentCaptor = ArgumentCaptor.forClass(Appointment.class);
+        assertEquals(BookingStatus.SUCCESS, result);
+        verify(appointmentBookingRepository).save(appointmentCaptor.capture());
+        assertEquals("+1 202-555-0199", appointmentCaptor.getValue().getCustomerPhoneNumber());
+    }
+
+    @Test
+    void bookAppointment_WithPhone_BlankPhone_ReturnsBlankPhoneNumber() {
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "Alice Johnson",
+                "   ",
+                "10:00",
+                60,
+                1
+        );
+
+        assertEquals(BookingStatus.BLANK_PHONE_NUMBER, result);
+        verifyNoInteractions(appointmentRepository);
+        verifyNoInteractions(appointmentBookingRepository);
+    }
+
+    @Test
+    void bookAppointment_WithPhone_InvalidPhone_ReturnsInvalidPhoneNumber() {
+        BookingStatus result = appointmentBookingService.bookAppointment(
+                "Alice Johnson",
+                "not-a-number",
+                "10:00",
+                60,
+                1
+        );
+
+        assertEquals(BookingStatus.INVALID_PHONE_NUMBER, result);
+        verifyNoInteractions(appointmentRepository);
+        verifyNoInteractions(appointmentBookingRepository);
     }
 
     private void authenticateAsAdmin() {

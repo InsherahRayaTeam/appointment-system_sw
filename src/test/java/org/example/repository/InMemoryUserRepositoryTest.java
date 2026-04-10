@@ -175,6 +175,25 @@ class InMemoryUserRepositoryTest {
         assertFalse(updated);
     }
 
+    @Test
+    void update_WithExistingEmail_ReplacesStoredUser() {
+        SystemUser updatedUser = new SystemUser("user-1", "user@gmail.com", "changed123", UserRole.USER);
+
+        boolean updated = repository.update(updatedUser);
+
+        assertTrue(updated);
+        assertEquals("changed123", repository.findByEmail("user@gmail.com").orElseThrow().getPassword());
+    }
+
+    @Test
+    void update_WithUnknownEmail_ReturnsFalse() {
+        SystemUser missingUser = new SystemUser("new-id", "missing@example.com", "changed123", UserRole.USER);
+
+        boolean updated = repository.update(missingUser);
+
+        assertFalse(updated);
+    }
+
     private void invokeSeedUser(String id, String email, String password, UserRole role) throws Exception {
         Method seedUser = InMemoryUserRepository.class.getDeclaredMethod(
                 "seedUser",
