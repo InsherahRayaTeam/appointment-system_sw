@@ -46,6 +46,15 @@ class InMemoryUserRepositoryTest {
     }
 
     @Test
+    void findByEmail_NumberedRegularUserFromProperties_IsLoaded() {
+        Optional<SystemUser> result = repository.findByEmail("mlkschool10@gmail.com");
+
+        assertTrue(result.isPresent());
+        assertEquals("mlkschool10@gmail.com", result.get().getEmail());
+        assertEquals(UserRole.USER, result.get().getRole());
+    }
+
+    @Test
     void findByEmail_WithTrimmedUppercaseInput_UsesNormalizedLookup() {
         // Arrange / Act
         Optional<SystemUser> result = repository.findByEmail("  ADMIN@GMAIL.COM  ");

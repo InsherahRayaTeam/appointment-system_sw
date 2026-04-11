@@ -1,6 +1,5 @@
 package org.example.presentation.gui;
 
-import org.example.domain.Appointment;
 import org.example.domain.AppointmentSlot;
 import org.example.domain.SystemUser;
 import org.example.domain.UserRole;
@@ -14,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.swing.AbstractButton;
-import javax.swing.JButton;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -88,6 +86,27 @@ class UserDashboardFrameTest extends GuiTestSupport {
         assertFalse(slotsPanel.isVisible());
         assertTrue(bookingPanel.isVisible());
         assertFalse(reservationsPanel.isVisible());
+    }
+
+    @Test
+    void testCalendarViewButton_switchesToCalendarPanel() {
+        when(appointmentService.getAvailableSlots()).thenReturn(Collections.singletonList(new AppointmentSlot("10:00")));
+        when(appointmentBookingService.getReservationsForCustomer("user@example.com")).thenReturn(Collections.emptyList());
+
+        frame = new UserDashboardFrame(user, appController);
+        AbstractButton calendarButton = findButton(frame.getContentPane(), "Calendar View");
+
+        clickButton(calendarButton);
+
+        SlotsPanel slotsPanel = getPrivateField(frame, "slotsPanel", SlotsPanel.class);
+        BookingPanel bookingPanel = getPrivateField(frame, "bookingPanel", BookingPanel.class);
+        ReservationsPanel reservationsPanel = getPrivateField(frame, "reservationsPanel", ReservationsPanel.class);
+        CalendarPanel calendarPanel = getPrivateField(frame, "calendarPanel", CalendarPanel.class);
+
+        assertFalse(slotsPanel.isVisible());
+        assertFalse(bookingPanel.isVisible());
+        assertFalse(reservationsPanel.isVisible());
+        assertTrue(calendarPanel.isVisible());
     }
 
     @Test

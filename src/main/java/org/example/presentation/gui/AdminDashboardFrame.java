@@ -19,6 +19,7 @@ public class AdminDashboardFrame extends JFrame {
 
     private static final String CARD_SLOTS = "SLOTS";
     private static final String CARD_RESERVATIONS = "RESERVATIONS";
+    private static final String CARD_CALENDAR = "CALENDAR";
 
     private final SystemUser user;
     private final ApplicationController appController;
@@ -27,6 +28,7 @@ public class AdminDashboardFrame extends JFrame {
     private final JPanel contentPanel;
     private final SlotsPanel slotsPanel;
     private final AdminReservationsPanel adminReservationsPanel;
+    private final CalendarPanel calendarPanel;
 
     /**
      * Creates a new admin dashboard frame object with the given values.
@@ -43,10 +45,14 @@ public class AdminDashboardFrame extends JFrame {
 
         this.cardLayout = new CardLayout();
         this.contentPanel = new JPanel(cardLayout);
-        this.slotsPanel = new SlotsPanel(appController.getAppointmentService());
+        this.slotsPanel = new SlotsPanel(appController.getAppointmentService(), true);
         this.adminReservationsPanel = new AdminReservationsPanel(
                 appController.getAppointmentBookingService(),
                 appController.getAppointmentService()
+        );
+        this.calendarPanel = new CalendarPanel(
+                appController.getAppointmentService(),
+                () -> appController.getAppointmentBookingService().getManagedReservations()
         );
 
         initializeUi();
@@ -68,6 +74,7 @@ public class AdminDashboardFrame extends JFrame {
 
         contentPanel.add(slotsPanel, CARD_SLOTS);
         contentPanel.add(adminReservationsPanel, CARD_RESERVATIONS);
+        contentPanel.add(calendarPanel, CARD_CALENDAR);
         add(contentPanel, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
@@ -78,11 +85,15 @@ public class AdminDashboardFrame extends JFrame {
         JButton manageReservationsButton = new JButton("Manage Reservations");
         manageReservationsButton.addActionListener(e -> showReservationsPanel());
 
+        JButton calendarViewButton = new JButton("Calendar View");
+        calendarViewButton.addActionListener(e -> showCalendarPanel());
+
         JButton logoutButton = new JButton("Logout");
         logoutButton.addActionListener(e -> onLogout());
 
         buttonPanel.add(viewSlotsButton);
         buttonPanel.add(manageReservationsButton);
+        buttonPanel.add(calendarViewButton);
         buttonPanel.add(logoutButton);
 
         add(buttonPanel, BorderLayout.SOUTH);
@@ -96,6 +107,9 @@ public class AdminDashboardFrame extends JFrame {
     private void showSlotsPanel() {
         slotsPanel.refreshData();
         cardLayout.show(contentPanel, CARD_SLOTS);
+        slotsPanel.setVisible(true);
+        adminReservationsPanel.setVisible(false);
+        calendarPanel.setVisible(false);
     }
 
     /**
@@ -104,6 +118,20 @@ public class AdminDashboardFrame extends JFrame {
     private void showReservationsPanel() {
         adminReservationsPanel.refreshData();
         cardLayout.show(contentPanel, CARD_RESERVATIONS);
+        slotsPanel.setVisible(false);
+        adminReservationsPanel.setVisible(true);
+        calendarPanel.setVisible(false);
+    }
+
+    /**
+     * Shows calendar panel to the user.
+     */
+    private void showCalendarPanel() {
+        calendarPanel.refreshCalendar();
+        cardLayout.show(contentPanel, CARD_CALENDAR);
+        slotsPanel.setVisible(false);
+        adminReservationsPanel.setVisible(false);
+        calendarPanel.setVisible(true);
     }
 
     /**
