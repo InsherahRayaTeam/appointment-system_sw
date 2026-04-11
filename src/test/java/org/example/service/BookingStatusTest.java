@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class BookingStatusTest {
 
-    private static final int EXPECTED_STATUS_COUNT = 21;
+    private static final int EXPECTED_STATUS_COUNT = 25;
 
     private void assertStatus(String name, BookingStatus expected) {
         assertEquals(expected, BookingStatus.valueOf(name));
@@ -26,6 +26,10 @@ class BookingStatusTest {
         assertStatus("DUPLICATE_SLOT", BookingStatus.DUPLICATE_SLOT);
         assertStatus("SLOT_NOT_FOUND", BookingStatus.SLOT_NOT_FOUND);
         assertStatus("SLOT_ALREADY_BOOKED", BookingStatus.SLOT_ALREADY_BOOKED);
+        assertStatus("WAITLISTED", BookingStatus.WAITLISTED);
+        assertStatus("WAITLIST_ALREADY_EXISTS", BookingStatus.WAITLIST_ALREADY_EXISTS);
+        assertStatus("WAITLIST_ALREADY_BOOKED", BookingStatus.WAITLIST_ALREADY_BOOKED);
+        assertStatus("WAITLIST_PROMOTION_FAILED", BookingStatus.WAITLIST_PROMOTION_FAILED);
         assertStatus("UNAUTHORIZED", BookingStatus.UNAUTHORIZED);
         assertStatus("APPOINTMENT_NOT_FOUND", BookingStatus.APPOINTMENT_NOT_FOUND);
         assertStatus("APPOINTMENT_NOT_FUTURE", BookingStatus.APPOINTMENT_NOT_FUTURE);
