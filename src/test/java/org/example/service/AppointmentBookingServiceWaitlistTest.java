@@ -24,10 +24,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -86,12 +88,26 @@ class AppointmentBookingServiceWaitlistTest {
         BookingStatus result = appointmentBookingService.bookAppointment(ALICE_EMAIL, SLOT_TIME, 60, 1);
 
         assertEquals(BookingStatus.WAITLISTED, result);
-        assertFalse(waitlistRepository.findAll().isEmpty());
+        assertEquals(1, waitlistRepository.findAll().size());
         WaitlistEntry entry = waitlistRepository.findAll().get(0);
         assertEquals(ALICE_EMAIL, entry.getCustomerEmail());
         assertEquals(slot.getDateTime(), entry.getSlotDateTime());
+        assertEquals(60, entry.getDurationMinutes());
+        assertEquals(1, entry.getParticipantCount());
         verify(appointmentBookingRepository, never()).save(any(Appointment.class));
         verifyNoInteractions(appointmentNotificationCoordinator);
+    }
+
+    @Test
+    void bookAppointment_AvailableSlot_DoesNotCreateWaitlistEntry() {
+        AppointmentSlot availableSlot = new AppointmentSlot(SLOT_TIME);
+        when(appointmentRepository.findAll()).thenReturn(List.of(availableSlot));
+
+        BookingStatus result = appointmentBookingService.bookAppointment(ALICE_EMAIL, SLOT_TIME, 60, 1);
+
+        assertEquals(BookingStatus.SUCCESS, result);
+        assertTrue(waitlistRepository.findAll().isEmpty());
+        verify(appointmentBookingRepository).save(any(Appointment.class));
     }
 
     @Test
@@ -122,37 +138,46 @@ class AppointmentBookingServiceWaitlistTest {
     }
 
     @Test
+    void bookAppointment_BlankCustomerName_IsRejected() {
+        BookingStatus result = appointmentBookingService.bookAppointment(" ", SLOT_TIME, 60, 1);
+
+        assertEquals(BookingStatus.BLANK_CUSTOMER_NAME, result);
+        verifyNoInteractions(appointmentRepository);
+        assertTrue(waitlistRepository.findAll().isEmpty());
+    }
+
+    @Test
+    void bookAppointment_SlotNotFound_ReturnsSlotNotFound() {
+        when(appointmentRepository.findAll()).thenReturn(List.of(new AppointmentSlot("11:00")));
+
+        BookingStatus result = appointmentBookingService.bookAppointment(ALICE_EMAIL, SLOT_TIME, 60, 1);
+
+        assertEquals(BookingStatus.SLOT_NOT_FOUND, result);
+        assertTrue(waitlistRepository.findAll().isEmpty());
+    }
+
+    @Test
+    void bookAppointment_FullSlot_WithType_PreservesTypeInWaitlist() {
+        AppointmentSlot slot = bookedSlot();
+        when(appointmentRepository.findAll()).thenReturn(List.of(slot));
+
+        BookingStatus result = appointmentBookingService.bookAppointment(ALICE_EMAIL, SLOT_TIME, 60, 1, AppointmentType.URGENT);
+
+        assertEquals(BookingStatus.WAITLISTED, result);
+        assertEquals(AppointmentType.URGENT, waitlistRepository.findAll().get(0).getType());
+    }
+
+    @Test
     void cancelAppointment_FutureReservation_PromotesFirstWaitlistedUserAndNotifies() {
         authenticateAsAdmin();
-
         AppointmentSlot slot = bookedSlot();
         Appointment cancelled = appointmentAt("apt-cancel", slot.getDateTime());
         when(appointmentBookingRepository.findById(eq("apt-cancel"))).thenReturn(Optional.of(cancelled));
         when(appointmentRepository.findAll()).thenReturn(List.of(slot));
         when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
 
-        waitlistRepository.save(new WaitlistEntry(
-                "wait-1",
-                BOB_EMAIL,
-                BOB_EMAIL,
-                null,
-                slot.getDateTime(),
-                60,
-                1,
-                AppointmentType.NORMAL,
-                LocalDateTime.now().minusMinutes(2)
-        ));
-        waitlistRepository.save(new WaitlistEntry(
-                "wait-2",
-                CAROL_EMAIL,
-                CAROL_EMAIL,
-                null,
-                slot.getDateTime(),
-                60,
-                1,
-                AppointmentType.NORMAL,
-                LocalDateTime.now().minusMinutes(1)
-        ));
+        enqueue("wait-1", BOB_EMAIL, slot.getDateTime(), LocalDateTime.now().minusMinutes(2));
+        enqueue("wait-2", CAROL_EMAIL, slot.getDateTime(), LocalDateTime.now().minusMinutes(1));
 
         BookingStatus result = appointmentBookingService.cancelAppointment("apt-cancel");
 
@@ -162,19 +187,21 @@ class AppointmentBookingServiceWaitlistTest {
         assertEquals(CAROL_EMAIL, waitlistRepository.findAll().get(0).getCustomerEmail());
 
         ArgumentCaptor<Appointment> savedAppointmentCaptor = ArgumentCaptor.forClass(Appointment.class);
-        verify(appointmentBookingRepository).update(any(Appointment.class));
+        ArgumentCaptor<Appointment> updatedAppointmentCaptor = ArgumentCaptor.forClass(Appointment.class);
+        verify(appointmentBookingRepository).update(updatedAppointmentCaptor.capture());
         verify(appointmentBookingRepository).save(savedAppointmentCaptor.capture());
+        assertEquals(AppointmentStatus.CANCELLED, updatedAppointmentCaptor.getValue().getStatus());
         assertEquals(AppointmentStatus.CONFIRMED, savedAppointmentCaptor.getValue().getStatus());
         assertEquals(BOB_EMAIL, savedAppointmentCaptor.getValue().getCustomerName());
         verify(eventManager).notifyObservers(contains("Reservation cancelled: apt-cancel"));
         verify(eventManager).notifyObservers(contains("Waitlist promotion confirmed:"));
-        verify(appointmentNotificationCoordinator).sendWaitlistPromotionNotification(savedAppointmentCaptor.getValue());
+        verify(appointmentNotificationCoordinator, times(1))
+                .sendWaitlistPromotionNotification(savedAppointmentCaptor.getValue());
     }
 
     @Test
-    void cancelAppointment_WhenNoWaitlistExists_SlotBecomesAvailable() {
+    void cancelAppointment_WhenNoWaitlistExists_SlotBecomesAvailableAndNoPromotionNotification() {
         authenticateAsAdmin();
-
         AppointmentSlot slot = bookedSlot();
         Appointment cancelled = appointmentAt("apt-no-waitlist", slot.getDateTime());
         when(appointmentBookingRepository.findById(eq("apt-no-waitlist"))).thenReturn(Optional.of(cancelled));
@@ -190,9 +217,31 @@ class AppointmentBookingServiceWaitlistTest {
     }
 
     @Test
+    void waitlistPromotionFifoOrder_UsesOldestEntryFirst_AndPreservesRemainingOrder() {
+        authenticateAsAdmin();
+        AppointmentSlot slot = bookedSlot();
+        Appointment cancelled = appointmentAt("apt-fifo", slot.getDateTime());
+        when(appointmentBookingRepository.findById(eq("apt-fifo"))).thenReturn(Optional.of(cancelled));
+        when(appointmentRepository.findAll()).thenReturn(List.of(slot));
+        when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
+
+        LocalDateTime baseTime = LocalDateTime.now();
+        enqueue("wait-old", BOB_EMAIL, slot.getDateTime(), baseTime.minusMinutes(3));
+        enqueue("wait-new", CAROL_EMAIL, slot.getDateTime(), baseTime.minusMinutes(1));
+
+        BookingStatus result = appointmentBookingService.cancelAppointment("apt-fifo");
+
+        assertEquals(BookingStatus.SUCCESS, result);
+        ArgumentCaptor<Appointment> savedAppointmentCaptor = ArgumentCaptor.forClass(Appointment.class);
+        verify(appointmentBookingRepository).save(savedAppointmentCaptor.capture());
+        assertEquals(BOB_EMAIL, savedAppointmentCaptor.getValue().getCustomerName());
+        assertEquals(1, waitlistRepository.findAll().size());
+        assertEquals(CAROL_EMAIL, waitlistRepository.findAll().get(0).getCustomerEmail());
+    }
+
+    @Test
     void cancelAppointment_PromotionSaveFails_RestoresWaitlistEntryAndLeavesSlotAvailable() {
         authenticateAsAdmin();
-
         AppointmentSlot slot = bookedSlot();
         Appointment cancelled = appointmentAt("apt-fail", slot.getDateTime());
         when(appointmentBookingRepository.findById(eq("apt-fail"))).thenReturn(Optional.of(cancelled));
@@ -200,17 +249,7 @@ class AppointmentBookingServiceWaitlistTest {
         when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
         doThrow(new RuntimeException("save failed")).when(appointmentBookingRepository).save(any(Appointment.class));
 
-        waitlistRepository.save(new WaitlistEntry(
-                "wait-fail",
-                BOB_EMAIL,
-                BOB_EMAIL,
-                null,
-                slot.getDateTime(),
-                60,
-                1,
-                AppointmentType.NORMAL,
-                LocalDateTime.now().minusMinutes(1)
-        ));
+        enqueue("wait-fail", BOB_EMAIL, slot.getDateTime(), LocalDateTime.now().minusMinutes(1));
 
         BookingStatus result = appointmentBookingService.cancelAppointment("apt-fail");
 
@@ -223,61 +262,145 @@ class AppointmentBookingServiceWaitlistTest {
     }
 
     @Test
-    void waitlistPromotionFifoOrder_UsesOldestEntryFirst() {
+    void cancelAppointment_UpdateFails_RestoresOriginalSlotStateAndDoesNotPromote() {
         authenticateAsAdmin();
-
         AppointmentSlot slot = bookedSlot();
-        Appointment cancelled = appointmentAt("apt-fifo", slot.getDateTime());
-        when(appointmentBookingRepository.findById(eq("apt-fifo"))).thenReturn(Optional.of(cancelled));
+        Appointment cancelled = appointmentAt("apt-update-fail", slot.getDateTime());
+        when(appointmentBookingRepository.findById(eq("apt-update-fail"))).thenReturn(Optional.of(cancelled));
         when(appointmentRepository.findAll()).thenReturn(List.of(slot));
+        when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(false);
+        enqueue("wait-admin", BOB_EMAIL, slot.getDateTime(), LocalDateTime.now().minusMinutes(1));
+
+        BookingStatus result = appointmentBookingService.cancelAppointment("apt-update-fail");
+
+        assertEquals(BookingStatus.UPDATE_FAILED, result);
+        assertTrue(slot.isBooked());
+        assertEquals(1, waitlistRepository.findAll().size());
+        verify(appointmentBookingRepository, never()).save(any(Appointment.class));
+    }
+
+    @Test
+    void cancelAppointment_AlreadyCancelled_DoesNotPromote() {
+        authenticateAsAdmin();
+        Appointment alreadyCancelled = appointmentAt("apt-cancelled", LocalDateTime.now().plusHours(1))
+                .withStatus(AppointmentStatus.CANCELLED);
+        when(appointmentBookingRepository.findById(eq("apt-cancelled"))).thenReturn(Optional.of(alreadyCancelled));
+
+        BookingStatus result = appointmentBookingService.cancelAppointment("apt-cancelled");
+
+        assertEquals(BookingStatus.APPOINTMENT_ALREADY_CANCELLED, result);
+        verify(appointmentBookingRepository, never()).update(any(Appointment.class));
+        verify(appointmentBookingRepository, never()).save(any(Appointment.class));
+    }
+
+    @Test
+    void cancelAppointment_PastAppointment_DoesNotPromote() {
+        authenticateAsAdmin();
+        Appointment pastAppointment = appointmentAt("apt-past", LocalDateTime.now().minusHours(1));
+        when(appointmentBookingRepository.findById(eq("apt-past"))).thenReturn(Optional.of(pastAppointment));
+
+        BookingStatus result = appointmentBookingService.cancelAppointment("apt-past");
+
+        assertEquals(BookingStatus.APPOINTMENT_NOT_FUTURE, result);
+        verify(appointmentBookingRepository, never()).update(any(Appointment.class));
+        verify(appointmentBookingRepository, never()).save(any(Appointment.class));
+    }
+
+    @Test
+    void cancelAppointment_NotFoundAppointment_ReturnsNotFound() {
+        authenticateAsAdmin();
+        when(appointmentBookingRepository.findById(anyString())).thenReturn(Optional.empty());
+
+        BookingStatus result = appointmentBookingService.cancelAppointment("missing-id");
+
+        assertEquals(BookingStatus.APPOINTMENT_NOT_FOUND, result);
+        verify(appointmentBookingRepository, never()).update(any(Appointment.class));
+    }
+
+    @Test
+    void cancelAppointment_UnauthenticatedAdminFlow_ReturnsUnauthorized() {
+        when(sessionManager.isLoggedIn()).thenReturn(false);
+
+        BookingStatus result = appointmentBookingService.cancelAppointment("apt-test");
+
+        assertEquals(BookingStatus.UNAUTHORIZED, result);
+    }
+
+    @Test
+    void cancelAppointment_LoggedInButNotAdmin_ReturnsUnauthorized() {
+        when(sessionManager.isLoggedIn()).thenReturn(true);
+        when(sessionManager.isAdmin()).thenReturn(false);
+
+        BookingStatus result = appointmentBookingService.cancelAppointment("apt-test");
+
+        assertEquals(BookingStatus.UNAUTHORIZED, result);
+    }
+
+    @Test
+    void cancelAppointment_MultipleSlots_PromotesFromMatchingSlotOnly() {
+        authenticateAsAdmin();
+        LocalDateTime slotTime1 = LocalDateTime.now().plusHours(1);
+        LocalDateTime slotTime2 = LocalDateTime.now().plusHours(2);
+        AppointmentSlot slot1 = new AppointmentSlot(slotTime1.toLocalDate(), slotTime1.toLocalTime());
+        AppointmentSlot slot2 = new AppointmentSlot(slotTime2.toLocalDate(), slotTime2.toLocalTime());
+        slot1.book();
+        slot2.book();
+
+        Appointment cancelled = new Appointment("apt-multi", ALICE_EMAIL, slotTime1, 60, 1, AppointmentStatus.CONFIRMED);
+        when(appointmentBookingRepository.findById(eq("apt-multi"))).thenReturn(Optional.of(cancelled));
+        when(appointmentRepository.findAll()).thenReturn(List.of(slot1, slot2));
         when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
+        enqueue("wait-slot1", BOB_EMAIL, slotTime1, LocalDateTime.now().minusMinutes(2));
+        enqueue("wait-slot2", CAROL_EMAIL, slotTime2, LocalDateTime.now().minusMinutes(1));
 
-        waitlistRepository.save(new WaitlistEntry(
-                "wait-old",
-                BOB_EMAIL,
-                BOB_EMAIL,
-                null,
-                slot.getDateTime(),
-                60,
-                1,
-                AppointmentType.NORMAL,
-                LocalDateTime.now().minusMinutes(3)
-        ));
-        waitlistRepository.save(new WaitlistEntry(
-                "wait-new",
-                CAROL_EMAIL,
-                CAROL_EMAIL,
-                null,
-                slot.getDateTime(),
-                60,
-                1,
-                AppointmentType.NORMAL,
-                LocalDateTime.now().minusMinutes(1)
-        ));
-
-        BookingStatus result = appointmentBookingService.cancelAppointment("apt-fifo");
+        BookingStatus result = appointmentBookingService.cancelAppointment("apt-multi");
 
         assertEquals(BookingStatus.SUCCESS, result);
-        ArgumentCaptor<Appointment> savedAppointmentCaptor = ArgumentCaptor.forClass(Appointment.class);
-        verify(appointmentBookingRepository).save(savedAppointmentCaptor.capture());
-        assertEquals(BOB_EMAIL, savedAppointmentCaptor.getValue().getCustomerName());
-        assertEquals(1, waitlistRepository.findAll().size());
-        assertEquals(CAROL_EMAIL, waitlistRepository.findAll().get(0).getCustomerEmail());
+        ArgumentCaptor<Appointment> promotedCaptor = ArgumentCaptor.forClass(Appointment.class);
+        verify(appointmentBookingRepository).save(promotedCaptor.capture());
+        assertEquals(BOB_EMAIL, promotedCaptor.getValue().getCustomerName());
+        assertEquals(slotTime1, promotedCaptor.getValue().getStartTime());
+        assertEquals(1, waitlistRepository.findBySlotDateTime(slotTime2).size());
     }
 
-    private void authenticateAsAdmin() {
-        when(sessionManager.isLoggedIn()).thenReturn(true);
-        when(sessionManager.isAdmin()).thenReturn(true);
+    @Test
+    void bookAppointment_FullSlot_DoesNotSendNotificationWhenWaitlisted() {
+        AppointmentSlot slot = bookedSlot();
+        when(appointmentRepository.findAll()).thenReturn(List.of(slot));
+
+        BookingStatus result = appointmentBookingService.bookAppointment(ALICE_EMAIL, SLOT_TIME, 60, 1);
+
+        assertEquals(BookingStatus.WAITLISTED, result);
+        verifyNoInteractions(appointmentNotificationCoordinator);
     }
 
-    private AppointmentSlot bookedSlot() {
-        AppointmentSlot slot = new AppointmentSlot(SLOT_TIME);
-        slot.book();
-        return slot;
-    }
+     private void authenticateAsAdmin() {
+         when(sessionManager.isLoggedIn()).thenReturn(true);
+         when(sessionManager.isAdmin()).thenReturn(true);
+     }
 
-    private Appointment appointmentAt(String id, LocalDateTime dateTime) {
-        return new Appointment(id, ALICE_EMAIL, dateTime, 60, 1, AppointmentStatus.CONFIRMED);
-    }
+     private AppointmentSlot bookedSlot() {
+         AppointmentSlot slot = new AppointmentSlot(SLOT_TIME);
+         slot.book();
+         return slot;
+     }
+
+     private Appointment appointmentAt(String id, LocalDateTime dateTime) {
+         return new Appointment(id, ALICE_EMAIL, dateTime, 60, 1, AppointmentStatus.CONFIRMED);
+     }
+
+      private void enqueue(String id, String email, LocalDateTime slotDateTime, LocalDateTime createdAt) {
+          waitlistRepository.save(new WaitlistEntry(
+                  id,
+                  email,
+                  email,
+                  null,
+                  slotDateTime,
+                  60,
+                  1,
+                  AppointmentType.NORMAL,
+                  createdAt
+          ));
+      }
 }
 
