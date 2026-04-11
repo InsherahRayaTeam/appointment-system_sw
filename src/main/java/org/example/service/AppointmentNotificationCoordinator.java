@@ -79,6 +79,22 @@ public class AppointmentNotificationCoordinator {
     }
 
     /**
+     * Sends a notification for a waitlisted appointment that has been promoted.
+     *
+     * @param appointment appointment involved in this action
+     */
+    public void sendWaitlistPromotionNotification(Appointment appointment) {
+        SystemUser user = requireUser(appointment);
+        String appointmentDateTime = formatAppointmentDateTime(appointment);
+        String subject = "Appointment Waitlist Promotion";
+        String body = "Your waitlisted appointment has been promoted to a confirmed reservation."
+                + " Name: " + displayBookedUserName(appointment)
+                + " Date/time: " + appointmentDateTime;
+
+        notificationService.send(user.getEmail(), subject, body);
+    }
+
+    /**
      * Sends a modified notification for an updated appointment.
      *
      * @param appointment appointment involved in this action

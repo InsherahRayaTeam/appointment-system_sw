@@ -65,6 +65,21 @@ class AppointmentNotificationCoordinatorTest {
     }
 
     @Test
+    void sendWaitlistPromotionNotification_RecordsOneMessage() {
+        Appointment appointment = appointmentAt("grace@example.com", LocalDateTime.of(2026, 4, 21, 12, 15));
+
+        coordinator.sendWaitlistPromotionNotification(appointment);
+
+        assertEquals(1, mockNotificationService.getSentMessages().size());
+        String message = mockNotificationService.getSentMessages().get(0);
+        assertTrue(message.contains("grace@example.com"));
+        assertTrue(message.contains("Appointment Waitlist Promotion"));
+        assertTrue(message.contains("promoted to a confirmed reservation"));
+        assertTrue(message.contains("2026-04-21"));
+        assertTrue(message.contains("12:15"));
+    }
+
+    @Test
     void sendModifiedNotification_RecordsOneMessage() {
         Appointment appointment = appointmentAt("dave@example.com", LocalDateTime.of(2026, 4, 18, 9, 15));
 

@@ -4,9 +4,11 @@ import org.example.domain.Appointment;
 import org.example.domain.AppointmentSlot;
 import org.example.domain.AppointmentStatus;
 import org.example.domain.AppointmentType;
+import org.example.domain.WaitlistEntry;
 import org.example.domain.UserRole;
 import org.example.repository.AppointmentBookingRepository;
 import org.example.repository.AppointmentRepository;
+import org.example.repository.WaitlistRepository;
 import org.example.repository.UserRepository;
 
 import java.time.LocalDateTime;
@@ -35,6 +37,7 @@ public class AppointmentBookingService {
     private final SessionManager sessionManager;
     private final UserRepository userRepository;
     private final EventManager eventManager;
+    private final WaitlistRepository waitlistRepository;
     private final AppointmentNotificationCoordinator appointmentNotificationCoordinator;
 
     /**
@@ -47,7 +50,7 @@ public class AppointmentBookingService {
             AppointmentRepository appointmentRepository,
             AppointmentBookingRepository appointmentBookingRepository
     ) {
-        this(appointmentRepository, appointmentBookingRepository, null, null, null);
+        this(appointmentRepository, appointmentBookingRepository, null, null, null, null, null);
     }
 
     /**
@@ -66,14 +69,7 @@ public class AppointmentBookingService {
             UserRepository userRepository,
             EventManager eventManager
     ) {
-        this(
-                appointmentRepository,
-                appointmentBookingRepository,
-                sessionManager,
-                userRepository,
-                eventManager,
-                null
-        );
+        this(appointmentRepository, appointmentBookingRepository, sessionManager, userRepository, eventManager, null, null);
     }
 
     /**
@@ -92,6 +88,29 @@ public class AppointmentBookingService {
             SessionManager sessionManager,
             UserRepository userRepository,
             EventManager eventManager,
+            AppointmentNotificationCoordinator appointmentNotificationCoordinator
+    ) {
+        this(appointmentRepository, appointmentBookingRepository, sessionManager, userRepository, eventManager, null, appointmentNotificationCoordinator);
+    }
+
+    /**
+     * Creates a new appointment booking service object with the given values.
+     *
+     * @param appointmentRepository repository used to read and save data
+     * @param appointmentBookingRepository repository used to read and save data
+     * @param sessionManager manager object used for shared app state
+     * @param userRepository user involved in this action
+     * @param eventManager manager object used for shared app state
+     * @param waitlistRepository repository used to store waitlisted entries
+     * @param appointmentNotificationCoordinator coordinator used to send appointment notifications
+     */
+    public AppointmentBookingService(
+            AppointmentRepository appointmentRepository,
+            AppointmentBookingRepository appointmentBookingRepository,
+            SessionManager sessionManager,
+            UserRepository userRepository,
+            EventManager eventManager,
+            WaitlistRepository waitlistRepository,
             AppointmentNotificationCoordinator appointmentNotificationCoordinator
     ) {
         this.appointmentRepository = Objects.requireNonNull(
@@ -117,6 +136,7 @@ public class AppointmentBookingService {
         this.sessionManager = sessionManager;
         this.userRepository = userRepository;
         this.eventManager = eventManager;
+        this.waitlistRepository = waitlistRepository;
         this.appointmentNotificationCoordinator = appointmentNotificationCoordinator;
     }
 
@@ -451,6 +471,7 @@ public class AppointmentBookingService {
         String normalizedCustomerName = customerName.trim();
         String normalizedSlotSelection = slotTime.trim();
         boolean matchingSlotFound = false;
+        AppointmentSlot matchingUnavailableSlot = null;
 
         String bookingCustomerName = normalizedCustomerName;
         String bookingCustomerEmail = normalizedCustomerName;
@@ -467,6 +488,9 @@ public class AppointmentBookingService {
                 matchingSlotFound = true;
 
                 if (!slot.isAvailable()) {
+                    if (matchingUnavailableSlot == null) {
+                        matchingUnavailableSlot = slot;
+                    }
                     continue;
                 }
 
@@ -488,6 +512,17 @@ public class AppointmentBookingService {
         }
 
         if (matchingSlotFound) {
+            if (waitlistRepository != null && matchingUnavailableSlot != null) {
+                return addToWaitlistForFullSlot(
+                        matchingUnavailableSlot,
+                        bookingCustomerName,
+                        bookingCustomerEmail,
+                        normalizedPhone,
+                        durationMinutes,
+                        participantCount,
+                        normalizedType
+                );
+            }
             return BookingStatus.SLOT_ALREADY_BOOKED;
         }
 
@@ -764,7 +799,9 @@ public class AppointmentBookingService {
 
         notifyEvent("Reservation cancelled: " + updated.getId());
         sendCancelledNotificationIfConfigured(updated);
-        return BookingStatus.SUCCESS;
+
+        BookingStatus waitlistPromotionStatus = promoteWaitlistedAppointmentIfAvailable(slot);
+        return waitlistPromotionStatus == BookingStatus.SUCCESS ? BookingStatus.SUCCESS : waitlistPromotionStatus;
     }
 
     /**
@@ -951,6 +988,120 @@ public class AppointmentBookingService {
         if (appointmentNotificationCoordinator != null && appointment != null) {
             appointmentNotificationCoordinator.sendNotAttendedNotification(appointment);
         }
+    }
+
+    private void sendWaitlistPromotionNotificationIfConfigured(Appointment appointment) {
+        if (appointmentNotificationCoordinator != null && appointment != null) {
+            appointmentNotificationCoordinator.sendWaitlistPromotionNotification(appointment);
+        }
+    }
+
+    private BookingStatus addToWaitlistForFullSlot(
+            AppointmentSlot slot,
+            String bookingCustomerName,
+            String bookingCustomerEmail,
+            String normalizedPhone,
+            int durationMinutes,
+            int participantCount,
+            AppointmentType normalizedType
+    ) {
+        if (slot == null || slot.getDateTime() == null || waitlistRepository == null) {
+            return BookingStatus.SLOT_ALREADY_BOOKED;
+        }
+
+        if (hasActiveAppointmentForSlot(slot, bookingCustomerName, bookingCustomerEmail)) {
+            return BookingStatus.WAITLIST_ALREADY_BOOKED;
+        }
+
+        if (waitlistRepository.existsForSlotAndCustomer(slot.getDateTime(), bookingCustomerName, bookingCustomerEmail)) {
+            return BookingStatus.WAITLIST_ALREADY_EXISTS;
+        }
+
+        WaitlistEntry waitlistEntry = new WaitlistEntry(
+                UUID.randomUUID().toString(),
+                bookingCustomerName,
+                bookingCustomerEmail,
+                normalizedPhone,
+                slot.getDateTime(),
+                durationMinutes,
+                participantCount,
+                normalizedType,
+                LocalDateTime.now()
+        );
+        waitlistRepository.save(waitlistEntry);
+        return BookingStatus.WAITLISTED;
+    }
+
+    private BookingStatus promoteWaitlistedAppointmentIfAvailable(AppointmentSlot slot) {
+        if (waitlistRepository == null || slot == null || slot.getDateTime() == null) {
+            return BookingStatus.SUCCESS;
+        }
+
+        WaitlistEntry nextEntry = waitlistRepository.pollFirstBySlotDateTime(slot.getDateTime()).orElse(null);
+        if (nextEntry == null) {
+            return BookingStatus.SUCCESS;
+        }
+
+        Appointment promoted = nextEntry.toAppointment(AppointmentStatus.CONFIRMED);
+        try {
+            appointmentBookingRepository.save(promoted);
+            slot.book();
+        } catch (RuntimeException ex) {
+            waitlistRepository.saveFirst(nextEntry);
+            return BookingStatus.WAITLIST_PROMOTION_FAILED;
+        }
+
+        notifyEvent("Waitlist promotion confirmed: " + promoted.getId());
+        sendWaitlistPromotionNotificationIfConfigured(promoted);
+        return BookingStatus.SUCCESS;
+    }
+
+    private boolean hasActiveAppointmentForSlot(
+            AppointmentSlot slot,
+            String bookingCustomerName,
+            String bookingCustomerEmail
+    ) {
+        if (slot == null || slot.getDateTime() == null) {
+            return false;
+        }
+
+        String requestedIdentity = customerIdentity(bookingCustomerName, bookingCustomerEmail);
+        if (requestedIdentity == null) {
+            return false;
+        }
+
+        for (Appointment appointment : appointmentBookingRepository.findAll()) {
+            if (!slot.getDateTime().equals(appointment.getStartTime())) {
+                continue;
+            }
+
+            if (!isActiveBookingStatus(appointment.getStatus())) {
+                continue;
+            }
+
+            if (requestedIdentity.equalsIgnoreCase(customerIdentity(appointment.getCustomerName(), appointment.getUser() == null ? null : appointment.getUser().getEmail()))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean isActiveBookingStatus(AppointmentStatus status) {
+        return status == AppointmentStatus.CONFIRMED
+                || status == AppointmentStatus.MODIFIED
+                || status == AppointmentStatus.RESCHEDULED
+                || status == AppointmentStatus.ATTENDED;
+    }
+
+    private String customerIdentity(String customerName, String customerEmail) {
+        String normalizedEmail = normalize(customerEmail);
+        if (normalizedEmail != null) {
+            return normalizedEmail.toLowerCase();
+        }
+
+        String normalizedName = normalize(customerName);
+        return normalizedName == null ? null : normalizedName.toLowerCase();
     }
 
     /**

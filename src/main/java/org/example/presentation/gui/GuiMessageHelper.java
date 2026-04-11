@@ -36,6 +36,10 @@ public final class GuiMessageHelper {
             case DUPLICATE_SLOT -> "The selected slot already exists.";
             case SLOT_NOT_FOUND -> "Selected slot was not found.";
             case SLOT_ALREADY_BOOKED -> "Selected slot is already booked.";
+            case WAITLISTED -> "The selected slot is full. You have been added to the waitlist.";
+            case WAITLIST_ALREADY_EXISTS -> "You are already on the waitlist for this slot.";
+            case WAITLIST_ALREADY_BOOKED -> "You already have a confirmed reservation for this slot.";
+            case WAITLIST_PROMOTION_FAILED -> "Your waitlist promotion could not be completed. Please try again.";
             case UNAUTHORIZED -> "You are not authorized to perform this action.";
             case APPOINTMENT_NOT_FOUND -> "Reservation was not found.";
             case APPOINTMENT_NOT_FUTURE -> "Only future reservations can be changed.";

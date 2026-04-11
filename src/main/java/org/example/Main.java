@@ -9,7 +9,9 @@ import org.example.repository.AppointmentBookingRepository;
 import org.example.repository.AppointmentRepository;
 import org.example.repository.InMemoryAppointmentBookingRepository;
 import org.example.repository.InMemoryAppointmentRepository;
+import org.example.repository.InMemoryWaitlistRepository;
 import org.example.repository.InMemoryUserRepository;
+import org.example.repository.WaitlistRepository;
 import org.example.repository.UserRepository;
 import org.example.service.AdminAuthService;
 import org.example.service.AppointmentBookingService;
@@ -73,6 +75,7 @@ public class Main {
             AppointmentRepository appointmentRepository = new InMemoryAppointmentRepository();
             AppointmentBookingRepository appointmentBookingRepository =
                     new InMemoryAppointmentBookingRepository();
+            WaitlistRepository waitlistRepository = new InMemoryWaitlistRepository();
 
             // ===== EVENTS / OBSERVERS =====
             AuthEventLogger authEventLogger = new AuthEventLogger();
@@ -110,6 +113,7 @@ public class Main {
                             sessionManager,
                             userRepository,
                             eventManager,
+                            waitlistRepository,
                             appointmentNotificationCoordinator
                     );
 
@@ -134,6 +138,7 @@ public class Main {
         UserRepository userRepository = new InMemoryUserRepository();
         AppointmentRepository appointmentRepository = new InMemoryAppointmentRepository();
         AppointmentBookingRepository appointmentBookingRepository = new InMemoryAppointmentBookingRepository();
+        WaitlistRepository waitlistRepository = new InMemoryWaitlistRepository();
 
         AuthEventLogger authEventLogger = new AuthEventLogger();
         EventManager eventManager = new EventManager();
@@ -155,6 +160,7 @@ public class Main {
                 sessionManager,
                 userRepository,
                 eventManager,
+                waitlistRepository,
                 appointmentNotificationCoordinator
         );
 
