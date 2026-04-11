@@ -3,7 +3,11 @@ package org.example.presentation.gui;
 import org.example.service.BookingStatus;
 import org.junit.jupiter.api.Test;
 
+import javax.swing.JOptionPane;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GuiMessageHelperTest {
 
@@ -74,5 +78,19 @@ class GuiMessageHelperTest {
                 "Reservation update failed. Please try again.",
                 GuiMessageHelper.toMessage(BookingStatus.UPDATE_FAILED)
         );
+    }
+
+    @Test
+    void toDialogMessageType_TreatsWaitlistAsInformational() {
+        assertEquals(JOptionPane.INFORMATION_MESSAGE, GuiMessageHelper.toDialogMessageType(BookingStatus.SUCCESS));
+        assertEquals(JOptionPane.INFORMATION_MESSAGE, GuiMessageHelper.toDialogMessageType(BookingStatus.WAITLISTED));
+        assertEquals(JOptionPane.ERROR_MESSAGE, GuiMessageHelper.toDialogMessageType(BookingStatus.INVALID_DURATION));
+    }
+
+    @Test
+    void isSuccessLike_MatchesExpectedStatuses() {
+        assertTrue(GuiMessageHelper.isSuccessLike(BookingStatus.SUCCESS));
+        assertTrue(GuiMessageHelper.isSuccessLike(BookingStatus.WAITLISTED));
+        assertFalse(GuiMessageHelper.isSuccessLike(BookingStatus.SLOT_NOT_FOUND));
     }
 }

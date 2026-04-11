@@ -2,6 +2,8 @@ package org.example.presentation.gui;
 
 import org.example.service.BookingStatus;
 
+import javax.swing.JOptionPane;
+
 /**
  * Represents gui message helper in the system.
  */
@@ -50,5 +52,25 @@ public final class GuiMessageHelper {
             case APPOINTMENT_NOT_ATTENDED -> "Reservation must be marked as attended before it can be completed.";
             case UPDATE_FAILED -> "Reservation update failed. Please try again.";
         };
+    }
+
+    /**
+     * Resolves a Swing dialog message type for a booking status.
+     *
+     * @param status status value used for this operation
+     * @return JOptionPane message type constant
+     */
+    public static int toDialogMessageType(BookingStatus status) {
+        return isSuccessLike(status) ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE;
+    }
+
+    /**
+     * Checks whether status should be treated as a non-error user outcome.
+     *
+     * @param status status value used for this operation
+     * @return true when the status is informational/success-like
+     */
+    public static boolean isSuccessLike(BookingStatus status) {
+        return status == BookingStatus.SUCCESS || status == BookingStatus.WAITLISTED;
     }
 }

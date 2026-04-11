@@ -31,7 +31,6 @@ public class BookingPanel extends JPanel {
     private static final String NO_SLOTS_AVAILABLE_MESSAGE = "No slots are currently available.";
     private static final String BOOKING_DIALOG_TITLE = "Booking";
     private static final String BOOKING_ERROR_TITLE = "Booking Error";
-    private static final String BOOK_APPOINTMENT_SUCCESS_MESSAGE = "Appointment booked successfully.";
     private static final String BOOKED_FOR_NAME_LABEL = "Booked For (name):";
     private static final String PHONE_NUMBER_LABEL = "Phone Number:";
 
@@ -46,6 +45,7 @@ public class BookingPanel extends JPanel {
     private final JComboBox<AppointmentType> typeComboBox;
     private final JTextField durationField;
     private final JTextField participantCountField;
+    private final JButton bookButton;
 
     /**
      * Creates a new booking panel object with the given values.
@@ -100,7 +100,7 @@ public class BookingPanel extends JPanel {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton refreshButton = new JButton(REFRESH_SLOTS_BUTTON);
         JButton clearButton = new JButton(CLEAR_BUTTON);
-        JButton bookButton = new JButton(BOOK_APPOINTMENT_BUTTON);
+        bookButton = new JButton(BOOK_APPOINTMENT_BUTTON);
 
         refreshButton.addActionListener(e -> refreshData());
         clearButton.addActionListener(e -> clearInputs());
@@ -129,8 +129,10 @@ public class BookingPanel extends JPanel {
         if (slotComboBox.getItemCount() == 0) {
             slotComboBox.addItem(NO_AVAILABLE_SLOTS_PLACEHOLDER);
             slotComboBox.setEnabled(false);
+            bookButton.setEnabled(false);
         } else {
             slotComboBox.setEnabled(true);
+            bookButton.setEnabled(true);
         }
     }
 
@@ -157,13 +159,9 @@ public class BookingPanel extends JPanel {
                 selectedType()
         );
 
-        if (status == BookingStatus.SUCCESS) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    BOOK_APPOINTMENT_SUCCESS_MESSAGE,
-                    BOOKING_DIALOG_TITLE,
-                    JOptionPane.INFORMATION_MESSAGE
-            );
+        if (GuiMessageHelper.isSuccessLike(status)) {
+            JOptionPane.showMessageDialog(this, GuiMessageHelper.toMessage(status), BOOKING_DIALOG_TITLE, JOptionPane.INFORMATION_MESSAGE);
+            clearInputs();
             refreshData();
             if (onBookingSuccess != null) {
                 onBookingSuccess.run();

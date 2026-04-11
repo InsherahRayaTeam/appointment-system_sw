@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * Represents in memory user repository in the system.
@@ -50,12 +51,7 @@ public class InMemoryUserRepository implements UserRepository {
                         p.getProperty(ADMIN_PASSWORD_KEY),
                         UserRole.ADMIN
                 );
-                seedUser(
-                        p.getProperty(USER_ID_KEY, DEFAULT_USER_ID),
-                        p.getProperty(USER_EMAIL_KEY),
-                        p.getProperty(USER_PASSWORD_KEY),
-                        UserRole.USER
-                );
+                seedConfiguredRegularUsers(p);
             }
         } catch (IOException e) {
             // Fall back to defaults if loading fails
@@ -72,6 +68,30 @@ public class InMemoryUserRepository implements UserRepository {
             usersByEmail.put(
                     DEFAULT_USER_EMAIL,
                     new SystemUser(DEFAULT_USER_ID, DEFAULT_USER_EMAIL, DEFAULT_USER_PASSWORD, UserRole.USER)
+            );
+        }
+    }
+
+    private void seedConfiguredRegularUsers(Properties p) {
+        seedUser(
+                p.getProperty(USER_ID_KEY, DEFAULT_USER_ID),
+                p.getProperty(USER_EMAIL_KEY),
+                p.getProperty(USER_PASSWORD_KEY),
+                UserRole.USER
+        );
+
+        Set<String> propertyNames = p.stringPropertyNames();
+        for (String propertyName : propertyNames) {
+            if (!propertyName.matches("user\\d+\\.email")) {
+                continue;
+            }
+
+            String userPrefix = propertyName.substring(0, propertyName.length() - ".email".length());
+            seedUser(
+                    p.getProperty(userPrefix + ".id"),
+                    p.getProperty(userPrefix + ".email"),
+                    p.getProperty(userPrefix + ".password"),
+                    UserRole.USER
             );
         }
     }

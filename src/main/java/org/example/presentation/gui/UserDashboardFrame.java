@@ -20,6 +20,7 @@ public class UserDashboardFrame extends JFrame {
     private static final String CARD_SLOTS = "SLOTS";
     private static final String CARD_BOOKING = "BOOKING";
     private static final String CARD_RESERVATIONS = "RESERVATIONS";
+    private static final String CARD_CALENDAR = "CALENDAR";
 
     private final SystemUser user;
     private final ApplicationController appController;
@@ -29,6 +30,7 @@ public class UserDashboardFrame extends JFrame {
     private final SlotsPanel slotsPanel;
     private final BookingPanel bookingPanel;
     private final ReservationsPanel reservationsPanel;
+    private final CalendarPanel calendarPanel;
 
     /**
      * Creates a new user dashboard frame object with the given values.
@@ -46,12 +48,20 @@ public class UserDashboardFrame extends JFrame {
         this.cardLayout = new CardLayout();
         this.contentPanel = new JPanel(cardLayout);
         this.slotsPanel = new SlotsPanel(appController.getAppointmentService());
-        this.reservationsPanel = new ReservationsPanel(user, appController.getAppointmentBookingService());
+        this.reservationsPanel = new ReservationsPanel(
+                user,
+                appController.getAppointmentService(),
+                appController.getAppointmentBookingService()
+        );
         this.bookingPanel = new BookingPanel(
                 user,
                 appController.getAppointmentService(),
                 appController.getAppointmentBookingService(),
                 this::refreshPanelsAfterBooking
+        );
+        this.calendarPanel = new CalendarPanel(
+                appController.getAppointmentService(),
+                () -> appController.getAppointmentBookingService().getReservationsForCustomer(user.getEmail())
         );
 
         initializeUi();
@@ -74,6 +84,7 @@ public class UserDashboardFrame extends JFrame {
         contentPanel.add(slotsPanel, CARD_SLOTS);
         contentPanel.add(bookingPanel, CARD_BOOKING);
         contentPanel.add(reservationsPanel, CARD_RESERVATIONS);
+        contentPanel.add(calendarPanel, CARD_CALENDAR);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
 
@@ -86,12 +97,16 @@ public class UserDashboardFrame extends JFrame {
         JButton myReservationsButton = new JButton("My Reservations");
         myReservationsButton.addActionListener(e -> showReservationsPanel());
 
+        JButton calendarViewButton = new JButton("Calendar View");
+        calendarViewButton.addActionListener(e -> showCalendarPanel());
+
         JButton logoutButton = new JButton("Logout");
         logoutButton.addActionListener(e -> onLogout());
 
         buttonPanel.add(viewSlotsButton);
         buttonPanel.add(bookButton);
         buttonPanel.add(myReservationsButton);
+        buttonPanel.add(calendarViewButton);
         buttonPanel.add(logoutButton);
 
         add(buttonPanel, BorderLayout.SOUTH);
@@ -112,6 +127,7 @@ public class UserDashboardFrame extends JFrame {
         slotsPanel.setVisible(true);
         bookingPanel.setVisible(false);
         reservationsPanel.setVisible(false);
+        calendarPanel.setVisible(false);
     }
 
     /**
@@ -123,6 +139,7 @@ public class UserDashboardFrame extends JFrame {
         slotsPanel.setVisible(false);
         bookingPanel.setVisible(true);
         reservationsPanel.setVisible(false);
+        calendarPanel.setVisible(false);
     }
 
     /**
@@ -134,6 +151,19 @@ public class UserDashboardFrame extends JFrame {
         slotsPanel.setVisible(false);
         bookingPanel.setVisible(false);
         reservationsPanel.setVisible(true);
+        calendarPanel.setVisible(false);
+    }
+
+    /**
+     * Shows calendar panel to the user.
+     */
+    private void showCalendarPanel() {
+        calendarPanel.refreshCalendar();
+        cardLayout.show(contentPanel, CARD_CALENDAR);
+        slotsPanel.setVisible(false);
+        bookingPanel.setVisible(false);
+        reservationsPanel.setVisible(false);
+        calendarPanel.setVisible(true);
     }
 
     /**
@@ -142,6 +172,7 @@ public class UserDashboardFrame extends JFrame {
     private void refreshPanelsAfterBooking() {
         slotsPanel.refreshData();
         reservationsPanel.refreshData();
+        calendarPanel.refreshCalendar();
     }
 
     /**
