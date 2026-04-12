@@ -1,8 +1,8 @@
 # Appointment Scheduling System
 
 ## Group Members
--Insherah Dwikat 
--Raya Barakat   
+-Insherah Dwikat (12217332)
+-Raya Barakat (12217279)
 ## Project Overview
 This project is an Appointment Scheduling System developed for the Software Engineering course.
 It is built incrementally using Java, Maven, JUnit 5, JaCoCo, and Mockito, following a layered architecture and applying software engineering principles.
