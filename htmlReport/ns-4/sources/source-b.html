@@ -1,0 +1,281 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > SignUpFrame</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.presentation.gui</a>
+</div>
+
+<h1>Coverage Summary for Class: SignUpFrame (org.example.presentation.gui)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">SignUpFrame</td>
+<td class="coverageStat">
+  <span class="percent">
+    80%
+  </span>
+  <span class="absValue">
+    (4/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    44.4%
+  </span>
+  <span class="absValue">
+    (4/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    82.8%
+  </span>
+  <span class="absValue">
+    (48/58)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">SignUpFrame$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    83.3%
+  </span>
+  <span class="absValue">
+    (5/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    44.4%
+  </span>
+  <span class="absValue">
+    (4/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    83.1%
+  </span>
+  <span class="absValue">
+    (49/59)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.presentation.gui;
+&nbsp;
+&nbsp;import org.example.service.SignUpStatus;
+&nbsp;
+&nbsp;import javax.swing.BorderFactory;
+&nbsp;import javax.swing.JButton;
+&nbsp;import javax.swing.JFrame;
+&nbsp;import javax.swing.JLabel;
+&nbsp;import javax.swing.JOptionPane;
+&nbsp;import javax.swing.JPanel;
+&nbsp;import javax.swing.JPasswordField;
+&nbsp;import javax.swing.JTextField;
+&nbsp;import java.awt.BorderLayout;
+&nbsp;import java.awt.Color;
+&nbsp;import java.awt.Font;
+&nbsp;import java.awt.GridLayout;
+&nbsp;import java.util.Objects;
+&nbsp;
+&nbsp;/**
+&nbsp; * Represents sign up frame in the system.
+&nbsp; */
+&nbsp;public class SignUpFrame extends JFrame {
+&nbsp;
+&nbsp;    private final ApplicationController appController;
+&nbsp;
+&nbsp;    private JTextField emailField;
+&nbsp;    private JPasswordField passwordField;
+&nbsp;    private JLabel statusLabel;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new sign up frame object with the given values.
+&nbsp;     *
+&nbsp;     * @param appController controller used for navigation and actions
+&nbsp;     */
+<b class="fc">&nbsp;    public SignUpFrame(ApplicationController appController) {</b>
+<b class="fc">&nbsp;        this.appController = Objects.requireNonNull(appController, &quot;appController cannot be null&quot;);</b>
+<b class="fc">&nbsp;        initializeUi();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void initializeUi() {
+<b class="fc">&nbsp;        setTitle(&quot;Appointment System - Sign Up&quot;);</b>
+<b class="fc">&nbsp;        setSize(460, 320);</b>
+<b class="fc">&nbsp;        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</b>
+<b class="fc">&nbsp;        setLayout(new BorderLayout());</b>
+&nbsp;
+<b class="fc">&nbsp;        JLabel titleLabel = new JLabel(&quot;Create Your Account&quot;, JLabel.CENTER);</b>
+<b class="fc">&nbsp;        titleLabel.setFont(new Font(&quot;Arial&quot;, Font.BOLD, 18));</b>
+<b class="fc">&nbsp;        titleLabel.setBorder(BorderFactory.createEmptyBorder(15, 10, 10, 10));</b>
+<b class="fc">&nbsp;        add(titleLabel, BorderLayout.NORTH);</b>
+&nbsp;
+<b class="fc">&nbsp;        JPanel formPanel = new JPanel(new GridLayout(3, 2, 10, 10));</b>
+<b class="fc">&nbsp;        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));</b>
+&nbsp;
+<b class="fc">&nbsp;        formPanel.add(new JLabel(&quot;Email:&quot;));</b>
+<b class="fc">&nbsp;        emailField = new JTextField();</b>
+<b class="fc">&nbsp;        formPanel.add(emailField);</b>
+&nbsp;
+<b class="fc">&nbsp;        formPanel.add(new JLabel(&quot;Password:&quot;));</b>
+<b class="fc">&nbsp;        passwordField = new JPasswordField();</b>
+<b class="fc">&nbsp;        formPanel.add(passwordField);</b>
+&nbsp;
+<b class="fc">&nbsp;        formPanel.add(new JLabel(&quot;&quot;));</b>
+<b class="fc">&nbsp;        statusLabel = new JLabel(&quot; &quot;);</b>
+<b class="fc">&nbsp;        statusLabel.setForeground(new Color(170, 0, 0));</b>
+<b class="fc">&nbsp;        formPanel.add(statusLabel);</b>
+&nbsp;
+<b class="fc">&nbsp;        add(formPanel, BorderLayout.CENTER);</b>
+&nbsp;
+<b class="fc">&nbsp;        JPanel buttonPanel = new JPanel();</b>
+<b class="fc">&nbsp;        JButton signUpButton = new JButton(&quot;Sign Up&quot;);</b>
+<b class="fc">&nbsp;        JButton clearButton = new JButton(&quot;Clear&quot;);</b>
+<b class="fc">&nbsp;        JButton backButton = new JButton(&quot;Back to Login&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        signUpButton.addActionListener(e -&gt; onSignUp());</b>
+<b class="fc">&nbsp;        clearButton.addActionListener(e -&gt; clearInputs());</b>
+<b class="fc">&nbsp;        backButton.addActionListener(e -&gt; appController.openLoginFrame());</b>
+&nbsp;
+<b class="fc">&nbsp;        buttonPanel.add(signUpButton);</b>
+<b class="fc">&nbsp;        buttonPanel.add(clearButton);</b>
+<b class="fc">&nbsp;        buttonPanel.add(backButton);</b>
+&nbsp;
+<b class="fc">&nbsp;        add(buttonPanel, BorderLayout.SOUTH);</b>
+<b class="fc">&nbsp;        getRootPane().setDefaultButton(signUpButton);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void onSignUp() {
+<b class="fc">&nbsp;        SignUpStatus status = appController.signUp(</b>
+<b class="fc">&nbsp;                emailField.getText(),</b>
+<b class="fc">&nbsp;                new String(passwordField.getPassword())</b>
+&nbsp;        );
+&nbsp;
+<b class="fc">&nbsp;        if (status == SignUpStatus.SUCCESS) {</b>
+<b class="fc">&nbsp;            JOptionPane.showMessageDialog(</b>
+&nbsp;                    this,
+&nbsp;                    &quot;Account created successfully. You can now log in.&quot;,
+&nbsp;                    &quot;Sign Up&quot;,
+&nbsp;                    JOptionPane.INFORMATION_MESSAGE
+&nbsp;            );
+<b class="fc">&nbsp;            appController.openLoginFrame();</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        String message = toMessage(status);</b>
+<b class="fc">&nbsp;        statusLabel.setText(message);</b>
+<b class="fc">&nbsp;        JOptionPane.showMessageDialog(this, message, &quot;Sign Up Error&quot;, JOptionPane.ERROR_MESSAGE);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    private String toMessage(SignUpStatus status) {
+<b class="pc">&nbsp;        if (status == null) {</b>
+<b class="nc">&nbsp;            return &quot;Unable to create account.&quot;;</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        return switch (status) {</b>
+<b class="nc">&nbsp;            case BLANK_EMAIL -&gt; &quot;Email is required.&quot;;</b>
+<b class="nc">&nbsp;            case BLANK_PASSWORD -&gt; &quot;Password is required.&quot;;</b>
+<b class="fc">&nbsp;            case INVALID_EMAIL -&gt; &quot;Please provide a valid email address.&quot;;</b>
+<b class="nc">&nbsp;            case WEAK_PASSWORD -&gt; &quot;Password must be at least 6 characters and include letters and numbers.&quot;;</b>
+<b class="nc">&nbsp;            case EMAIL_ALREADY_EXISTS -&gt; &quot;An account with this email already exists.&quot;;</b>
+<b class="nc">&nbsp;            default -&gt; &quot;Unable to create account.&quot;;</b>
+&nbsp;        };
+&nbsp;    }
+&nbsp;
+&nbsp;    private void clearInputs() {
+<b class="nc">&nbsp;        emailField.setText(&quot;&quot;);</b>
+<b class="nc">&nbsp;        passwordField.setText(&quot;&quot;);</b>
+<b class="nc">&nbsp;        statusLabel.setText(&quot; &quot;);</b>
+<b class="nc">&nbsp;        emailField.requestFocusInWindow();</b>
+&nbsp;    }
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

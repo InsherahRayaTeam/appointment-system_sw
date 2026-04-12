@@ -1,0 +1,6 @@
+org.example
+org.example.domain
+org.example.notification
+org.example.presentation.gui
+org.example.repository
+org.example.service

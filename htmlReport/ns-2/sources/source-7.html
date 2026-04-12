@@ -1,0 +1,203 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > SystemUser</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.domain</a>
+</div>
+
+<h1>Coverage Summary for Class: SystemUser (org.example.domain)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">SystemUser</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    87.5%
+  </span>
+  <span class="absValue">
+    (14/16)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (18/18)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.domain;
+&nbsp;
+&nbsp;/**
+&nbsp; * Represents system user in the system.
+&nbsp; */
+&nbsp;public final class SystemUser {
+&nbsp;
+&nbsp;    private final String id;
+&nbsp;    private final String email;
+&nbsp;    private final String password;
+&nbsp;    private final UserRole role;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new system user object with the given values.
+&nbsp;     *
+&nbsp;     * @param email email address used for login or matching
+&nbsp;     * @param password password text entered by the user
+&nbsp;     * @param role role value used for access control
+&nbsp;     */
+&nbsp;    public SystemUser(String email, String password, UserRole role) {
+<b class="fc">&nbsp;        this(email == null ? null : email.trim().toLowerCase() + &quot;-id&quot;, email, password, role);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new system user object with the given values.
+&nbsp;     *
+&nbsp;     * @param id unique id used to find the record
+&nbsp;     * @param email email address used for login or matching
+&nbsp;     * @param password password text entered by the user
+&nbsp;     * @param role role value used for access control
+&nbsp;     */
+<b class="fc">&nbsp;    public SystemUser(String id, String email, String password, UserRole role) {</b>
+<b class="fc">&nbsp;        if (id == null || id.isBlank()) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Id cannot be null or blank&quot;);</b>
+&nbsp;        }
+<b class="pc">&nbsp;        if (email == null || email.isBlank()) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Email cannot be null or blank&quot;);</b>
+&nbsp;        }
+<b class="pc">&nbsp;        if (password == null || password.isBlank()) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Password cannot be null or blank&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (role == null) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Role cannot be null&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        this.id = id.trim();</b>
+<b class="fc">&nbsp;        this.email = email.trim().toLowerCase();</b>
+<b class="fc">&nbsp;        this.password = password;</b>
+<b class="fc">&nbsp;        this.role = role;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the id.
+&nbsp;     *
+&nbsp;     * @return text result from this method
+&nbsp;     */
+&nbsp;    public String getId() {
+<b class="fc">&nbsp;        return id;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the email.
+&nbsp;     *
+&nbsp;     * @return text result from this method
+&nbsp;     */
+&nbsp;    public String getEmail() {
+<b class="fc">&nbsp;        return email;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the password.
+&nbsp;     *
+&nbsp;     * @return text result from this method
+&nbsp;     */
+&nbsp;    public String getPassword() {
+<b class="fc">&nbsp;        return password;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the role.
+&nbsp;     *
+&nbsp;     * @return requested value from this object
+&nbsp;     */
+&nbsp;    public UserRole getRole() {
+<b class="fc">&nbsp;        return role;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

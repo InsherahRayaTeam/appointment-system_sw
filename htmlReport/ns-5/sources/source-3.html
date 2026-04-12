@@ -1,0 +1,345 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > InMemoryUserRepository</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.repository</a>
+</div>
+
+<h1>Coverage Summary for Class: InMemoryUserRepository (org.example.repository)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">InMemoryUserRepository</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (10/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    73.2%
+  </span>
+  <span class="absValue">
+    (41/56)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    95.4%
+  </span>
+  <span class="absValue">
+    (62/65)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.repository;
+&nbsp;
+&nbsp;import org.example.domain.SystemUser;
+&nbsp;import org.example.domain.UserRole;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.io.InputStream;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Optional;
+&nbsp;import java.util.Properties;
+&nbsp;import java.util.Set;
+&nbsp;
+&nbsp;/**
+&nbsp; * Represents in memory user repository in the system.
+&nbsp; */
+&nbsp;public class InMemoryUserRepository implements UserRepository {
+&nbsp;
+&nbsp;    private static final String RESOURCE = &quot;/admin.properties&quot;;
+&nbsp;    private static final String ADMIN_ID_KEY = &quot;admin.id&quot;;
+&nbsp;    private static final String ADMIN_EMAIL_KEY = &quot;admin.email&quot;;
+&nbsp;    private static final String ADMIN_PASSWORD_KEY = &quot;admin.password&quot;;
+&nbsp;    private static final String USER_ID_KEY = &quot;user.id&quot;;
+&nbsp;    private static final String USER_EMAIL_KEY = &quot;user.email&quot;;
+&nbsp;    private static final String USER_PASSWORD_KEY = &quot;user.password&quot;;
+&nbsp;    private static final String DEFAULT_ADMIN_ID = &quot;admin-1&quot;;
+&nbsp;    private static final String DEFAULT_ADMIN_EMAIL = &quot;admin@gmail.com&quot;;
+&nbsp;    private static final String DEFAULT_ADMIN_PASSWORD = &quot;admin123&quot;;
+&nbsp;    private static final String DEFAULT_USER_ID = &quot;user-1&quot;;
+&nbsp;    private static final String DEFAULT_USER_EMAIL = &quot;user@gmail.com&quot;;
+&nbsp;    private static final String DEFAULT_USER_PASSWORD = &quot;user123&quot;;
+<b class="fc">&nbsp;    private final Map&lt;String, SystemUser&gt; usersByEmail = new HashMap&lt;&gt;();</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new in memory user repository object with the given values.
+&nbsp;     */
+<b class="fc">&nbsp;    public InMemoryUserRepository() {</b>
+<b class="fc">&nbsp;        loadFromResource();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void loadFromResource() {
+<b class="fc">&nbsp;        Properties p = new Properties();</b>
+&nbsp;
+<b class="fc">&nbsp;        try (InputStream in = InMemoryUserRepository.class.getResourceAsStream(RESOURCE)) {</b>
+<b class="pc">&nbsp;            if (in != null) {</b>
+<b class="fc">&nbsp;                p.load(in);</b>
+<b class="fc">&nbsp;                seedUser(</b>
+<b class="fc">&nbsp;                        p.getProperty(ADMIN_ID_KEY, DEFAULT_ADMIN_ID),</b>
+<b class="fc">&nbsp;                        p.getProperty(ADMIN_EMAIL_KEY),</b>
+<b class="fc">&nbsp;                        p.getProperty(ADMIN_PASSWORD_KEY),</b>
+&nbsp;                        UserRole.ADMIN
+&nbsp;                );
+<b class="fc">&nbsp;                seedConfiguredRegularUsers(p);</b>
+&nbsp;            }
+&nbsp;        } catch (IOException e) {
+&nbsp;            // Fall back to defaults if loading fails
+&nbsp;        }
+&nbsp;
+&nbsp;        // Defaults when properties are missing or incomplete.
+<b class="pc">&nbsp;        if (!usersByEmail.containsKey(DEFAULT_ADMIN_EMAIL)) {</b>
+<b class="fc">&nbsp;            usersByEmail.put(</b>
+&nbsp;                    DEFAULT_ADMIN_EMAIL,
+&nbsp;                    new SystemUser(DEFAULT_ADMIN_ID, DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD, UserRole.ADMIN)
+&nbsp;            );
+&nbsp;        }
+<b class="pc">&nbsp;        if (!usersByEmail.containsKey(DEFAULT_USER_EMAIL)) {</b>
+<b class="fc">&nbsp;            usersByEmail.put(</b>
+&nbsp;                    DEFAULT_USER_EMAIL,
+&nbsp;                    new SystemUser(DEFAULT_USER_ID, DEFAULT_USER_EMAIL, DEFAULT_USER_PASSWORD, UserRole.USER)
+&nbsp;            );
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void seedConfiguredRegularUsers(Properties p) {
+<b class="fc">&nbsp;        seedUser(</b>
+<b class="fc">&nbsp;                p.getProperty(USER_ID_KEY, DEFAULT_USER_ID),</b>
+<b class="fc">&nbsp;                p.getProperty(USER_EMAIL_KEY),</b>
+<b class="fc">&nbsp;                p.getProperty(USER_PASSWORD_KEY),</b>
+&nbsp;                UserRole.USER
+&nbsp;        );
+&nbsp;
+<b class="fc">&nbsp;        Set&lt;String&gt; propertyNames = p.stringPropertyNames();</b>
+<b class="fc">&nbsp;        for (String propertyName : propertyNames) {</b>
+<b class="fc">&nbsp;            if (!propertyName.matches(&quot;user\\d+\\.email&quot;)) {</b>
+&nbsp;                continue;
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            String userPrefix = propertyName.substring(0, propertyName.length() - &quot;.email&quot;.length());</b>
+<b class="fc">&nbsp;            seedUser(</b>
+<b class="fc">&nbsp;                    p.getProperty(userPrefix + &quot;.id&quot;),</b>
+<b class="fc">&nbsp;                    p.getProperty(userPrefix + &quot;.email&quot;),</b>
+<b class="fc">&nbsp;                    p.getProperty(userPrefix + &quot;.password&quot;),</b>
+&nbsp;                    UserRole.USER
+&nbsp;            );
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void seedUser(String id, String email, String password, UserRole role) {
+<b class="fc">&nbsp;        if (email == null || email.trim().isEmpty() || password == null || password.trim().isEmpty()) {</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        String normalizedEmail = email.trim().toLowerCase();</b>
+&nbsp;
+<b class="fc">&nbsp;        usersByEmail.put(</b>
+&nbsp;                normalizedEmail,
+&nbsp;                new SystemUser(
+<b class="pc">&nbsp;                        (id == null || id.trim().isEmpty()) ? normalizedEmail + &quot;-id&quot; : id.trim(),</b>
+&nbsp;                        normalizedEmail,
+<b class="fc">&nbsp;                        password.trim(),</b>
+&nbsp;                        role
+&nbsp;                )
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Finds by email using the given input.
+&nbsp;     *
+&nbsp;     * @param email email address used for login or matching
+&nbsp;     *
+&nbsp;     * @return optional value if data is found
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public Optional&lt;SystemUser&gt; findByEmail(String email) {
+<b class="fc">&nbsp;        if (email == null) {</b>
+<b class="fc">&nbsp;            return Optional.empty();</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return Optional.ofNullable(usersByEmail.get(email.trim().toLowerCase()));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Finds by id using the given input.
+&nbsp;     *
+&nbsp;     * @param id unique id used to find the record
+&nbsp;     *
+&nbsp;     * @return optional value if data is found
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public Optional&lt;SystemUser&gt; findById(String id) {
+<b class="pc">&nbsp;        if (id == null || id.trim().isEmpty()) {</b>
+<b class="nc">&nbsp;            return Optional.empty();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        String normalizedId = id.trim();</b>
+<b class="fc">&nbsp;        for (SystemUser user : usersByEmail.values()) {</b>
+<b class="fc">&nbsp;            if (normalizedId.equalsIgnoreCase(user.getId())) {</b>
+<b class="fc">&nbsp;                return Optional.of(user);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return Optional.empty();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Saves a user record.
+&nbsp;     *
+&nbsp;     * @param user user involved in this action
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public void save(SystemUser user) {
+<b class="pc">&nbsp;        if (user == null || user.getEmail() == null || user.getEmail().trim().isEmpty()) {</b>
+&nbsp;            return;
+&nbsp;        }
+<b class="fc">&nbsp;        usersByEmail.put(user.getEmail().trim().toLowerCase(), user);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Updates an existing user record.
+&nbsp;     *
+&nbsp;     * @param user user entity with updated values
+&nbsp;     *
+&nbsp;     * @return true when the action is valid or successful, otherwise false
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public boolean update(SystemUser user) {
+<b class="pc">&nbsp;        if (user == null || user.getEmail() == null || user.getEmail().trim().isEmpty()) {</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        String normalizedEmail = user.getEmail().trim().toLowerCase();</b>
+<b class="fc">&nbsp;        if (!usersByEmail.containsKey(normalizedEmail)) {</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        usersByEmail.put(normalizedEmail, user);</b>
+<b class="fc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Updates user password when record exists.
+&nbsp;     *
+&nbsp;     * @param userId unique id used to find the record
+&nbsp;     * @param newPassword password text entered by the user
+&nbsp;     *
+&nbsp;     * @return true when the action is valid or successful, otherwise false
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public boolean updatePassword(String userId, String newPassword) {
+<b class="pc">&nbsp;        if (userId == null || userId.trim().isEmpty() || newPassword == null || newPassword.trim().isEmpty()) {</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Optional&lt;SystemUser&gt; existing = findById(userId);</b>
+<b class="fc">&nbsp;        if (existing.isEmpty()) {</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        SystemUser current = existing.get();</b>
+<b class="fc">&nbsp;        SystemUser updated = new SystemUser(</b>
+<b class="fc">&nbsp;                current.getId(),</b>
+<b class="fc">&nbsp;                current.getEmail(),</b>
+<b class="fc">&nbsp;                newPassword.trim(),</b>
+<b class="fc">&nbsp;                current.getRole()</b>
+&nbsp;        );
+&nbsp;
+<b class="fc">&nbsp;        return update(updated);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Finds all using the given input.
+&nbsp;     *
+&nbsp;     * @return collection with the requested results
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public List&lt;SystemUser&gt; findAll() {
+<b class="fc">&nbsp;        return List.copyOf(usersByEmail.values());</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

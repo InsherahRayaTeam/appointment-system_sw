@@ -1,0 +1,140 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > UserRepository</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.repository</a>
+</div>
+
+<h1>Coverage Summary for Class: UserRepository (org.example.repository)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">UserRepository$MockitoMock$tMGC5b3J</td>
+  </tr>
+  <tr>
+    <td class="name">UserRepository$MockitoMock$tMGC5b3J$auxiliary$1OrOWBPh</td>
+  </tr>
+  <tr>
+    <td class="name">UserRepository$MockitoMock$tMGC5b3J$auxiliary$iHSAdlpW</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.repository;
+&nbsp;
+&nbsp;import org.example.domain.SystemUser;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;/**
+&nbsp; * Defines the operations for user repository.
+&nbsp; */
+&nbsp;public interface UserRepository {
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Finds by email using the given input.
+&nbsp;     *
+&nbsp;     * @param email email address used for login or matching
+&nbsp;     *
+&nbsp;     * @return optional value if data is found
+&nbsp;     */
+&nbsp;    Optional&lt;SystemUser&gt; findByEmail(String email);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Finds by id using the given input.
+&nbsp;     *
+&nbsp;     * @param id unique id used to find the record
+&nbsp;     *
+&nbsp;     * @return optional value if data is found
+&nbsp;     */
+&nbsp;    Optional&lt;SystemUser&gt; findById(String id);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Saves a user record.
+&nbsp;     *
+&nbsp;     * @param user user involved in this action
+&nbsp;     */
+&nbsp;    void save(SystemUser user);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Updates an existing user record.
+&nbsp;     *
+&nbsp;     * @param user user entity with updated values
+&nbsp;     *
+&nbsp;     * @return true when the action is valid or successful, otherwise false
+&nbsp;     */
+&nbsp;    boolean update(SystemUser user);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Updates user password when record exists.
+&nbsp;     *
+&nbsp;     * @param userId unique id used to find the record
+&nbsp;     * @param newPassword password text entered by the user
+&nbsp;     *
+&nbsp;     * @return true when the action is valid or successful, otherwise false
+&nbsp;     */
+&nbsp;    boolean updatePassword(String userId, String newPassword);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Finds all using the given input.
+&nbsp;     *
+&nbsp;     * @return collection with the requested results
+&nbsp;     */
+&nbsp;    List&lt;SystemUser&gt; findAll();
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

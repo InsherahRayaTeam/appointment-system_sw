@@ -1,0 +1,340 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AuthenticationAttemptResult</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.service</a>
+</div>
+
+<h1>Coverage Summary for Class: AuthenticationAttemptResult (org.example.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AuthenticationAttemptResult</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (14/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (29/29)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.service;
+&nbsp;
+&nbsp;import org.example.domain.SystemUser;
+&nbsp;import org.example.domain.UserRole;
+&nbsp;
+&nbsp;import java.util.Objects;
+&nbsp;
+&nbsp;/**
+&nbsp; * Represents the outcome of one authentication attempt.
+&nbsp; */
+&nbsp;public final class AuthenticationAttemptResult {
+&nbsp;
+&nbsp;    private final LoginStatus status;
+&nbsp;    private final boolean locked;
+&nbsp;    private final long remainingLockSeconds;
+&nbsp;    private final int attemptsRemaining;
+&nbsp;    private final String authenticatedEmail;
+&nbsp;    private final UserRole authenticatedRole;
+&nbsp;    private final SystemUser authenticatedUser;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new authentication attempt result object with the given values.
+&nbsp;     *
+&nbsp;     * @param status status value used for this operation
+&nbsp;     * @param locked value for locked
+&nbsp;     * @param remainingLockSeconds value for remaining lock seconds
+&nbsp;     * @param attemptsRemaining value for attempts remaining
+&nbsp;     * @param authenticatedEmail email address used for login or matching
+&nbsp;     * @param authenticatedRole role value used for access control
+&nbsp;     * @param authenticatedUser user involved in this action
+&nbsp;     */
+&nbsp;    private AuthenticationAttemptResult(
+&nbsp;            LoginStatus status,
+&nbsp;            boolean locked,
+&nbsp;            long remainingLockSeconds,
+&nbsp;            int attemptsRemaining,
+&nbsp;            String authenticatedEmail,
+&nbsp;            UserRole authenticatedRole,
+&nbsp;            SystemUser authenticatedUser
+<b class="fc">&nbsp;    ) {</b>
+<b class="fc">&nbsp;        this.status = Objects.requireNonNull(status, &quot;status cannot be null&quot;);</b>
+<b class="fc">&nbsp;        this.locked = locked;</b>
+<b class="fc">&nbsp;        this.remainingLockSeconds = remainingLockSeconds;</b>
+<b class="fc">&nbsp;        this.attemptsRemaining = attemptsRemaining;</b>
+<b class="fc">&nbsp;        this.authenticatedEmail = authenticatedEmail;</b>
+<b class="fc">&nbsp;        this.authenticatedRole = authenticatedRole;</b>
+<b class="fc">&nbsp;        this.authenticatedUser = authenticatedUser;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a successful result without user details.
+&nbsp;     *
+&nbsp;     * @return result produced by this method
+&nbsp;     */
+&nbsp;    public static AuthenticationAttemptResult success() {
+<b class="fc">&nbsp;        return new AuthenticationAttemptResult(</b>
+&nbsp;                LoginStatus.SUCCESS,
+&nbsp;                false,
+&nbsp;                0,
+&nbsp;                0,
+&nbsp;                null,
+&nbsp;                null,
+&nbsp;                null
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a successful result with authenticated email and role.
+&nbsp;     *
+&nbsp;     * @param email email address used for login or matching
+&nbsp;     * @param role role value used for access control
+&nbsp;     *
+&nbsp;     * @return result produced by this method
+&nbsp;     */
+&nbsp;    public static AuthenticationAttemptResult success(String email, UserRole role) {
+<b class="fc">&nbsp;        return new AuthenticationAttemptResult(</b>
+&nbsp;                LoginStatus.SUCCESS,
+&nbsp;                false,
+&nbsp;                0,
+&nbsp;                0,
+&nbsp;                email,
+&nbsp;                role,
+&nbsp;                null
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a successful result from a user object.
+&nbsp;     *
+&nbsp;     * @param user user involved in this action
+&nbsp;     *
+&nbsp;     * @return result produced by this method
+&nbsp;     */
+&nbsp;    public static AuthenticationAttemptResult success(SystemUser user) {
+<b class="fc">&nbsp;        if (user == null) {</b>
+<b class="fc">&nbsp;            return success();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return new AuthenticationAttemptResult(</b>
+&nbsp;                LoginStatus.SUCCESS,
+&nbsp;                false,
+&nbsp;                0,
+&nbsp;                0,
+<b class="fc">&nbsp;                user.getEmail(),</b>
+<b class="fc">&nbsp;                user.getRole(),</b>
+&nbsp;                user
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a failed result with remaining attempts.
+&nbsp;     *
+&nbsp;     * @param status status value used for this operation
+&nbsp;     * @param attemptsRemaining value for attempts remaining
+&nbsp;     *
+&nbsp;     * @return result produced by this method
+&nbsp;     */
+&nbsp;    public static AuthenticationAttemptResult failure(LoginStatus status, int attemptsRemaining) {
+<b class="fc">&nbsp;        if (status == LoginStatus.SUCCESS) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;status must represent a failure&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return new AuthenticationAttemptResult(</b>
+&nbsp;                status,
+&nbsp;                false,
+&nbsp;                0,
+<b class="fc">&nbsp;                Math.max(0, attemptsRemaining),</b>
+&nbsp;                null,
+&nbsp;                null,
+&nbsp;                null
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a locked result with remaining lock seconds.
+&nbsp;     *
+&nbsp;     * @param remainingLockSeconds value for remaining lock seconds
+&nbsp;     *
+&nbsp;     * @return result produced by this method
+&nbsp;     */
+&nbsp;    public static AuthenticationAttemptResult locked(long remainingLockSeconds) {
+<b class="fc">&nbsp;        return new AuthenticationAttemptResult(</b>
+&nbsp;                LoginStatus.INVALID_CREDENTIALS,
+&nbsp;                true,
+<b class="fc">&nbsp;                Math.max(0, remainingLockSeconds),</b>
+&nbsp;                0,
+&nbsp;                null,
+&nbsp;                null,
+&nbsp;                null
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the status.
+&nbsp;     *
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    public LoginStatus getStatus() {
+<b class="fc">&nbsp;        return status;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Checks whether success is true.
+&nbsp;     *
+&nbsp;     * @return true when the action is valid or successful, otherwise false
+&nbsp;     */
+&nbsp;    public boolean isSuccess() {
+<b class="fc">&nbsp;        return status == LoginStatus.SUCCESS;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Checks whether locked is true.
+&nbsp;     *
+&nbsp;     * @return true when the action is valid or successful, otherwise false
+&nbsp;     */
+&nbsp;    public boolean isLocked() {
+<b class="fc">&nbsp;        return locked;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the remaining lock seconds.
+&nbsp;     *
+&nbsp;     * @return numeric result from this method
+&nbsp;     */
+&nbsp;    public long getRemainingLockSeconds() {
+<b class="fc">&nbsp;        return remainingLockSeconds;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the attempts remaining.
+&nbsp;     *
+&nbsp;     * @return numeric result from this method
+&nbsp;     */
+&nbsp;    public int getAttemptsRemaining() {
+<b class="fc">&nbsp;        return attemptsRemaining;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the authenticated email.
+&nbsp;     *
+&nbsp;     * @return text result from this method
+&nbsp;     */
+&nbsp;    public String getAuthenticatedEmail() {
+<b class="fc">&nbsp;        return authenticatedEmail;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the authenticated role.
+&nbsp;     *
+&nbsp;     * @return requested value from this object
+&nbsp;     */
+&nbsp;    public UserRole getAuthenticatedRole() {
+<b class="fc">&nbsp;        return authenticatedRole;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the authenticated user.
+&nbsp;     *
+&nbsp;     * @return requested value from this object
+&nbsp;     */
+&nbsp;    public SystemUser getAuthenticatedUser() {
+<b class="fc">&nbsp;        return authenticatedUser;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

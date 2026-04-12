@@ -1,0 +1,144 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AppointmentType</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.domain</a>
+</div>
+
+<h1>Coverage Summary for Class: AppointmentType (org.example.domain)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AppointmentType</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (13/13)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.domain;
+&nbsp;
+&nbsp;/**
+&nbsp; * Lists the possible values for appointment type.
+&nbsp; */
+<b class="fc">&nbsp;public enum AppointmentType {</b>
+<b class="fc">&nbsp;    NORMAL(&quot;Normal&quot;),</b>
+<b class="fc">&nbsp;    URGENT(&quot;Urgent&quot;),</b>
+<b class="fc">&nbsp;    FOLLOW_UP(&quot;Follow-up&quot;),</b>
+<b class="fc">&nbsp;    ASSESSMENT(&quot;Assessment&quot;),</b>
+<b class="fc">&nbsp;    VIRTUAL(&quot;Virtual&quot;),</b>
+<b class="fc">&nbsp;    IN_PERSON(&quot;In-person&quot;),</b>
+<b class="fc">&nbsp;    INDIVIDUAL(&quot;Individual&quot;),</b>
+<b class="fc">&nbsp;    GROUP(&quot;Group&quot;);</b>
+&nbsp;
+&nbsp;    private final String displayName;
+&nbsp;
+<b class="fc">&nbsp;    AppointmentType(String displayName) {</b>
+<b class="fc">&nbsp;        this.displayName = displayName;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the text label shown in the UI.
+&nbsp;     *
+&nbsp;     * @return human-readable name for this appointment type
+&nbsp;     */
+&nbsp;    public String getDisplayName() {
+<b class="fc">&nbsp;        return displayName;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the display name of this appointment type.
+&nbsp;     *
+&nbsp;     * @return formatted name used in combo boxes and tables
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public String toString() {
+<b class="fc">&nbsp;        return displayName;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>
