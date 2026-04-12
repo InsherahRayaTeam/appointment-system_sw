@@ -129,4 +129,3 @@ class AdminDashboardFrameTest extends GuiTestSupport {
         assertTrue(calendarPanel.isVisible());
     }
 }
-

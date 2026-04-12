@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
- * Represents session manager in the system.
+ * Stores login session details for the current user.
  */
 public class SessionManager {
 
@@ -37,7 +37,7 @@ public class SessionManager {
     }
 
     /**
-     * Runs login for this class.
+     * Logs in a user email with the default USER role.
      *
      * @param email email address used for login or matching
      */
@@ -46,7 +46,7 @@ public class SessionManager {
     }
 
     /**
-     * Runs login for this class.
+     * Logs in a user with a specific role.
      *
      * @param email email address used for login or matching
      * @param role role value used for access control
@@ -69,7 +69,7 @@ public class SessionManager {
     }
 
     /**
-     * Runs login for this class.
+     * Logs in using an existing user object.
      *
      * @param user user involved in this action
      */
@@ -88,14 +88,14 @@ public class SessionManager {
     }
 
     /**
-     * Runs login for this class.
+     * Logs in a default admin session used by compatibility flows.
      */
     public void login() {
         login("admin@gmail.com", UserRole.ADMIN);
     }
 
     /**
-     * Runs logout for this class.
+     * Clears all session values and logs out the current user.
      */
     public void logout() {
         loggedIn = false;
@@ -106,7 +106,7 @@ public class SessionManager {
     }
 
     /**
-     * Runs logout and notify for this class.
+     * Logs out and sends a logout event message to observers.
      */
     public void logoutAndNotify() {
         String email = currentEmail;

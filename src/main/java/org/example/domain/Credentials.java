@@ -47,7 +47,7 @@ public class Credentials {
     }
 
     /**
-     * Runs matches for this class.
+     * Checks whether input email and password match this object.
      *
      * @param email email address used for login or matching
      * @param password password text entered by the user
@@ -62,9 +62,9 @@ public class Credentials {
     }
 
     /**
-     * Runs equals for this class.
+     * Checks whether two credentials objects refer to the same email.
      *
-     * @param o value for o
+     * @param o object to compare
      *
      * @return true when the action is valid or successful, otherwise false
      */
@@ -91,7 +91,7 @@ public class Credentials {
     }
 
     /**
-     * Runs to string for this class.
+     * Returns a safe text form without exposing the password.
      *
      * @return text result from this method
      */

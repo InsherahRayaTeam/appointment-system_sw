@@ -6,14 +6,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents event manager in the system.
+ * Manages observers and sends text events to them.
  */
 public class EventManager {
 
     private final List<Observer> observers = new ArrayList<>();
 
     /**
-     * Runs subscribe for this class.
+     * Adds an observer if it is not null and not already subscribed.
      *
      * @param observer value for observer
      */
@@ -25,7 +25,7 @@ public class EventManager {
     }
 
     /**
-     * Runs unsubscribe for this class.
+     * Removes an observer when it exists.
      *
      * @param observer value for observer
      */

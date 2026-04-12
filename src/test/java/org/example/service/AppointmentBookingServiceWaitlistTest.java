@@ -161,7 +161,7 @@ class AppointmentBookingServiceWaitlistTest {
         AppointmentSlot slot = bookedSlot();
         when(appointmentRepository.findAll()).thenReturn(List.of(slot));
 
-        BookingStatus result = appointmentBookingService.bookAppointment(ALICE_EMAIL, SLOT_TIME, 60, 1, AppointmentType.URGENT);
+        BookingStatus result = appointmentBookingService.bookAppointment(ALICE_EMAIL, SLOT_TIME, 30, 1, AppointmentType.URGENT);
 
         assertEquals(BookingStatus.WAITLISTED, result);
         assertEquals(AppointmentType.URGENT, waitlistRepository.findAll().get(0).getType());

@@ -65,8 +65,8 @@ class AppointmentServiceBranchTest {
     }
 
     @Test
-    void addSlot_DateDayTime_InvalidDayText_ReturnsInvalidSlotDateTime() {
-        BookingStatus result = appointmentService.addSlot("2030-12-12", "FUNDAY", "10:00");
+    void addSlot_InvalidDateText_ReturnsInvalidSlotDateTime() {
+        BookingStatus result = appointmentService.addSlot("2030/12/12", "10:00");
 
         assertEquals(BookingStatus.INVALID_SLOT_DATE_TIME, result);
         verifyNoInteractions(appointmentRepository);
@@ -74,11 +74,11 @@ class AppointmentServiceBranchTest {
     }
 
     @Test
-    void addSlot_DateDayTime_DayDoesNotMatchDate_ReturnsInvalidSlotDateTime() {
-        LocalDate date = LocalDate.now().plusDays(7);
-        String wrongDay = date.getDayOfWeek().plus(1).name();
+    void addSlot_PastDateTime_ReturnsInvalidSlotDateTime() {
+        LocalDate date = LocalDate.now().minusDays(1);
+        LocalTime time = LocalTime.now();
 
-        BookingStatus result = appointmentService.addSlot(date.toString(), wrongDay, "10:00");
+        BookingStatus result = appointmentService.addSlot(date, time);
 
         assertEquals(BookingStatus.INVALID_SLOT_DATE_TIME, result);
         verifyNoInteractions(appointmentRepository);

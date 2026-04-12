@@ -8,8 +8,10 @@ import org.example.service.AppointmentCalendarExportService;
 import org.example.service.AppointmentBookingService;
 import org.example.service.AppointmentService;
 import org.example.service.BookingStatus;
+import org.example.service.GoogleCalendarService;
 
 import javax.swing.BorderFactory;
+import javax.swing.JDialog;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -17,10 +19,14 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JComboBox;
+import javax.swing.JSpinner;
 import javax.swing.ListSelectionModel;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.JTextArea;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,7 +34,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 /**
- * Represents reservations panel in the system.
+ * Shows the logged-in user's reservations and related actions.
  */
 public class ReservationsPanel extends JPanel {
 
@@ -41,7 +47,11 @@ public class ReservationsPanel extends JPanel {
     private static final String NEW_DATE_TIME_LABEL = "New Date/Time:";
     private static final String NO_AVAILABLE_SLOTS_PLACEHOLDER = "No available slots";
     private static final String ADD_TO_CALENDAR_LABEL = "Add to Calendar";
+    private static final String ADD_TO_GOOGLE_CALENDAR_LABEL = "Add to Google Calendar";
+    private static final String LEAVE_FEEDBACK_LABEL = "Leave Feedback";
     private static final String CALENDAR_EXPORT_TITLE = "Add to Calendar";
+    private static final String GOOGLE_CALENDAR_TITLE = "Google Calendar";
+    private static final String FEEDBACK_TITLE = "Feedback";
     private static final EnumSet<AppointmentStatus> EXPORTABLE_STATUSES = EnumSet.of(
             AppointmentStatus.CONFIRMED,
             AppointmentStatus.MODIFIED,
@@ -52,6 +62,7 @@ public class ReservationsPanel extends JPanel {
     private final AppointmentService appointmentService;
     private final AppointmentBookingService appointmentBookingService;
     private final AppointmentCalendarExportService calendarExportService;
+    private final GoogleCalendarService googleCalendarService;
     private final DefaultTableModel tableModel;
     private final JTable reservationsTable;
     private final JLabel infoLabel;
@@ -59,6 +70,8 @@ public class ReservationsPanel extends JPanel {
     private final JButton modifyButton;
     private final JButton cancelButton;
     private final JButton addToCalendarButton;
+    private final JButton addToGoogleCalendarButton;
+    private final JButton feedbackButton;
     private final List<Appointment> currentReservations;
 
     /**
@@ -73,7 +86,13 @@ public class ReservationsPanel extends JPanel {
             AppointmentService appointmentService,
             AppointmentBookingService appointmentBookingService
     ) {
-        this(user, appointmentService, appointmentBookingService, new AppointmentCalendarExportService());
+        this(
+                user,
+                appointmentService,
+                appointmentBookingService,
+                new AppointmentCalendarExportService(),
+                new GoogleCalendarService()
+        );
     }
 
     /**
@@ -90,10 +109,36 @@ public class ReservationsPanel extends JPanel {
             AppointmentBookingService appointmentBookingService,
             AppointmentCalendarExportService calendarExportService
     ) {
+        this(
+                user,
+                appointmentService,
+                appointmentBookingService,
+                calendarExportService,
+                new GoogleCalendarService()
+        );
+    }
+
+    /**
+     * Creates a new reservations panel object with the given values.
+     *
+     * @param user user involved in this action
+     * @param appointmentService service used to run business logic
+     * @param appointmentBookingService service used to run business logic
+     * @param calendarExportService service used to export appointments as ICS files
+     * @param googleCalendarService service used to open Google Calendar in browser
+     */
+    public ReservationsPanel(
+            SystemUser user,
+            AppointmentService appointmentService,
+            AppointmentBookingService appointmentBookingService,
+            AppointmentCalendarExportService calendarExportService,
+            GoogleCalendarService googleCalendarService
+    ) {
         this.user = user;
         this.appointmentService = appointmentService;
         this.appointmentBookingService = appointmentBookingService;
         this.calendarExportService = calendarExportService;
+        this.googleCalendarService = googleCalendarService;
         this.currentReservations = new ArrayList<>();
 
         setLayout(new BorderLayout(10, 10));
@@ -116,6 +161,13 @@ public class ReservationsPanel extends JPanel {
                 },
                 0
         ) {
+            /**
+             * Keeps reservation table cells read-only.
+             *
+             * @param row row index in the table model
+             * @param column column index in the table model
+             * @return false because editing is not allowed
+             */
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -123,6 +175,12 @@ public class ReservationsPanel extends JPanel {
         };
 
         reservationsTable = new JTable(tableModel) {
+            /**
+             * Selects a row and refreshes data when table is empty.
+             *
+             * @param index0 first row index in the selection
+             * @param index1 last row index in the selection
+             */
             @Override
             public void setRowSelectionInterval(int index0, int index1) {
                 if (tableModel.getRowCount() == 0) {
@@ -134,26 +192,45 @@ public class ReservationsPanel extends JPanel {
         reservationsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         add(new JScrollPane(reservationsTable), BorderLayout.CENTER);
 
-        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel actionPanel = new JPanel(new BorderLayout(0, 6));
         slotComboBox = new JComboBox<>();
         JButton refreshButton = new JButton(REFRESH_BUTTON_LABEL);
         modifyButton = new JButton(MODIFY_RESERVATION_TITLE);
         cancelButton = new JButton(CANCEL_RESERVATION_TITLE);
         addToCalendarButton = new JButton(ADD_TO_CALENDAR_LABEL);
+        addToGoogleCalendarButton = new JButton(ADD_TO_GOOGLE_CALENDAR_LABEL);
+        feedbackButton = new JButton(LEAVE_FEEDBACK_LABEL);
+        feedbackButton.setVisible(false);
 
         refreshButton.addActionListener(e -> refreshData());
         modifyButton.addActionListener(e -> onModifyReservation());
         cancelButton.addActionListener(e -> onCancelReservation());
         addToCalendarButton.addActionListener(e -> onAddToCalendar());
+        addToGoogleCalendarButton.addActionListener(e -> onAddToGoogleCalendar());
+        feedbackButton.addActionListener(e -> onLeaveFeedback());
         reservationsTable.getSelectionModel().addListSelectionListener(e -> updateActionState());
         slotComboBox.addActionListener(e -> updateActionState());
 
-        actionPanel.add(new JLabel(NEW_DATE_TIME_LABEL));
-        actionPanel.add(slotComboBox);
-        actionPanel.add(refreshButton);
-        actionPanel.add(modifyButton);
-        actionPanel.add(cancelButton);
-        actionPanel.add(addToCalendarButton);
+        JPanel slotRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        slotRow.add(new JLabel(NEW_DATE_TIME_LABEL));
+        slotRow.add(slotComboBox);
+
+        JPanel topButtonRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        topButtonRow.add(refreshButton);
+        topButtonRow.add(modifyButton);
+        topButtonRow.add(cancelButton);
+        topButtonRow.add(feedbackButton);
+
+        JPanel bottomButtonRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        bottomButtonRow.add(addToCalendarButton);
+        bottomButtonRow.add(addToGoogleCalendarButton);
+
+        JPanel buttonRows = new JPanel(new GridLayout(2, 1, 0, 4));
+        buttonRows.add(topButtonRow);
+        buttonRows.add(bottomButtonRow);
+
+        actionPanel.add(slotRow, BorderLayout.NORTH);
+        actionPanel.add(buttonRows, BorderLayout.CENTER);
         add(actionPanel, BorderLayout.SOUTH);
 
         refreshData();
@@ -194,7 +271,7 @@ public class ReservationsPanel extends JPanel {
     }
 
     /**
-     * Runs on modify reservation for this class.
+     * Changes the selected reservation to a new selected slot.
      */
     private void onModifyReservation() {
         String reservationId = selectedReservationId();
@@ -223,7 +300,7 @@ public class ReservationsPanel extends JPanel {
     }
 
     /**
-     * Runs on cancel reservation for this class.
+     * Cancels the selected reservation.
      */
     private void onCancelReservation() {
         String reservationId = selectedReservationId();
@@ -273,10 +350,107 @@ public class ReservationsPanel extends JPanel {
         }
     }
 
+    private void onAddToGoogleCalendar() {
+        Appointment selected = selectedReservation();
+        if (selected == null) {
+            showSelectionWarning();
+            return;
+        }
+
+        try {
+            googleCalendarService.openGoogleCalendarEvent(selected);
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Google Calendar opened with the selected appointment.",
+                    GOOGLE_CALENDAR_TITLE,
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+        } catch (RuntimeException ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Unable to open Google Calendar: " + ex.getMessage(),
+                    GOOGLE_CALENDAR_TITLE,
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
+    private void onLeaveFeedback() {
+        Appointment selected = selectedReservation();
+        if (selected == null) {
+            showSelectionWarning();
+            return;
+        }
+
+        if (selected.getStatus() != AppointmentStatus.COMPLETED || selected.isFeedbackSubmitted()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Feedback is only available for completed reservations that have not been rated yet.",
+                    FEEDBACK_TITLE,
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        JDialog dialog = new JDialog();
+        dialog.setTitle(FEEDBACK_TITLE);
+        dialog.setModal(true);
+        dialog.setSize(360, 260);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        JPanel formPanel = new JPanel(new java.awt.GridLayout(2, 2, 10, 10));
+        JSpinner ratingSpinner = new JSpinner(new SpinnerNumberModel(5, 1, 5, 1));
+        JTextArea commentArea = new JTextArea(5, 20);
+        commentArea.setLineWrap(true);
+        commentArea.setWrapStyleWord(true);
+
+        formPanel.add(new JLabel("Rating (1-5):"));
+        formPanel.add(ratingSpinner);
+        formPanel.add(new JLabel("Comment:"));
+        formPanel.add(new JScrollPane(commentArea));
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton saveButton = new JButton("Save");
+        JButton cancelButton = new JButton("Cancel");
+
+        saveButton.addActionListener(e -> {
+            int rating = ((Number) ratingSpinner.getValue()).intValue();
+            BookingStatus status = appointmentBookingService.submitFeedback(
+                    selected.getId(),
+                    rating,
+                    commentArea.getText()
+            );
+
+            JOptionPane.showMessageDialog(
+                    dialog,
+                    GuiMessageHelper.toMessage(status),
+                    FEEDBACK_TITLE,
+                    GuiMessageHelper.isSuccessLike(status)
+                            ? JOptionPane.INFORMATION_MESSAGE
+                            : JOptionPane.ERROR_MESSAGE
+            );
+
+            if (status == BookingStatus.SUCCESS) {
+                dialog.dispose();
+                refreshData();
+            }
+        });
+
+        cancelButton.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(saveButton);
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
     /**
-     * Runs selected reservation id for this class.
+     * Returns the id of the selected reservation row.
      *
-     * @return text result from this method
+     * @return selected reservation id, or null when no row is selected
      */
     private String selectedReservationId() {
         int selectedRow = reservationsTable.getSelectedRow();
@@ -298,6 +472,12 @@ public class ReservationsPanel extends JPanel {
 
     private boolean isExportableStatus(AppointmentStatus status) {
         return status != null && EXPORTABLE_STATUSES.contains(status);
+    }
+
+    private boolean isFeedbackEligible(Appointment appointment) {
+        return appointment != null
+                && appointment.getStatus() == AppointmentStatus.COMPLETED
+                && !appointment.isFeedbackSubmitted();
     }
 
     /**
@@ -334,11 +514,23 @@ public class ReservationsPanel extends JPanel {
         boolean hasReservationSelection = reservationsTable.getSelectedRow() >= 0;
         boolean hasReplacementSlots = slotComboBox.getItemCount() > 0
                 && !NO_AVAILABLE_SLOTS_PLACEHOLDER.equals(String.valueOf(slotComboBox.getItemAt(0)));
+        Appointment selected = selectedReservation();
+        boolean feedbackEligible = isFeedbackEligible(selected);
+        boolean feedbackWasVisible = feedbackButton.isVisible();
 
         slotComboBox.setEnabled(hasReplacementSlots);
         modifyButton.setEnabled(hasReservationSelection && hasReplacementSlots);
         cancelButton.setEnabled(hasReservationSelection);
         addToCalendarButton.setEnabled(hasReservationSelection && isExportableStatus(selectedReservationStatus()));
+        addToGoogleCalendarButton.setEnabled(hasReservationSelection);
+        feedbackButton.setVisible(feedbackEligible);
+        feedbackButton.setEnabled(feedbackEligible);
+
+        // Ensure the action row updates immediately when feedback eligibility changes.
+        if (feedbackWasVisible != feedbackEligible) {
+            revalidate();
+            repaint();
+        }
     }
 
     private AppointmentStatus selectedReservationStatus() {
@@ -348,11 +540,11 @@ public class ReservationsPanel extends JPanel {
 
 
     /**
-     * Runs to row for this class.
+     * Converts an appointment object to one table row.
      *
-     * @param appointment value for appointment
+     * @param appointment appointment to display in the table
      *
-     * @return result produced by this method
+     * @return array of values used by the table model
      */
     private Object[] toRow(Appointment appointment) {
         return new Object[] {

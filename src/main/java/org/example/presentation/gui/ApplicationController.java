@@ -157,7 +157,7 @@ public class ApplicationController {
     }
 
     /**
-     * Runs handle successful login for this class.
+     * Stores session data after a successful login and opens the dashboard.
      *
      * @param result value for result
      */
@@ -193,7 +193,7 @@ public class ApplicationController {
     }
 
     /**
-     * Runs logout and open login for this class.
+     * Logs out the current session and returns to the login screen.
      */
     public void logoutAndOpenLogin() {
         sessionManager.logoutAndNotify();
@@ -219,7 +219,7 @@ public class ApplicationController {
     }
 
     /**
-     * Runs switch frame for this class.
+     * Closes the current frame and shows the next one.
      *
      * @param newFrame window frame used by the screen
      */

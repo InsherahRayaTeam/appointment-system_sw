@@ -4,6 +4,7 @@ import org.example.domain.Appointment;
 import org.example.domain.AppointmentSlot;
 import org.example.domain.AppointmentStatus;
 import org.example.notification.MockNotificationService;
+import org.example.notification.NotificationService;
 import org.example.repository.AppointmentBookingRepository;
 import org.example.repository.AppointmentRepository;
 import org.example.repository.UserRepository;
@@ -93,7 +94,35 @@ class AppointmentBookingServiceNotificationTest {
         String message = mockNotificationService.getSentMessages().get(0);
         assertTrue(message.contains(ALICE_EMAIL));
         assertTrue(message.contains("Appointment Request Received"));
-        assertTrue(message.contains("Appointment date/time:"));
+        assertTrue(message.contains("Date/time:"));
+    }
+
+    /**
+     * Verifies booking still succeeds when notification sending fails.
+     */
+    @Test
+    void bookAppointment_NotificationFails_BookingStillSucceeds() {
+        NotificationService failingNotificationService = (to, subject, body) -> {
+            throw new IllegalStateException("smtp unavailable");
+        };
+        AppointmentNotificationCoordinator failingCoordinator =
+                new AppointmentNotificationCoordinator(failingNotificationService);
+
+        AppointmentBookingService bookingServiceWithFailingNotifier = new AppointmentBookingService(
+                appointmentRepository,
+                appointmentBookingRepository,
+                sessionManager,
+                userRepository,
+                eventManager,
+                failingCoordinator
+        );
+
+        AppointmentSlot slot = new AppointmentSlot(TEN_AM);
+        when(appointmentRepository.findAll()).thenReturn(List.of(slot));
+
+        BookingStatus result = bookingServiceWithFailingNotifier.bookAppointment(ALICE_EMAIL, TEN_AM, 60, 1);
+
+        assertEquals(BookingStatus.SUCCESS, result);
     }
 
     /**
@@ -114,7 +143,7 @@ class AppointmentBookingServiceNotificationTest {
         String message = mockNotificationService.getSentMessages().get(0);
         assertTrue(message.contains(ALICE_EMAIL));
         assertTrue(message.contains("Appointment Approved"));
-        assertTrue(message.contains("Appointment date/time:"));
+        assertTrue(message.contains("Date/time:"));
     }
 
     /**
@@ -139,7 +168,7 @@ class AppointmentBookingServiceNotificationTest {
         String message = mockNotificationService.getSentMessages().get(0);
         assertTrue(message.contains(ALICE_EMAIL));
         assertTrue(message.contains("Appointment Cancelled"));
-        assertTrue(message.contains("Appointment date/time:"));
+        assertTrue(message.contains("Date/time:"));
     }
 
     /**
@@ -221,7 +250,7 @@ class AppointmentBookingServiceNotificationTest {
         assertEquals(1, mockNotificationService.getSentMessages().size());
         String message = mockNotificationService.getSentMessages().get(0);
         assertTrue(message.contains("Appointment Marked as Attended"));
-        assertTrue(message.contains("Booked for:"));
+        assertTrue(message.contains("Date/time:"));
     }
 
     /**
@@ -249,7 +278,7 @@ class AppointmentBookingServiceNotificationTest {
         assertEquals(1, mockNotificationService.getSentMessages().size());
         String message = mockNotificationService.getSentMessages().get(0);
         assertTrue(message.contains("Appointment Completed"));
-        assertTrue(message.contains("Booked for:"));
+        assertTrue(message.contains("Date/time:"));
     }
 
     /**

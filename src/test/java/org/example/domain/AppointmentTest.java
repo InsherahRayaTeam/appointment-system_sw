@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -84,6 +85,40 @@ public class AppointmentTest {
 
         assertEquals(AppointmentStatus.CANCELLED, updated.getStatus());
         assertEquals("apt-status", updated.getId());
+    }
+
+    @Test
+    void feedbackFields_ShouldBeStoredAndCopiedWithAppointment() {
+        Appointment appointment = new Appointment(
+                "apt-feedback",
+                "alice@example.com",
+                LocalDateTime.now().plusHours(1),
+                60,
+                2,
+                AppointmentStatus.COMPLETED
+        );
+
+        appointment.setRating(5);
+        appointment.setFeedbackComment("Great service");
+        appointment.setFeedbackSubmitted(true);
+
+        Appointment copied = appointment.withStatus(AppointmentStatus.COMPLETED);
+
+        assertEquals(5, appointment.getRating());
+        assertEquals("Great service", appointment.getFeedbackComment());
+        assertTrue(appointment.isFeedbackSubmitted());
+        assertEquals(5, copied.getRating());
+        assertEquals("Great service", copied.getFeedbackComment());
+        assertTrue(copied.isFeedbackSubmitted());
+    }
+
+    @Test
+    void feedbackFields_DefaultToEmptyState() {
+        Appointment appointment = new Appointment("apt-empty", LocalDateTime.now().plusHours(1), 30, 1);
+
+        assertEquals(0, appointment.getRating());
+        assertNull(appointment.getFeedbackComment());
+        assertFalse(appointment.isFeedbackSubmitted());
     }
 
     @Test

@@ -78,7 +78,8 @@ class InMemoryUserRepositoryTest {
         Optional<SystemUser> result = repository.findById("admin-1");
 
         assertTrue(result.isPresent());
-        assertEquals("admin@gmail.com", result.get().getEmail());
+        assertEquals("admin-1", result.get().getId());
+        assertEquals(UserRole.ADMIN, result.get().getRole());
     }
 
     @Test
@@ -174,7 +175,7 @@ class InMemoryUserRepositoryTest {
         boolean updated = repository.updatePassword("user-1", "updated123");
 
         assertTrue(updated);
-        assertEquals("updated123", repository.findByEmail("user@gmail.com").orElseThrow().getPassword());
+        assertEquals("updated123", repository.findById("user-1").orElseThrow().getPassword());
     }
 
     @Test

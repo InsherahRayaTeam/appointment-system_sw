@@ -29,7 +29,7 @@ public interface UserRepository {
     Optional<SystemUser> findById(String id);
 
     /**
-     * Runs save for this class.
+     * Saves a user record.
      *
      * @param user user involved in this action
      */

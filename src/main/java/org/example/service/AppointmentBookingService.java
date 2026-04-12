@@ -763,6 +763,30 @@ public class AppointmentBookingService {
     }
 
     /**
+     * Submits feedback for the current user's own completed appointment.
+     *
+     * @param appointmentId unique id used to find the record
+     * @param rating rating value from 1 to 5
+     * @param feedbackComment comment text entered by the user
+     * @return status that explains the operation result
+     */
+    public BookingStatus submitFeedback(String appointmentId, int rating, String feedbackComment) {
+        return submitFeedbackInternal(appointmentId, rating, feedbackComment, ReservationAccess.OWN_ONLY);
+    }
+
+    /**
+     * Submits feedback for the current user's own completed appointment.
+     *
+     * @param appointmentId unique id used to find the record
+     * @param rating rating value from 1 to 5
+     * @param feedbackComment comment text entered by the user
+     * @return status that explains the operation result
+     */
+    public BookingStatus submitOwnFeedback(String appointmentId, int rating, String feedbackComment) {
+        return submitFeedbackInternal(appointmentId, rating, feedbackComment, ReservationAccess.OWN_ONLY);
+    }
+
+    /**
      * Checks whether it can cancel reservation internal.
      *
      * @param appointmentId unique id used to find the record
@@ -878,7 +902,52 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Runs resolve authorized appointment for this class.
+     * Saves feedback for a completed appointment.
+     *
+     * @param appointmentId unique id used to find the record
+     * @param rating rating value from 1 to 5
+     * @param feedbackComment comment text entered by the user
+     * @param access value for access
+     * @return status that explains the operation result
+     */
+    private BookingStatus submitFeedbackInternal(
+            String appointmentId,
+            int rating,
+            String feedbackComment,
+            ReservationAccess access
+    ) {
+        if (rating < 1 || rating > 5) {
+            return BookingStatus.INVALID_RATING;
+        }
+
+        Appointment appointment = resolveAuthorizedAppointment(appointmentId, access);
+        if (appointment == null) {
+            return resolveAuthorizationOrNotFoundStatus(appointmentId, access);
+        }
+
+        if (appointment.getStatus() != AppointmentStatus.COMPLETED) {
+            return BookingStatus.APPOINTMENT_NOT_COMPLETED;
+        }
+
+        if (appointment.isFeedbackSubmitted()) {
+            return BookingStatus.FEEDBACK_ALREADY_SUBMITTED;
+        }
+
+        Appointment updated = appointment.withStatus(AppointmentStatus.COMPLETED);
+        updated.setRating(rating);
+        updated.setFeedbackComment(normalizeFeedbackComment(feedbackComment));
+        updated.setFeedbackSubmitted(true);
+
+        if (!appointmentBookingRepository.update(updated)) {
+            return BookingStatus.UPDATE_FAILED;
+        }
+
+        notifyEvent("Feedback submitted: " + updated.getId());
+        return BookingStatus.SUCCESS;
+    }
+
+    /**
+     * Returns the appointment only when access rules allow it.
      *
      * @param appointmentId unique id used to find the record
      * @param access value for access
@@ -905,7 +974,7 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Runs resolve authorization or not found status for this class.
+     * Resolves whether access is unauthorized or appointment is missing.
      *
      * @param appointmentId unique id used to find the record
      * @param access value for access
@@ -935,8 +1004,8 @@ public class AppointmentBookingService {
     /**
      * Finds slot by time using the given input.
      *
-     * @param slotTime slot time text like 10:00
-     * @return result produced by this method
+     * @param slotSelection slot text like yyyy-MM-dd (DAY) HH:mm
+     * @return matching slot, or null when no slot matches
      */
     private AppointmentSlot findSlotBySelection(String slotSelection) {
         String normalized = normalize(slotSelection);
@@ -1173,7 +1242,11 @@ public class AppointmentBookingService {
      */
     private void sendPendingNotificationIfConfigured(Appointment appointment) {
         if (appointmentNotificationCoordinator != null && appointment != null) {
-            appointmentNotificationCoordinator.sendPendingNotification(appointment);
+            try {
+                appointmentNotificationCoordinator.sendPendingNotification(appointment);
+            } catch (Exception e) {
+                System.out.println("Email failed but booking continues: " + e.getMessage());
+            }
         }
     }
 
@@ -1184,7 +1257,11 @@ public class AppointmentBookingService {
      */
     private void sendApprovedNotificationIfConfigured(Appointment appointment) {
         if (appointmentNotificationCoordinator != null && appointment != null) {
-            appointmentNotificationCoordinator.sendApprovedNotification(appointment);
+            try {
+                appointmentNotificationCoordinator.sendApprovedNotification(appointment);
+            } catch (Exception e) {
+                System.out.println("Email failed but booking continues: " + e.getMessage());
+            }
         }
     }
 
@@ -1195,23 +1272,32 @@ public class AppointmentBookingService {
      */
     private void sendCancelledNotificationIfConfigured(Appointment appointment) {
         if (appointmentNotificationCoordinator != null && appointment != null) {
-            appointmentNotificationCoordinator.sendCancelledNotification(appointment);
+            try {
+                appointmentNotificationCoordinator.sendCancelledNotification(appointment);
+            } catch (Exception e) {
+                System.out.println("Email failed but booking continues: " + e.getMessage());
+            }
         }
     }
 
     /**
      * Sends a modified notification when the coordinator is configured.
      *
-     * @param appointment appointment involved in this action
+     * @param previousAppointment appointment details before the change
+     * @param updatedAppointment appointment details after the change
      */
     private void sendRescheduledNotificationIfConfigured(Appointment previousAppointment, Appointment updatedAppointment) {
         if (appointmentNotificationCoordinator != null && previousAppointment != null && updatedAppointment != null) {
-            appointmentNotificationCoordinator.sendRescheduledNotification(previousAppointment, updatedAppointment);
+            try {
+                appointmentNotificationCoordinator.sendRescheduledNotification(previousAppointment, updatedAppointment);
+            } catch (Exception e) {
+                System.out.println("Email failed but booking continues: " + e.getMessage());
+            }
         }
     }
 
     /**
-     * Runs normalize for this class.
+     * Trims text and returns null when the value is blank.
      *
      * @param value value used by this method
      * @return text result from this method
@@ -1221,6 +1307,16 @@ public class AppointmentBookingService {
             return null;
         }
         return value.trim();
+    }
+
+    /**
+     * Trims feedback text and returns null when the value is blank.
+     *
+     * @param value value used by this method
+     * @return text result from this method
+     */
+    private String normalizeFeedbackComment(String value) {
+        return normalize(value);
     }
 
     private boolean isValidPhoneNumber(String phoneNumber) {
@@ -1246,7 +1342,7 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Runs validation probe for this class.
+     * Builds a temporary appointment used for rule checks.
      *
      * @param durationMinutes appointment duration in minutes
      * @param participantCount number of people for the appointment
@@ -1257,7 +1353,7 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Runs type rules allow for this class.
+     * Checks whether the selected appointment type rule accepts this appointment.
      *
      * @param appointment value for appointment
      * @param appointmentType value for appointment type
@@ -1275,7 +1371,7 @@ public class AppointmentBookingService {
     }
 
     /**
-     * Runs normalize type for this class.
+     * Returns NORMAL when appointment type is null.
      *
      * @param appointmentType value for appointment type
      * @return result produced by this method

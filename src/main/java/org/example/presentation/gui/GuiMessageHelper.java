@@ -5,7 +5,7 @@ import org.example.service.BookingStatus;
 import javax.swing.JOptionPane;
 
 /**
- * Represents gui message helper in the system.
+ * Converts booking statuses into user-friendly GUI messages.
  */
 public final class GuiMessageHelper {
 
@@ -14,11 +14,11 @@ public final class GuiMessageHelper {
     }
 
     /**
-     * Runs to message for this class.
+     * Converts a booking status value into text for dialogs.
      *
      * @param status status value used for this operation
      *
-     * @return text result from this method
+     * @return message text shown to the user
      */
     public static String toMessage(BookingStatus status) {
         if (status == null) {
@@ -50,6 +50,9 @@ public final class GuiMessageHelper {
             case APPOINTMENT_ALREADY_NOT_ATTENDED -> "Reservation has already been marked as not attended.";
             case APPOINTMENT_ALREADY_COMPLETED -> "Reservation has already been completed.";
             case APPOINTMENT_NOT_ATTENDED -> "Reservation must be marked as attended before it can be completed.";
+            case APPOINTMENT_NOT_COMPLETED -> "Feedback is only allowed for completed reservations.";
+            case FEEDBACK_ALREADY_SUBMITTED -> "Feedback has already been submitted for this reservation.";
+            case INVALID_RATING -> "Rating must be between 1 and 5.";
             case UPDATE_FAILED -> "Reservation update failed. Please try again.";
         };
     }

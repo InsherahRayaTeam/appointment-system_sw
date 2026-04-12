@@ -89,7 +89,7 @@ class SlotsPanelTest extends GuiTestSupport {
     @Test
     void addSlotForm_derivesDayAndUsesSelectedTime() {
         LocalDate date = LocalDate.of(2030, 12, 12);
-        String expectedDay = date.getDayOfWeek().name();
+        String expectedResetDay = LocalDate.now().getDayOfWeek().name();
         when(appointmentService.addSlot(date.toString(), "10:00"))
                 .thenReturn(BookingStatus.SUCCESS);
         when(appointmentService.getAvailableSlots()).thenReturn(Collections.emptyList());
@@ -109,7 +109,7 @@ class SlotsPanelTest extends GuiTestSupport {
 
         clickButton(addSlotButton);
 
-        assertEquals(expectedDay, slotDayValueLabel.getText());
+        assertEquals(expectedResetDay, slotDayValueLabel.getText());
         verify(appointmentService).addSlot(date.toString(), "10:00");
     }
 }

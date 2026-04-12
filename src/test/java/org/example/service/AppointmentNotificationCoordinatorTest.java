@@ -5,15 +5,19 @@ import org.example.domain.AppointmentStatus;
 import org.example.notification.MockNotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Timeout(value = 500, unit = TimeUnit.MILLISECONDS)
 class AppointmentNotificationCoordinatorTest {
 
     private MockNotificationService mockNotificationService;
+
     private AppointmentNotificationCoordinator coordinator;
 
     @BeforeEach
@@ -103,7 +107,7 @@ class AppointmentNotificationCoordinatorTest {
         String message = mockNotificationService.getSentMessages().get(0);
         assertTrue(message.contains("erin@example.com"));
         assertTrue(message.contains("Appointment Marked as Attended"));
-        assertTrue(message.contains("Booked for:"));
+        assertTrue(message.contains("Date/time:"));
     }
 
     @Test
@@ -116,7 +120,7 @@ class AppointmentNotificationCoordinatorTest {
         String message = mockNotificationService.getSentMessages().get(0);
         assertTrue(message.contains("frank@example.com"));
         assertTrue(message.contains("Appointment Completed"));
-        assertTrue(message.contains("Booked for:"));
+        assertTrue(message.contains("Date/time:"));
     }
 
     @Test

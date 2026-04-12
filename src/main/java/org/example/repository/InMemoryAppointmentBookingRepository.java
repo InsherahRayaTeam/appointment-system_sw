@@ -15,9 +15,9 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
     private final List<Appointment> appointments = new ArrayList<>();
 
     /**
-     * Runs save for this class.
+     * Saves one appointment in memory.
      *
-     * @param appointment value for appointment
+     * @param appointment appointment to store
      */
     @Override
     public void save(Appointment appointment) {
@@ -62,9 +62,9 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
     }
 
     /**
-     * Runs update for this class.
+     * Updates one appointment in memory.
      *
-     * @param appointment value for appointment
+     * @param appointment appointment with updated values
      *
      * @return true when the action is valid or successful, otherwise false
      */
@@ -87,7 +87,7 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
 
     private Appointment copyOf(Appointment appointment) {
         String customerEmail = appointment.getUser() == null ? null : appointment.getUser().getEmail();
-        return new Appointment(
+        Appointment copy = new Appointment(
                 appointment.getId(),
                 appointment.getCustomerName(),
                 customerEmail,
@@ -97,6 +97,10 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
                 appointment.getStatus(),
                 appointment.getType() == null ? AppointmentType.NORMAL : appointment.getType()
         ).withCustomerPhoneNumber(appointment.getCustomerPhoneNumber());
+        copy.setRating(appointment.getRating());
+        copy.setFeedbackComment(appointment.getFeedbackComment());
+        copy.setFeedbackSubmitted(appointment.isFeedbackSubmitted());
+        return copy;
     }
 }
 

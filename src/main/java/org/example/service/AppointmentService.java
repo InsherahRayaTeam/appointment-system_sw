@@ -138,7 +138,7 @@ public class AppointmentService {
     }
 
     /**
-     * Runs send reminder for slot for this class.
+     * Sends a reminder for one booked slot that matches the given selection.
      *
      * @param time time value used by this method
      *
@@ -161,7 +161,7 @@ public class AppointmentService {
     }
 
     /**
-     * Runs send all reminders for this class.
+     * Sends reminders for all booked slots.
      *
      * @return numeric result from this method
      */

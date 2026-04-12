@@ -229,6 +229,11 @@ public class CalendarPanel extends JPanel {
         dayCell.add(appointmentsPanel, BorderLayout.CENTER);
 
         MouseAdapter clickListener = new MouseAdapter() {
+            /**
+             * Opens the day details dialog when a day cell is clicked.
+             *
+             * @param e mouse click event from the calendar grid
+             */
             @Override
             public void mouseClicked(MouseEvent e) {
                 showDayAppointmentsDialog(date, dayAppointments);
@@ -281,6 +286,11 @@ public class CalendarPanel extends JPanel {
                     .toArray(AppointmentListItem[]::new));
             list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             list.addMouseListener(new java.awt.event.MouseAdapter() {
+                /**
+                 * Opens appointment details when the user double-clicks an item.
+                 *
+                 * @param e mouse click event from the appointments list
+                 */
                 @Override
                 public void mouseClicked(java.awt.event.MouseEvent e) {
                     if (e.getClickCount() >= 2 && list.getSelectedValue() != null) {
@@ -359,6 +369,11 @@ public class CalendarPanel extends JPanel {
             this.appointment = appointment;
         }
 
+        /**
+         * Builds one readable line for the appointment list.
+         *
+         * @return formatted text with time and status
+         */
         @Override
         public String toString() {
             LocalDateTime start = appointment.getStartTime();

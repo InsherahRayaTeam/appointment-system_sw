@@ -4,14 +4,14 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Represents auth event logger in the system.
+ * Writes login and logout events to the console.
  */
 public class AuthEventLogger {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     /**
-     * Runs log login success for this class.
+     * Logs a successful login event.
      *
      * @param username user involved in this action
      */
@@ -20,7 +20,7 @@ public class AuthEventLogger {
     }
 
     /**
-     * Runs log login failure for this class.
+     * Logs a failed login event.
      *
      * @param username user involved in this action
      */
@@ -30,7 +30,7 @@ public class AuthEventLogger {
     }
 
     /**
-     * Runs log logout for this class.
+     * Logs a logout event.
      *
      * @param username user involved in this action
      */
@@ -40,7 +40,7 @@ public class AuthEventLogger {
     }
 
     /**
-     * Runs now for this class.
+     * Returns the current timestamp in log format.
      *
      * @return text result from this method
      */

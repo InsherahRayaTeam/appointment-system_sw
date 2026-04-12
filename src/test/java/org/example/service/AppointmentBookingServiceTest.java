@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -51,6 +52,7 @@ class AppointmentBookingServiceTest {
     private EventManager eventManager;
 
     private AppointmentBookingService appointmentBookingService;
+    private String authenticatedEmail;
 
     @BeforeEach
     void setUp() {
@@ -398,7 +400,8 @@ class AppointmentBookingServiceTest {
     @Test
     void cancelOwnAppointment_UserOwnFutureReservation_ReturnsSuccessAndReleasesSlot() {
         // Arrange
-        authenticateAsUser("alice@example.com");
+        authenticatedEmail = "alice@example.com";
+        authenticateAsUser();
 
         AppointmentSlot slot = new AppointmentSlot("10:00");
         slot.book();
@@ -419,7 +422,8 @@ class AppointmentBookingServiceTest {
 
     @Test
     void cancelOwnAppointment_ThenBookNewSlot_UserCanBookAgainAndReleasedSlotIsAvailable() {
-        authenticateAsUser("alice@example.com");
+        authenticatedEmail = "alice@example.com";
+        authenticateAsUser();
 
         AppointmentSlot releasedSlot = new AppointmentSlot("10:00");
         releasedSlot.book();
@@ -442,7 +446,8 @@ class AppointmentBookingServiceTest {
     @Test
     void cancelOwnAppointment_UserOtherReservation_ReturnsUnauthorized() {
         // Arrange
-        authenticateAsUser("alice@example.com");
+        authenticatedEmail = "alice@example.com";
+        authenticateAsUser();
         when(appointmentBookingRepository.findById(eq("apt-user-2")))
                 .thenReturn(Optional.of(futureReservation("apt-user-2", "10:00", "bob@example.com")));
 
@@ -457,7 +462,8 @@ class AppointmentBookingServiceTest {
     @Test
     void cancelOwnAppointment_UserPastReservation_ReturnsAppointmentNotFuture() {
         // Arrange
-        authenticateAsUser("alice@example.com");
+        authenticatedEmail = "alice@example.com";
+        authenticateAsUser();
         Appointment past = new Appointment(
                 "apt-user-3",
                 "alice@example.com",
@@ -663,7 +669,8 @@ class AppointmentBookingServiceTest {
     @Test
     void modifyOwnAppointment_UserOwnFutureReservation_ReturnsSuccess() {
         // Arrange
-        authenticateAsUser("alice@example.com");
+        authenticatedEmail = "alice@example.com";
+        authenticateAsUser();
 
         AppointmentSlot oldSlot = new AppointmentSlot("10:00");
         oldSlot.book();
@@ -687,7 +694,8 @@ class AppointmentBookingServiceTest {
     @Test
     void modifyOwnAppointment_UserOtherReservation_ReturnsUnauthorized() {
         // Arrange
-        authenticateAsUser("alice@example.com");
+        authenticatedEmail = "alice@example.com";
+        authenticateAsUser();
         when(appointmentBookingRepository.findById(eq("apt-user-6")))
                 .thenReturn(Optional.of(futureReservation("apt-user-6", "10:00", "bob@example.com")));
 
@@ -702,7 +710,8 @@ class AppointmentBookingServiceTest {
     @Test
     void modifyOwnAppointment_UserPastReservation_ReturnsAppointmentNotFuture() {
         // Arrange
-        authenticateAsUser("alice@example.com");
+        authenticatedEmail = "alice@example.com";
+        authenticateAsUser();
         Appointment past = new Appointment(
                 "apt-user-7",
                 "alice@example.com",
@@ -1105,14 +1114,75 @@ class AppointmentBookingServiceTest {
         verifyNoInteractions(appointmentBookingRepository);
     }
 
+    @Test
+    void submitFeedback_CompletedAppointment_ReturnsSuccessAndSavesFeedback() {
+        String email = UUID.randomUUID() + "@example.com";
+        authenticatedEmail = email;
+        authenticateAsUser();
+
+        Appointment appointment = futureReservation("apt-feedback", "10:00", email)
+                .withStatus(AppointmentStatus.COMPLETED);
+        when(appointmentBookingRepository.findById(eq("apt-feedback"))).thenReturn(Optional.of(appointment));
+        when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
+
+        BookingStatus status = appointmentBookingService.submitFeedback("apt-feedback", 5, "Great visit");
+
+        ArgumentCaptor<Appointment> captor = ArgumentCaptor.forClass(Appointment.class);
+        assertEquals(BookingStatus.SUCCESS, status);
+        verify(appointmentBookingRepository).update(captor.capture());
+        assertEquals(5, captor.getValue().getRating());
+        assertEquals("Great visit", captor.getValue().getFeedbackComment());
+        assertTrue(captor.getValue().isFeedbackSubmitted());
+        verify(eventManager).notifyObservers("Feedback submitted: apt-feedback");
+    }
+
+    @Test
+    void submitFeedback_NonCompletedAppointment_ReturnsAppointmentNotCompleted() {
+        authenticatedEmail = "alice@example.com";
+        authenticateAsUser();
+
+        Appointment appointment = futureReservation("apt-feedback-2", "10:00", "alice@example.com");
+        when(appointmentBookingRepository.findById(eq("apt-feedback-2"))).thenReturn(Optional.of(appointment));
+
+        BookingStatus status = appointmentBookingService.submitFeedback("apt-feedback-2", 4, "Good");
+
+        assertEquals(BookingStatus.APPOINTMENT_NOT_COMPLETED, status);
+        verify(appointmentBookingRepository, never()).update(any());
+    }
+
+    @Test
+    void submitFeedback_DuplicateFeedback_ReturnsFeedbackAlreadySubmitted() {
+        authenticatedEmail = "bob@example.com";
+        authenticateAsUser();
+
+        Appointment appointment = futureReservation("apt-feedback-3", "10:00", "bob@example.com")
+                .withStatus(AppointmentStatus.COMPLETED);
+        appointment.setFeedbackSubmitted(true);
+        when(appointmentBookingRepository.findById(eq("apt-feedback-3"))).thenReturn(Optional.of(appointment));
+
+        BookingStatus status = appointmentBookingService.submitFeedback("apt-feedback-3", 4, "Good");
+
+        assertEquals(BookingStatus.FEEDBACK_ALREADY_SUBMITTED, status);
+        verify(appointmentBookingRepository, never()).update(any());
+    }
+
+    @Test
+    void submitFeedback_InvalidRating_ReturnsInvalidRating() {
+        BookingStatus status = appointmentBookingService.submitFeedback("apt-feedback-4", 0, "Bad rating");
+
+        assertEquals(BookingStatus.INVALID_RATING, status);
+        verifyNoInteractions(appointmentRepository);
+        verifyNoInteractions(appointmentBookingRepository);
+    }
+
     private void authenticateAsAdmin() {
         when(sessionManager.isLoggedIn()).thenReturn(true);
         when(sessionManager.isAdmin()).thenReturn(true);
     }
 
-    private void authenticateAsUser(String email) {
+    private void authenticateAsUser() {
         when(sessionManager.isLoggedIn()).thenReturn(true);
-        when(sessionManager.getCurrentEmail()).thenReturn(email);
+        when(sessionManager.getCurrentEmail()).thenReturn(authenticatedEmail);
     }
 
     private Appointment futureReservation(String id, String slotTime, String customerEmail) {

@@ -6,8 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
-import java.time.DayOfWeek;
-import java.util.Locale;
+import java.time.LocalTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -179,14 +178,11 @@ class AppointmentServiceTest {
     }
 
     @Test
-    void addSlot_WithDateDayTime_ValidDayAndFutureSlot_ReturnsSuccess() {
+    void addSlot_WithLocalDateAndTime_ValidFutureSlot_ReturnsSuccess() {
         LocalDate date = LocalDate.now().plusDays(3);
+        LocalTime time = LocalTime.of(16, 30);
 
-        BookingStatus status = appointmentService.addSlot(
-                date.toString(),
-                date.getDayOfWeek().name().toLowerCase(Locale.ROOT),
-                "16:30"
-        );
+        BookingStatus status = appointmentService.addSlot(date, time);
 
         assertEquals(BookingStatus.SUCCESS, status);
         assertTrue(
@@ -197,11 +193,10 @@ class AppointmentServiceTest {
     }
 
     @Test
-    void addSlot_WithDateDayTime_DayMismatch_ReturnsInvalidSlotDateTime() {
+    void addSlot_WithNullDate_ReturnsInvalidSlotDateTime() {
         LocalDate date = LocalDate.now().plusDays(4);
-        DayOfWeek wrongDay = date.getDayOfWeek().plus(1);
 
-        BookingStatus status = appointmentService.addSlot(date.toString(), wrongDay.name(), "16:30");
+        BookingStatus status = appointmentService.addSlot(null, date.atTime(16, 30).toLocalTime());
 
         assertEquals(BookingStatus.INVALID_SLOT_DATE_TIME, status);
     }
