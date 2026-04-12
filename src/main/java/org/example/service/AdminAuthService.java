@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Represents admin auth service in the system.
+ * Handles user and admin login checks.
  */
 public class AdminAuthService {
 
@@ -44,7 +44,7 @@ public class AdminAuthService {
     }
 
     /**
-     * Runs authenticate for this class.
+     * Checks credentials and returns true when login is successful.
      *
      * @param email email address used for login or matching
      * @param password password text entered by the user
@@ -56,7 +56,7 @@ public class AdminAuthService {
     }
 
     /**
-     * Runs authenticate with status for this class.
+     * Checks credentials and returns a login status value.
      *
      * @param credentials value for credentials
      *
@@ -86,7 +86,7 @@ public class AdminAuthService {
     }
 
     /**
-     * Runs authenticate with status for this class.
+     * Checks email and password and returns a login status value.
      *
      * @param email email address used for login or matching
      * @param password password text entered by the user
@@ -98,7 +98,7 @@ public class AdminAuthService {
     }
 
     /**
-     * Runs authenticate with policy for this class.
+     * Checks credentials with lockout policy and returns detailed result data.
      *
      * @param credentials value for credentials
      *
@@ -152,7 +152,7 @@ public class AdminAuthService {
         return loginAttemptTracker.getRemainingLockSeconds();
     }
 
-    /**
+     /**
      * Sends successful login to listeners.
      *
      * @param user user involved in this action
@@ -177,7 +177,7 @@ public class AdminAuthService {
     }
 
     /**
-     * Runs resolve authenticated user for this class.
+     * Finds a user that matches the given credentials.
      *
      * @param credentials value for credentials
      *

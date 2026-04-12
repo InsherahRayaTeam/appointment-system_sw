@@ -51,7 +51,7 @@ public class LoginFrame extends JFrame {
     }
 
     /**
-     * Runs initialize ui for this class.
+     * Builds and wires the login screen UI.
      */
     private void initializeUi() {
         setTitle(GuiText.APP_LOGIN_TITLE);
@@ -108,7 +108,7 @@ public class LoginFrame extends JFrame {
     }
 
     /**
-     * Runs on login for this class.
+     * Handles the login button click.
      */
     private void onLogin() {
         String email = emailField.getText();
@@ -151,7 +151,7 @@ public class LoginFrame extends JFrame {
     }
 
     /**
-     * Runs on clear for this class.
+     * Clears input fields and resets the status message.
      */
     private void onClear() {
         emailField.setText("");

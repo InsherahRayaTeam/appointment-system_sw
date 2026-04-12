@@ -59,7 +59,7 @@ public class AdminDashboardFrame extends JFrame {
     }
 
     /**
-     * Runs initialize ui for this class.
+     * Builds and wires the admin dashboard UI.
      */
     private void initializeUi() {
         setTitle("Admin Dashboard");
@@ -135,7 +135,7 @@ public class AdminDashboardFrame extends JFrame {
     }
 
     /**
-     * Runs on logout for this class.
+     * Logs out the current admin and opens the login screen.
      */
     private void onLogout() {
         appController.logoutAndOpenLogin();

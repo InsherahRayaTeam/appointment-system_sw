@@ -11,9 +11,9 @@ import java.util.Optional;
 public interface AppointmentBookingRepository {
 
     /**
-     * Runs save for this class.
+     * Saves one appointment record.
      *
-     * @param appointment value for appointment
+     * @param appointment appointment to store
      */
     void save(Appointment appointment);
 
@@ -34,9 +34,9 @@ public interface AppointmentBookingRepository {
     Optional<Appointment> findById(String appointmentId);
 
     /**
-     * Runs update for this class.
+     * Updates an existing appointment record.
      *
-     * @param appointment value for appointment
+     * @param appointment appointment with updated values
      *
      * @return true when the action is valid or successful, otherwise false
      */

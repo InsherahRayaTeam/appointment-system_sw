@@ -1,12 +1,12 @@
 package org.example.notification;
 
 /**
- * Defines the operations for observer.
+ * Contract for classes that receive text notifications.
  */
 public interface Observer {
 
     /**
-     * Runs update for this class.
+     * Handles a new notification message.
      *
      * @param message message text to show or send
      */

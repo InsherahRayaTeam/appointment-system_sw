@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Scanner;
 
 /**
- * Represents main in the system.
+ * Starts the application in GUI mode or console mode.
  */
 public class Main {
 
@@ -60,7 +60,7 @@ public class Main {
     }
 
     /**
-     * Runs launch gui for this class.
+     * Starts the Swing GUI application.
      */
     private static void launchGui() {
         try {
@@ -132,7 +132,7 @@ public class Main {
     }
 
     /**
-     * Runs run console mode for this class.
+     * Starts the console version of the application.
      */
     private static void runConsoleMode() {
         UserRepository userRepository = new InMemoryUserRepository();

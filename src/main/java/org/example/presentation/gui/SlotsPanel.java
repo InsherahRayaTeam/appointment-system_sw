@@ -56,6 +56,13 @@ public class SlotsPanel extends JPanel {
         add(noteLabel, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(new Object[] {"Date", "Day", "Time", "Status"}, 0) {
+            /**
+             * Keeps slots table cells read-only.
+             *
+             * @param row row index in the table model
+             * @param column column index in the table model
+             * @return false because editing is not allowed
+             */
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;

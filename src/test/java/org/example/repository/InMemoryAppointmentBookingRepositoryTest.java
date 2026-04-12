@@ -33,6 +33,9 @@ class InMemoryAppointmentBookingRepositoryTest {
     void save_AppointmentPersistsDefensiveCopy() {
         Appointment appointment = appointment("apt-1", "Alice", "2026-01-01T10:00:00", 60, 2,
                 AppointmentStatus.CONFIRMED);
+        appointment.setRating(4);
+        appointment.setFeedbackComment("Nice visit");
+        appointment.setFeedbackSubmitted(true);
 
         repository.save(appointment);
 
@@ -45,6 +48,9 @@ class InMemoryAppointmentBookingRepositoryTest {
         assertEquals(60, loaded.get().getDurationMinutes());
         assertEquals(2, loaded.get().getParticipantCount());
         assertEquals(AppointmentStatus.CONFIRMED, loaded.get().getStatus());
+        assertEquals(4, loaded.get().getRating());
+        assertEquals("Nice visit", loaded.get().getFeedbackComment());
+        assertTrue(loaded.get().isFeedbackSubmitted());
     }
 
     @Test
@@ -145,6 +151,9 @@ class InMemoryAppointmentBookingRepositoryTest {
 
         Appointment replacement = appointment("apt-1", "Alice Updated", "2026-01-01T11:00:00", 45, 4,
                 AppointmentStatus.MODIFIED);
+        replacement.setRating(5);
+        replacement.setFeedbackComment("Updated feedback");
+        replacement.setFeedbackSubmitted(true);
 
         boolean updated = repository.update(replacement);
 
@@ -155,6 +164,9 @@ class InMemoryAppointmentBookingRepositoryTest {
         assertEquals(45, stored.getDurationMinutes());
         assertEquals(4, stored.getParticipantCount());
         assertEquals(AppointmentStatus.MODIFIED, stored.getStatus());
+        assertEquals(5, stored.getRating());
+        assertEquals("Updated feedback", stored.getFeedbackComment());
+        assertTrue(stored.isFeedbackSubmitted());
         assertNotSame(replacement, stored);
     }
 

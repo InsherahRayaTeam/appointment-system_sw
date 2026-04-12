@@ -5,6 +5,7 @@ import org.example.domain.AppointmentSlot;
 import org.example.service.AppointmentBookingService;
 import org.example.service.AppointmentService;
 import org.example.service.BookingStatus;
+import org.example.service.GoogleCalendarService;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -20,14 +21,16 @@ import javax.swing.SpinnerDateModel;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 /**
- * Represents admin reservations panel in the system.
+ * Shows all reservations for admins and lets them manage each one.
  */
 public class AdminReservationsPanel extends JPanel {
 
@@ -50,13 +53,18 @@ public class AdminReservationsPanel extends JPanel {
     private static final String PLEASE_SELECT_RESERVATION_FIRST = "Please select a reservation first.";
     private static final String PLEASE_SELECT_A_REPLACEMENT_SLOT = "Please select a replacement slot.";
     private static final String INPUT_REQUIRED_TITLE = "Input Required";
+    private static final String ADD_TO_GOOGLE_CALENDAR_LABEL = "Add to Google Calendar";
+    private static final String GOOGLE_CALENDAR_TITLE = "Google Calendar";
+    private static final String FEEDBACK_SECTION_TITLE = "Appointment Feedback";
 
     private static final String NO_AVAILABLE_SLOTS_PLACEHOLDER = "No available slots";
 
     private final AppointmentBookingService appointmentBookingService;
     private final AppointmentService appointmentService;
+    private final GoogleCalendarService googleCalendarService;
     private final DefaultTableModel tableModel;
     private final JTable reservationsTable;
+    private final DefaultTableModel feedbackTableModel;
     private final JComboBox<String> slotComboBox;
     private final JLabel infoLabel;
     private final JButton modifyButton;
@@ -65,9 +73,11 @@ public class AdminReservationsPanel extends JPanel {
     private final JButton completedButton;
     private final JButton approveButton;
     private final JButton cancelButton;
+    private final JButton addToGoogleCalendarButton;
     private final JSpinner slotDateSpinner;
     private final JLabel slotDayValueLabel;
     private final JComboBox<String> slotTimeComboBox;
+    private final List<Appointment> currentReservations;
 
     /**
      * Creates a new admin reservations panel object with the given values.
@@ -79,14 +89,30 @@ public class AdminReservationsPanel extends JPanel {
             AppointmentBookingService appointmentBookingService,
             AppointmentService appointmentService
     ) {
+        this(appointmentBookingService, appointmentService, new GoogleCalendarService());
+    }
+
+    /**
+     * Creates a new admin reservations panel object with the given values.
+     *
+     * @param appointmentBookingService service used to run business logic
+     * @param appointmentService service used to run business logic
+     * @param googleCalendarService service used to open Google Calendar events in browser
+     */
+    public AdminReservationsPanel(
+            AppointmentBookingService appointmentBookingService,
+            AppointmentService appointmentService,
+            GoogleCalendarService googleCalendarService
+    ) {
         this.appointmentBookingService = appointmentBookingService;
         this.appointmentService = appointmentService;
+        this.googleCalendarService = googleCalendarService;
+        this.currentReservations = new ArrayList<>();
 
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         infoLabel = new JLabel(MANAGE_RESERVATIONS_INFO);
-        add(infoLabel, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(
                 new Object[] {
@@ -103,6 +129,13 @@ public class AdminReservationsPanel extends JPanel {
                 },
                 0
         ) {
+            /**
+             * Keeps reservation table cells read-only.
+             *
+             * @param row row index in the table model
+             * @param column column index in the table model
+             * @return false because editing is not allowed
+             */
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -111,7 +144,39 @@ public class AdminReservationsPanel extends JPanel {
 
         reservationsTable = new JTable(tableModel);
         reservationsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        add(new JScrollPane(reservationsTable), BorderLayout.CENTER);
+
+        feedbackTableModel = new DefaultTableModel(
+                new Object[] {
+                        "Customer",
+                        "Date",
+                        "Time",
+                        "Rating",
+                        "Feedback Comment"
+                },
+                0
+        ) {
+            /**
+             * Keeps feedback table cells read-only.
+             *
+             * @param row row index in the table model
+             * @param column column index in the table model
+             * @return false because editing is not allowed
+             */
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        JTable feedbackTable = new JTable(feedbackTableModel);
+
+        JPanel centerPanel = new JPanel(new GridLayout(2, 1, 10, 10));
+        centerPanel.add(new JScrollPane(reservationsTable));
+
+        JPanel feedbackPanel = new JPanel(new BorderLayout());
+        feedbackPanel.add(new JLabel(FEEDBACK_SECTION_TITLE), BorderLayout.NORTH);
+        feedbackPanel.add(new JScrollPane(feedbackTable), BorderLayout.CENTER);
+        centerPanel.add(feedbackPanel);
+        add(centerPanel, BorderLayout.CENTER);
 
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         slotComboBox = new JComboBox<>();
@@ -122,6 +187,13 @@ public class AdminReservationsPanel extends JPanel {
         completedButton = new JButton(MARK_AS_COMPLETED_TITLE);
         approveButton = new JButton(APPROVE_RESERVATION_TITLE);
         cancelButton = new JButton(CANCEL_RESERVATION_TITLE);
+        addToGoogleCalendarButton = new JButton(ADD_TO_GOOGLE_CALENDAR_LABEL);
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        JPanel calendarButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        calendarButtonPanel.add(addToGoogleCalendarButton);
+        headerPanel.add(infoLabel, BorderLayout.CENTER);
+        headerPanel.add(calendarButtonPanel, BorderLayout.EAST);
+        add(headerPanel, BorderLayout.NORTH);
         slotDateSpinner = new JSpinner(new SpinnerDateModel());
         slotDateSpinner.setEditor(new JSpinner.DateEditor(slotDateSpinner, "yyyy-MM-dd"));
         slotDayValueLabel = new JLabel("");
@@ -135,6 +207,7 @@ public class AdminReservationsPanel extends JPanel {
         completedButton.addActionListener(e -> onMarkCompleted());
         approveButton.addActionListener(e -> onApproveReservation());
         cancelButton.addActionListener(e -> onCancelReservation());
+        addToGoogleCalendarButton.addActionListener(e -> onAddToGoogleCalendar());
         addSlotButton.addActionListener(e -> onAddSlot());
         reservationsTable.getSelectionModel().addListSelectionListener(e -> updateActionState());
         slotComboBox.addActionListener(e -> updateActionState());
@@ -169,6 +242,7 @@ public class AdminReservationsPanel extends JPanel {
     public final void refreshData() {
         tableModel.setRowCount(0);
         slotComboBox.removeAllItems();
+        currentReservations.clear();
 
         if (!appointmentBookingService.canCurrentUserManageReservations()) {
             infoLabel.setText(ONLY_ADMINS_CAN_MANAGE_RESERVATIONS);
@@ -177,8 +251,16 @@ public class AdminReservationsPanel extends JPanel {
         }
 
         List<Appointment> reservations = appointmentBookingService.getManagedReservations();
+        currentReservations.addAll(reservations);
         for (Appointment appointment : reservations) {
             tableModel.addRow(toRow(appointment));
+        }
+
+        feedbackTableModel.setRowCount(0);
+        for (Appointment appointment : reservations) {
+            if (appointment.isFeedbackSubmitted()) {
+                feedbackTableModel.addRow(toFeedbackRow(appointment));
+            }
         }
 
         for (AppointmentSlot slot : appointmentService.getAvailableSlots()) {
@@ -197,7 +279,7 @@ public class AdminReservationsPanel extends JPanel {
     }
 
     /**
-     * Runs on cancel reservation for this class.
+     * Cancels the selected reservation.
      */
     private void onCancelReservation() {
         String reservationId = selectedReservationId();
@@ -215,7 +297,7 @@ public class AdminReservationsPanel extends JPanel {
     }
 
     /**
-     * Runs on modify reservation for this class.
+     * Moves the selected reservation to another slot.
      */
     private void onModifyReservation() {
         String reservationId = selectedReservationId();
@@ -252,7 +334,7 @@ public class AdminReservationsPanel extends JPanel {
     }
 
     /**
-     * Runs on mark attended for this class.
+     * Marks the selected reservation as attended.
      */
     private void onMarkAttended() {
         String reservationId = selectedReservationId();
@@ -269,7 +351,7 @@ public class AdminReservationsPanel extends JPanel {
     }
 
     /**
-     * Runs on mark completed for this class.
+     * Marks the selected reservation as completed.
      */
     private void onMarkCompleted() {
         String reservationId = selectedReservationId();
@@ -286,7 +368,7 @@ public class AdminReservationsPanel extends JPanel {
     }
 
     /**
-     * Runs on mark not attended for this class.
+     * Marks the selected reservation as not attended.
      */
     private void onMarkNotAttended() {
         String reservationId = selectedReservationId();
@@ -314,10 +396,35 @@ public class AdminReservationsPanel extends JPanel {
         }
     }
 
+    private void onAddToGoogleCalendar() {
+        Appointment selected = selectedReservation();
+        if (selected == null) {
+            showWarning(PLEASE_SELECT_RESERVATION_FIRST);
+            return;
+        }
+
+        try {
+            googleCalendarService.openGoogleCalendarEvent(selected);
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Google Calendar opened with the selected appointment.",
+                    GOOGLE_CALENDAR_TITLE,
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+        } catch (RuntimeException ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Unable to open Google Calendar: " + ex.getMessage(),
+                    GOOGLE_CALENDAR_TITLE,
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
     /**
-     * Runs selected reservation id for this class.
+     * Returns the id of the selected reservation row.
      *
-     * @return text result from this method
+     * @return selected reservation id, or null when no row is selected
      */
     private String selectedReservationId() {
         int selectedRow = reservationsTable.getSelectedRow();
@@ -329,12 +436,20 @@ public class AdminReservationsPanel extends JPanel {
         return value == null ? null : value.toString();
     }
 
+    private Appointment selectedReservation() {
+        int selectedRow = reservationsTable.getSelectedRow();
+        if (selectedRow < 0 || selectedRow >= currentReservations.size()) {
+            return null;
+        }
+        return currentReservations.get(selectedRow);
+    }
+
     /**
-     * Runs to row for this class.
+     * Converts an appointment object to one table row.
      *
-     * @param appointment value for appointment
+     * @param appointment appointment to display in the table
      *
-     * @return result produced by this method
+     * @return array of values used by the table model
      */
     private Object[] toRow(Appointment appointment) {
         return new Object[] {
@@ -348,6 +463,16 @@ public class AdminReservationsPanel extends JPanel {
                 appointment.getParticipantCount(),
                 appointment.getType(),
                 appointment.getStatus()
+        };
+    }
+
+    private Object[] toFeedbackRow(Appointment appointment) {
+        return new Object[] {
+                appointment.getCustomerName(),
+                appointment.getSlotDate(),
+                appointment.getSlotTime(),
+                appointment.getRating(),
+                appointment.getFeedbackComment()
         };
     }
 
@@ -386,6 +511,7 @@ public class AdminReservationsPanel extends JPanel {
         notAttendedButton.setEnabled(enabled);
         completedButton.setEnabled(enabled);
         approveButton.setEnabled(enabled);
+        addToGoogleCalendarButton.setEnabled(enabled);
     }
 
     private void updateActionState() {
@@ -400,6 +526,7 @@ public class AdminReservationsPanel extends JPanel {
         completedButton.setEnabled(hasSelection);
         approveButton.setEnabled(hasSelection);
         cancelButton.setEnabled(hasSelection);
+        addToGoogleCalendarButton.setEnabled(hasSelection);
     }
 
     private void syncDerivedDaySelection() {

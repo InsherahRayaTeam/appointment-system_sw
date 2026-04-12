@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class BookingStatusTest {
 
-    private static final int EXPECTED_STATUS_COUNT = 25;
+    private static final int EXPECTED_STATUS_COUNT = 28;
 
     private void assertStatus(String name, BookingStatus expected) {
         assertEquals(expected, BookingStatus.valueOf(name));

@@ -20,7 +20,7 @@ import java.awt.GridLayout;
 import java.util.List;
 
 /**
- * Represents booking panel in the system.
+ * Shows the form where a user books a new appointment.
  */
 public class BookingPanel extends JPanel {
 
@@ -137,7 +137,7 @@ public class BookingPanel extends JPanel {
     }
 
     /**
-     * Runs on book appointment for this class.
+     * Tries to book an appointment using the current form values.
      */
     private void onBookAppointment() {
         if (!slotComboBox.isEnabled()) {
@@ -160,7 +160,7 @@ public class BookingPanel extends JPanel {
         );
 
         if (GuiMessageHelper.isSuccessLike(status)) {
-            JOptionPane.showMessageDialog(this, GuiMessageHelper.toMessage(status), BOOKING_DIALOG_TITLE, JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Appointment booked successfully!");
             clearInputs();
             refreshData();
             if (onBookingSuccess != null) {
@@ -178,9 +178,9 @@ public class BookingPanel extends JPanel {
     }
 
     /**
-     * Runs selected slot for this class.
+     * Returns the selected slot text from the combo box.
      *
-     * @return text result from this method
+     * @return selected slot text, or null when nothing is selected
      */
     private String selectedSlot() {
         Object selected = slotComboBox.getSelectedItem();
@@ -188,9 +188,9 @@ public class BookingPanel extends JPanel {
     }
 
     /**
-     * Runs selected type for this class.
+     * Returns the selected appointment type.
      *
-     * @return result produced by this method
+     * @return selected type, or NORMAL when the selection is invalid
      */
     private AppointmentType selectedType() {
         Object selected = typeComboBox.getSelectedItem();

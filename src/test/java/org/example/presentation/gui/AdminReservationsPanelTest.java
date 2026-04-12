@@ -6,6 +6,7 @@ import org.example.domain.AppointmentStatus;
 import org.example.service.AppointmentBookingService;
 import org.example.service.AppointmentService;
 import org.example.service.BookingStatus;
+import org.example.service.GoogleCalendarService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -20,10 +21,10 @@ import javax.swing.table.DefaultTableModel;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Collections;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.Date;
 import java.time.ZoneId;
+import java.util.Collections;
+import java.util.Date;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -39,9 +40,11 @@ class AdminReservationsPanelTest extends GuiTestSupport {
     @Mock
     private AppointmentService appointmentService;
 
+    @Mock
+    private GoogleCalendarService googleCalendarService;
+
     @Test
     void testCancelReservation_updatesState() {
-        // Arrange
         Appointment reservation = new Appointment(
                 "res-1",
                 "customer@example.com",
@@ -59,24 +62,25 @@ class AdminReservationsPanelTest extends GuiTestSupport {
         when(appointmentService.getAvailableSlots()).thenReturn(Collections.singletonList(new AppointmentSlot("11:00")));
         when(appointmentBookingService.cancelAppointment("res-1")).thenReturn(BookingStatus.SUCCESS);
 
-        AdminReservationsPanel panel = new AdminReservationsPanel(appointmentBookingService, appointmentService);
+        AdminReservationsPanel panel = new AdminReservationsPanel(
+                appointmentBookingService,
+                appointmentService,
+                googleCalendarService
+        );
         JTable table = getPrivateField(panel, "reservationsTable", JTable.class);
         DefaultTableModel model = getPrivateField(panel, "tableModel", DefaultTableModel.class);
         AbstractButton cancelButton = getPrivateField(panel, "cancelButton", AbstractButton.class);
 
         runOnEdt(() -> table.setRowSelectionInterval(0, 0));
 
-        // Act
         clickButton(cancelButton);
 
-        // Assert
         verify(appointmentBookingService).cancelAppointment("res-1");
         assertEquals(0, model.getRowCount());
     }
 
     @Test
     void testModifyReservation_validCase() {
-        // Arrange
         Appointment reservation = new Appointment(
                 "res-1",
                 "customer@example.com",
@@ -104,7 +108,11 @@ class AdminReservationsPanelTest extends GuiTestSupport {
         when(appointmentService.getAvailableSlots()).thenReturn(Collections.singletonList(replacementSlot));
         when(appointmentBookingService.modifyAppointment("res-1", replacementSelection)).thenReturn(BookingStatus.SUCCESS);
 
-        AdminReservationsPanel panel = new AdminReservationsPanel(appointmentBookingService, appointmentService);
+        AdminReservationsPanel panel = new AdminReservationsPanel(
+                appointmentBookingService,
+                appointmentService,
+                googleCalendarService
+        );
         JTable table = getPrivateField(panel, "reservationsTable", JTable.class);
         DefaultTableModel model = getPrivateField(panel, "tableModel", DefaultTableModel.class);
         JComboBox<?> slotComboBox = getPrivateField(panel, "slotComboBox", JComboBox.class);
@@ -115,10 +123,8 @@ class AdminReservationsPanelTest extends GuiTestSupport {
             slotComboBox.setSelectedItem(replacementSelection);
         });
 
-        // Act
         clickButton(modifyButton);
 
-        // Assert
         verify(appointmentBookingService).modifyAppointment("res-1", replacementSelection);
         assertEquals(1, model.getRowCount());
         assertEquals("11:00", model.getValueAt(0, 5));
@@ -168,7 +174,11 @@ class AdminReservationsPanelTest extends GuiTestSupport {
         when(appointmentBookingService.markAppointmentAsAttended("res-2")).thenReturn(BookingStatus.SUCCESS);
         when(appointmentBookingService.markAppointmentAsCompleted("res-2")).thenReturn(BookingStatus.SUCCESS);
 
-        AdminReservationsPanel panel = new AdminReservationsPanel(appointmentBookingService, appointmentService);
+        AdminReservationsPanel panel = new AdminReservationsPanel(
+                appointmentBookingService,
+                appointmentService,
+                googleCalendarService
+        );
         JTable table = getPrivateField(panel, "reservationsTable", JTable.class);
         DefaultTableModel model = getPrivateField(panel, "tableModel", DefaultTableModel.class);
         AbstractButton attendedButton = getPrivateField(panel, "attendedButton", AbstractButton.class);
@@ -178,6 +188,7 @@ class AdminReservationsPanelTest extends GuiTestSupport {
         clickButton(attendedButton);
         assertEquals("ATTENDED", String.valueOf(model.getValueAt(0, 9)));
 
+        runOnEdt(() -> table.setRowSelectionInterval(0, 0));
         clickButton(completedButton);
         assertEquals("COMPLETED", String.valueOf(model.getValueAt(0, 9)));
         verify(appointmentBookingService).markAppointmentAsAttended("res-2");
@@ -194,12 +205,28 @@ class AdminReservationsPanelTest extends GuiTestSupport {
                 2,
                 AppointmentStatus.CONFIRMED
         );
+        Appointment notAttendedReservation = new Appointment(
+                "res-3",
+                "customer@example.com",
+                LocalDateTime.now().plusDays(1),
+                60,
+                2,
+                AppointmentStatus.NOT_ATTENDED
+        );
         when(appointmentBookingService.canCurrentUserManageReservations()).thenReturn(true);
-        when(appointmentBookingService.getManagedReservations()).thenReturn(Collections.singletonList(reservation));
+        AtomicInteger reservationsRefreshCount = new AtomicInteger();
+        when(appointmentBookingService.getManagedReservations())
+                .thenAnswer(invocation -> reservationsRefreshCount.getAndIncrement() == 0
+                        ? Collections.singletonList(reservation)
+                        : Collections.singletonList(notAttendedReservation));
         when(appointmentService.getAvailableSlots()).thenReturn(Collections.singletonList(new AppointmentSlot("11:00")));
         when(appointmentBookingService.markAppointmentAsNotAttended("res-3")).thenReturn(BookingStatus.SUCCESS);
 
-        AdminReservationsPanel panel = new AdminReservationsPanel(appointmentBookingService, appointmentService);
+        AdminReservationsPanel panel = new AdminReservationsPanel(
+                appointmentBookingService,
+                appointmentService,
+                googleCalendarService
+        );
         JTable table = getPrivateField(panel, "reservationsTable", JTable.class);
         DefaultTableModel model = getPrivateField(panel, "tableModel", DefaultTableModel.class);
         AbstractButton notAttendedButton = getPrivateField(panel, "notAttendedButton", AbstractButton.class);
@@ -238,7 +265,11 @@ class AdminReservationsPanelTest extends GuiTestSupport {
         when(appointmentService.getAvailableSlots()).thenReturn(Collections.singletonList(new AppointmentSlot("11:00")));
         when(appointmentBookingService.approveAppointment("res-4")).thenReturn(BookingStatus.SUCCESS);
 
-        AdminReservationsPanel panel = new AdminReservationsPanel(appointmentBookingService, appointmentService);
+        AdminReservationsPanel panel = new AdminReservationsPanel(
+                appointmentBookingService,
+                appointmentService,
+                googleCalendarService
+        );
         JTable table = getPrivateField(panel, "reservationsTable", JTable.class);
         DefaultTableModel model = getPrivateField(panel, "tableModel", DefaultTableModel.class);
         AbstractButton approveButton = findButton(panel, "Approve Reservation");
@@ -256,7 +287,7 @@ class AdminReservationsPanelTest extends GuiTestSupport {
         when(appointmentBookingService.getManagedReservations()).thenReturn(Collections.emptyList());
 
         LocalDate date = LocalDate.of(2030, 12, 12);
-        String expectedDay = date.getDayOfWeek().name();
+        String expectedResetDay = LocalDate.now().getDayOfWeek().name();
         AppointmentSlot initialSlot = new AppointmentSlot(LocalDate.now().plusDays(1), LocalTime.of(11, 0));
         AppointmentSlot addedSlot = new AppointmentSlot(LocalDate.now().plusDays(2), LocalTime.of(10, 0));
         AtomicInteger slotRefreshCount = new AtomicInteger();
@@ -266,7 +297,11 @@ class AdminReservationsPanelTest extends GuiTestSupport {
                         : java.util.List.of(initialSlot, addedSlot));
         when(appointmentService.addSlot(date.toString(), "10:00")).thenReturn(BookingStatus.SUCCESS);
 
-        AdminReservationsPanel panel = new AdminReservationsPanel(appointmentBookingService, appointmentService);
+        AdminReservationsPanel panel = new AdminReservationsPanel(
+                appointmentBookingService,
+                appointmentService,
+                googleCalendarService
+        );
         JSpinner slotDateSpinner = getPrivateField(panel, "slotDateSpinner", JSpinner.class);
         JLabel slotDayValueLabel = getPrivateField(panel, "slotDayValueLabel", JLabel.class);
         JComboBox<?> slotTimeComboBox = getPrivateField(panel, "slotTimeComboBox", JComboBox.class);
@@ -280,7 +315,7 @@ class AdminReservationsPanelTest extends GuiTestSupport {
 
         clickButton(addSlotButton);
 
-        assertEquals(expectedDay, slotDayValueLabel.getText());
+        assertEquals(expectedResetDay, slotDayValueLabel.getText());
         verify(appointmentService).addSlot(date.toString(), "10:00");
         assertTrue(slotComboBox.getItemCount() >= 2);
     }
@@ -294,7 +329,11 @@ class AdminReservationsPanelTest extends GuiTestSupport {
         String expectedDay = date.getDayOfWeek().name();
         when(appointmentService.addSlot(date.toString(), "10:00")).thenReturn(BookingStatus.DUPLICATE_SLOT);
 
-        AdminReservationsPanel panel = new AdminReservationsPanel(appointmentBookingService, appointmentService);
+        AdminReservationsPanel panel = new AdminReservationsPanel(
+                appointmentBookingService,
+                appointmentService,
+                googleCalendarService
+        );
         JSpinner slotDateSpinner = getPrivateField(panel, "slotDateSpinner", JSpinner.class);
         JLabel slotDayValueLabel = getPrivateField(panel, "slotDayValueLabel", JLabel.class);
         JComboBox<?> slotTimeComboBox = getPrivateField(panel, "slotTimeComboBox", JComboBox.class);
@@ -309,5 +348,64 @@ class AdminReservationsPanelTest extends GuiTestSupport {
 
         assertEquals(expectedDay, slotDayValueLabel.getText());
         verify(appointmentService).addSlot(date.toString(), "10:00");
+    }
+
+    @Test
+    void testAddToGoogleCalendar_callsCalendarServiceForSelectedAppointment() {
+        Appointment reservation = new Appointment(
+                "res-5",
+                "customer@example.com",
+                LocalDateTime.now().plusDays(1),
+                60,
+                1,
+                AppointmentStatus.CONFIRMED
+        );
+        when(appointmentBookingService.canCurrentUserManageReservations()).thenReturn(true);
+        when(appointmentBookingService.getManagedReservations()).thenReturn(Collections.singletonList(reservation));
+        when(appointmentService.getAvailableSlots()).thenReturn(Collections.singletonList(new AppointmentSlot("11:00")));
+
+        AdminReservationsPanel panel = new AdminReservationsPanel(
+                appointmentBookingService,
+                appointmentService,
+                googleCalendarService
+        );
+        JTable table = getPrivateField(panel, "reservationsTable", JTable.class);
+        AbstractButton addToGoogleCalendarButton = findButton(panel, "Add to Google Calendar");
+
+        runOnEdt(() -> table.setRowSelectionInterval(0, 0));
+        clickButton(addToGoogleCalendarButton);
+
+        verify(googleCalendarService).openGoogleCalendarEvent(reservation);
+    }
+
+    @Test
+    void feedbackTable_showsSubmittedFeedback() {
+        Appointment reservation = new Appointment(
+                "res-feedback-1",
+                "customer@example.com",
+                LocalDateTime.now().plusDays(1),
+                60,
+                1,
+                AppointmentStatus.COMPLETED
+        );
+        reservation.setRating(5);
+        reservation.setFeedbackComment("Very good");
+        reservation.setFeedbackSubmitted(true);
+
+        when(appointmentBookingService.canCurrentUserManageReservations()).thenReturn(true);
+        when(appointmentBookingService.getManagedReservations()).thenReturn(Collections.singletonList(reservation));
+        when(appointmentService.getAvailableSlots()).thenReturn(Collections.singletonList(new AppointmentSlot("11:00")));
+
+        AdminReservationsPanel panel = new AdminReservationsPanel(
+                appointmentBookingService,
+                appointmentService,
+                googleCalendarService
+        );
+        DefaultTableModel feedbackModel = getPrivateField(panel, "feedbackTableModel", DefaultTableModel.class);
+
+        assertEquals(1, feedbackModel.getRowCount());
+        assertEquals("customer@example.com", feedbackModel.getValueAt(0, 0));
+        assertEquals("5", String.valueOf(feedbackModel.getValueAt(0, 3)));
+        assertEquals("Very good", feedbackModel.getValueAt(0, 4));
     }
 }

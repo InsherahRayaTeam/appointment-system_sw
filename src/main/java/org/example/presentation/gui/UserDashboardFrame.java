@@ -68,11 +68,11 @@ public class UserDashboardFrame extends JFrame {
     }
 
     /**
-     * Runs initialize ui for this class.
+     * Builds and wires the user dashboard UI.
      */
     private void initializeUi() {
         setTitle("User Dashboard");
-        setSize(900, 520);
+        setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -176,7 +176,7 @@ public class UserDashboardFrame extends JFrame {
     }
 
     /**
-     * Runs on logout for this class.
+     * Logs out the current user and opens the login screen.
      */
     private void onLogout() {
         appController.logoutAndOpenLogin();

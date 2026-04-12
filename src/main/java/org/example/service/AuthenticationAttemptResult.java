@@ -6,7 +6,7 @@ import org.example.domain.UserRole;
 import java.util.Objects;
 
 /**
- * Represents authentication attempt result in the system.
+ * Represents the outcome of one authentication attempt.
  */
 public final class AuthenticationAttemptResult {
 
@@ -48,7 +48,7 @@ public final class AuthenticationAttemptResult {
     }
 
     /**
-     * Runs success for this class.
+     * Creates a successful result without user details.
      *
      * @return result produced by this method
      */
@@ -65,7 +65,7 @@ public final class AuthenticationAttemptResult {
     }
 
     /**
-     * Runs success for this class.
+     * Creates a successful result with authenticated email and role.
      *
      * @param email email address used for login or matching
      * @param role role value used for access control
@@ -85,7 +85,7 @@ public final class AuthenticationAttemptResult {
     }
 
     /**
-     * Runs success for this class.
+     * Creates a successful result from a user object.
      *
      * @param user user involved in this action
      *
@@ -108,7 +108,7 @@ public final class AuthenticationAttemptResult {
     }
 
     /**
-     * Runs failure for this class.
+     * Creates a failed result with remaining attempts.
      *
      * @param status status value used for this operation
      * @param attemptsRemaining value for attempts remaining
@@ -132,7 +132,7 @@ public final class AuthenticationAttemptResult {
     }
 
     /**
-     * Runs locked for this class.
+     * Creates a locked result with remaining lock seconds.
      *
      * @param remainingLockSeconds value for remaining lock seconds
      *

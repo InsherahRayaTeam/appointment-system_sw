@@ -20,6 +20,9 @@ public class Appointment {
     private final int duration;
     private final int participants;
     private AppointmentType type;
+    private int rating;
+    private String feedbackComment;
+    private boolean feedbackSubmitted;
 
     // Optional fields used by booking workflow compatibility.
     private final String customerName;
@@ -154,6 +157,9 @@ public class Appointment {
                 : customerPhoneNumber.trim();
         this.status = status;
         this.type = type == null ? AppointmentType.NORMAL : type;
+        this.rating = 0;
+        this.feedbackComment = null;
+        this.feedbackSubmitted = false;
     }
 
     /**
@@ -417,13 +423,13 @@ public class Appointment {
     }
 
     /**
-     * Runs with status for this class.
+     * Returns a copy of this appointment with a new status.
      *
      * @param newStatus status value used for this operation
      * @return result produced by this method
      */
     public Appointment withStatus(AppointmentStatus newStatus) {
-        return new Appointment(
+        return copyFeedbackState(new Appointment(
                 id,
                 customerName,
                 customerEmail,
@@ -433,17 +439,17 @@ public class Appointment {
                 participants,
                 newStatus,
                 type
-        );
+        ));
     }
 
     /**
-     * Runs with customer phone number for this class.
+     * Returns a copy of this appointment with a new phone number.
      *
      * @param newCustomerPhoneNumber phone number text used for this appointment
      * @return result produced by this method
      */
     public Appointment withCustomerPhoneNumber(String newCustomerPhoneNumber) {
-        return new Appointment(
+        return copyFeedbackState(new Appointment(
                 id,
                 customerName,
                 customerEmail,
@@ -453,18 +459,18 @@ public class Appointment {
                 participants,
                 status,
                 type
-        );
+        ));
     }
 
     /**
-     * Runs with slot time and status for this class.
+     * Returns a copy of this appointment with a new slot time and status.
      *
      * @param slotTime slot time text like 10:00
      * @param newStatus status value used for this operation
      * @return result produced by this method
      */
     public Appointment withSlotTimeAndStatus(String slotTime, AppointmentStatus newStatus) {
-        return new Appointment(
+        return copyFeedbackState(new Appointment(
                 id,
                 customerName,
                 customerEmail,
@@ -474,18 +480,18 @@ public class Appointment {
                 participants,
                 newStatus,
                 type
-        );
+        ));
     }
 
     /**
-     * Runs with start time and status for this class.
+     * Returns a copy of this appointment with a new start time and status.
      *
      * @param newStartTime time value used by this method
      * @param newStatus status value used for this operation
      * @return result produced by this method
      */
     public Appointment withStartTimeAndStatus(LocalDateTime newStartTime, AppointmentStatus newStatus) {
-        return new Appointment(
+        return copyFeedbackState(new Appointment(
                 id,
                 customerName,
                 customerEmail,
@@ -495,7 +501,63 @@ public class Appointment {
                 participants,
                 newStatus,
                 type
-        );
+        ));
+    }
+
+    /**
+     * Returns the feedback rating.
+     *
+     * @return rating value stored in this appointment
+     */
+    public int getRating() {
+        return rating;
+    }
+
+    /**
+     * Updates the feedback rating.
+     *
+     * @param rating rating value to store
+     */
+    public void setRating(int rating) {
+        this.rating = rating;
+    }
+
+    /**
+     * Returns the feedback comment.
+     *
+     * @return comment text stored in this appointment
+     */
+    public String getFeedbackComment() {
+        return feedbackComment;
+    }
+
+    /**
+     * Updates the feedback comment.
+     *
+     * @param feedbackComment comment text to store
+     */
+    public void setFeedbackComment(String feedbackComment) {
+        this.feedbackComment = feedbackComment == null || feedbackComment.trim().isEmpty()
+                ? null
+                : feedbackComment.trim();
+    }
+
+    /**
+     * Checks whether feedback was already submitted.
+     *
+     * @return true when feedback exists for this appointment
+     */
+    public boolean isFeedbackSubmitted() {
+        return feedbackSubmitted;
+    }
+
+    /**
+     * Updates the feedback submitted flag.
+     *
+     * @param feedbackSubmitted flag that says if feedback was saved
+     */
+    public void setFeedbackSubmitted(boolean feedbackSubmitted) {
+        this.feedbackSubmitted = feedbackSubmitted;
     }
 
     /**
@@ -554,6 +616,13 @@ public class Appointment {
         }
 
         return null;
+    }
+
+    private Appointment copyFeedbackState(Appointment copy) {
+        copy.setRating(rating);
+        copy.setFeedbackComment(feedbackComment);
+        copy.setFeedbackSubmitted(feedbackSubmitted);
+        return copy;
     }
 
     /**

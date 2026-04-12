@@ -159,14 +159,14 @@ public class AppointmentSlot {
     }
 
     /**
-     * Runs book for this class.
+     * Marks this slot as booked.
      */
     public void book() {
         booked = true;
     }
 
     /**
-     * Runs release for this class.
+     * Marks this slot as available again.
      */
     public void release() {
         booked = false;

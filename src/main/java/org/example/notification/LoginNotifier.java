@@ -1,12 +1,12 @@
 package org.example.notification;
 
 /**
- * Represents login notifier in the system.
+ * Prints login-related notifications to the console.
  */
 public class LoginNotifier implements Observer {
 
     /**
-     * Runs update for this class.
+     * Handles generic observer messages.
      *
      * @param message message text to show or send
      */

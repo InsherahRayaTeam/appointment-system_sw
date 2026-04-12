@@ -5,7 +5,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 /**
- * Represents login attempt tracker in the system.
+ * Tracks failed login attempts and temporary account lock time.
  */
 public class LoginAttemptTracker {
 
@@ -71,7 +71,7 @@ public class LoginAttemptTracker {
     }
 
     /**
-     * Runs record failure for this class.
+     * Records one failed login attempt.
      */
     public void recordFailure() {
         if (isLocked()) {
@@ -86,7 +86,7 @@ public class LoginAttemptTracker {
     }
 
     /**
-     * Runs record success for this class.
+     * Clears failure and lock state after a successful login.
      */
     public void recordSuccess() {
         failedAttempts = 0;

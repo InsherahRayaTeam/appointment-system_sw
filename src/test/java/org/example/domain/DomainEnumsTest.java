@@ -28,7 +28,7 @@ class DomainEnumsTest {
         assertEquals(AppointmentStatus.ATTENDED, AppointmentStatus.valueOf("ATTENDED"));
         assertEquals(AppointmentStatus.COMPLETED, AppointmentStatus.valueOf("COMPLETED"));
         assertEquals(AppointmentStatus.CANCELLED, AppointmentStatus.valueOf("CANCELLED"));
-        assertEquals(7, AppointmentStatus.values().length);
+        assertEquals(8, AppointmentStatus.values().length);
     }
 
     @Test
