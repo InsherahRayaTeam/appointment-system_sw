@@ -1,0 +1,222 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > InMemoryAppointmentBookingRepository</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.repository</a>
+</div>
+
+<h1>Coverage Summary for Class: InMemoryAppointmentBookingRepository (org.example.repository)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">InMemoryAppointmentBookingRepository</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    91.7%
+  </span>
+  <span class="absValue">
+    (22/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (36/36)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.repository;
+&nbsp;
+&nbsp;import org.example.domain.Appointment;
+&nbsp;import org.example.domain.AppointmentType;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;/**
+&nbsp; * Represents in memory appointment booking repository in the system.
+&nbsp; */
+<b class="fc">&nbsp;public class InMemoryAppointmentBookingRepository implements AppointmentBookingRepository {</b>
+&nbsp;
+<b class="fc">&nbsp;    private final List&lt;Appointment&gt; appointments = new ArrayList&lt;&gt;();</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Saves one appointment in memory.
+&nbsp;     *
+&nbsp;     * @param appointment appointment to store
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public void save(Appointment appointment) {
+<b class="fc">&nbsp;        appointments.add(copyOf(appointment));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Finds all using the given input.
+&nbsp;     *
+&nbsp;     * @return collection with the requested results
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public List&lt;Appointment&gt; findAll() {
+<b class="fc">&nbsp;        List&lt;Appointment&gt; copies = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        for (Appointment appointment : appointments) {</b>
+<b class="fc">&nbsp;            copies.add(copyOf(appointment));</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return copies;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Finds by id using the given input.
+&nbsp;     *
+&nbsp;     * @param appointmentId unique id used to find the record
+&nbsp;     *
+&nbsp;     * @return optional value if data is found
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public Optional&lt;Appointment&gt; findById(String appointmentId) {
+<b class="fc">&nbsp;        if (appointmentId == null || appointmentId.trim().isEmpty()) {</b>
+<b class="fc">&nbsp;            return Optional.empty();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        String normalizedId = appointmentId.trim();</b>
+<b class="fc">&nbsp;        for (Appointment appointment : appointments) {</b>
+<b class="fc">&nbsp;            if (normalizedId.equals(appointment.getId())) {</b>
+<b class="fc">&nbsp;                return Optional.of(copyOf(appointment));</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return Optional.empty();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Updates one appointment in memory.
+&nbsp;     *
+&nbsp;     * @param appointment appointment with updated values
+&nbsp;     *
+&nbsp;     * @return true when the action is valid or successful, otherwise false
+&nbsp;     */
+&nbsp;    @Override
+&nbsp;    public boolean update(Appointment appointment) {
+<b class="fc">&nbsp;        if (appointment == null || appointment.getId() == null || appointment.getId().trim().isEmpty()) {</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        for (int i = 0; i &lt; appointments.size(); i++) {</b>
+<b class="fc">&nbsp;            Appointment current = appointments.get(i);</b>
+<b class="fc">&nbsp;            if (appointment.getId().equals(current.getId())) {</b>
+<b class="fc">&nbsp;                appointments.set(i, copyOf(appointment));</b>
+<b class="fc">&nbsp;                return true;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Appointment copyOf(Appointment appointment) {
+<b class="pc">&nbsp;        String customerEmail = appointment.getUser() == null ? null : appointment.getUser().getEmail();</b>
+<b class="fc">&nbsp;        Appointment copy = new Appointment(</b>
+<b class="fc">&nbsp;                appointment.getId(),</b>
+<b class="fc">&nbsp;                appointment.getCustomerName(),</b>
+&nbsp;                customerEmail,
+<b class="fc">&nbsp;                appointment.getStartTime(),</b>
+<b class="fc">&nbsp;                appointment.getDurationMinutes(),</b>
+<b class="fc">&nbsp;                appointment.getParticipantCount(),</b>
+<b class="fc">&nbsp;                appointment.getStatus(),</b>
+<b class="pc">&nbsp;                appointment.getType() == null ? AppointmentType.NORMAL : appointment.getType()</b>
+<b class="fc">&nbsp;        ).withCustomerPhoneNumber(appointment.getCustomerPhoneNumber());</b>
+<b class="fc">&nbsp;        copy.setRating(appointment.getRating());</b>
+<b class="fc">&nbsp;        copy.setFeedbackComment(appointment.getFeedbackComment());</b>
+<b class="fc">&nbsp;        copy.setFeedbackSubmitted(appointment.isFeedbackSubmitted());</b>
+<b class="fc">&nbsp;        return copy;</b>
+&nbsp;    }
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,122 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AppointmentBookingRepository</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.repository</a>
+</div>
+
+<h1>Coverage Summary for Class: AppointmentBookingRepository (org.example.repository)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">AppointmentBookingRepository$MockitoMock$9zJcBYCi</td>
+  </tr>
+  <tr>
+    <td class="name">AppointmentBookingRepository$MockitoMock$9zJcBYCi$auxiliary$7vA7pdYI</td>
+  </tr>
+  <tr>
+    <td class="name">AppointmentBookingRepository$MockitoMock$9zJcBYCi$auxiliary$ZeaHuLUE</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.repository;
+&nbsp;
+&nbsp;import org.example.domain.Appointment;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;/**
+&nbsp; * Defines the operations for appointment booking repository.
+&nbsp; */
+&nbsp;public interface AppointmentBookingRepository {
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Saves one appointment record.
+&nbsp;     *
+&nbsp;     * @param appointment appointment to store
+&nbsp;     */
+&nbsp;    void save(Appointment appointment);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Finds all using the given input.
+&nbsp;     *
+&nbsp;     * @return collection with the requested results
+&nbsp;     */
+&nbsp;    List&lt;Appointment&gt; findAll();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Finds by id using the given input.
+&nbsp;     *
+&nbsp;     * @param appointmentId unique id used to find the record
+&nbsp;     *
+&nbsp;     * @return optional value if data is found
+&nbsp;     */
+&nbsp;    Optional&lt;Appointment&gt; findById(String appointmentId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Updates an existing appointment record.
+&nbsp;     *
+&nbsp;     * @param appointment appointment with updated values
+&nbsp;     *
+&nbsp;     * @return true when the action is valid or successful, otherwise false
+&nbsp;     */
+&nbsp;    boolean update(Appointment appointment);
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

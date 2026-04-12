@@ -1,0 +1,351 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ApplicationController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.presentation.gui</a>
+</div>
+
+<h1>Coverage Summary for Class: ApplicationController (org.example.presentation.gui)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ApplicationController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (16/16)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    68.8%
+  </span>
+  <span class="absValue">
+    (11/16)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    94.6%
+  </span>
+  <span class="absValue">
+    (35/37)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.presentation.gui;
+&nbsp;
+&nbsp;import org.example.domain.SystemUser;
+&nbsp;import org.example.domain.UserRole;
+&nbsp;import org.example.service.AdminAuthService;
+&nbsp;import org.example.service.AppointmentBookingService;
+&nbsp;import org.example.service.AppointmentService;
+&nbsp;import org.example.service.AuthenticationAttemptResult;
+&nbsp;import org.example.service.ForgotPasswordStatus;
+&nbsp;import org.example.service.SessionManager;
+&nbsp;import org.example.service.SignUpStatus;
+&nbsp;import org.example.service.PasswordRecoveryService;
+&nbsp;import org.example.service.UserRegistrationService;
+&nbsp;
+&nbsp;import javax.swing.JFrame;
+&nbsp;import java.util.Objects;
+&nbsp;
+&nbsp;/**
+&nbsp; * Represents application controller in the system.
+&nbsp; */
+&nbsp;public class ApplicationController {
+&nbsp;
+&nbsp;    private final AdminAuthService authService;
+&nbsp;    private final AppointmentService appointmentService;
+&nbsp;    private final AppointmentBookingService appointmentBookingService;
+&nbsp;    private final SessionManager sessionManager;
+&nbsp;    private final UserRegistrationService userRegistrationService;
+&nbsp;    private final PasswordRecoveryService passwordRecoveryService;
+&nbsp;
+&nbsp;    private JFrame currentFrame;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new application controller object with the given values.
+&nbsp;     *
+&nbsp;     * @param authService service used to run business logic
+&nbsp;     * @param appointmentService service used to run business logic
+&nbsp;     * @param appointmentBookingService service used to run business logic
+&nbsp;     * @param sessionManager manager object used for shared app state
+&nbsp;     */
+&nbsp;    public ApplicationController(
+&nbsp;            AdminAuthService authService,
+&nbsp;            AppointmentService appointmentService,
+&nbsp;            AppointmentBookingService appointmentBookingService,
+&nbsp;            SessionManager sessionManager,
+&nbsp;            UserRegistrationService userRegistrationService,
+&nbsp;            PasswordRecoveryService passwordRecoveryService
+<b class="fc">&nbsp;    ) {</b>
+<b class="fc">&nbsp;        this.authService = Objects.requireNonNull(authService, &quot;authService cannot be null&quot;);</b>
+<b class="fc">&nbsp;        this.appointmentService = Objects.requireNonNull(</b>
+&nbsp;                appointmentService,
+&nbsp;                &quot;appointmentService cannot be null&quot;
+&nbsp;        );
+<b class="fc">&nbsp;        this.appointmentBookingService = Objects.requireNonNull(</b>
+&nbsp;                appointmentBookingService,
+&nbsp;                &quot;appointmentBookingService cannot be null&quot;
+&nbsp;        );
+<b class="fc">&nbsp;        this.sessionManager = Objects.requireNonNull(sessionManager, &quot;sessionManager cannot be null&quot;);</b>
+<b class="fc">&nbsp;        this.userRegistrationService = Objects.requireNonNull(</b>
+&nbsp;                userRegistrationService,
+&nbsp;                &quot;userRegistrationService cannot be null&quot;
+&nbsp;        );
+<b class="fc">&nbsp;        this.passwordRecoveryService = Objects.requireNonNull(</b>
+&nbsp;                passwordRecoveryService,
+&nbsp;                &quot;passwordRecoveryService cannot be null&quot;
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Starts this part of the application.
+&nbsp;     */
+&nbsp;    public void start() {
+<b class="fc">&nbsp;        openLoginFrame();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Opens login frame in the user interface.
+&nbsp;     */
+&nbsp;    public void openLoginFrame() {
+<b class="fc">&nbsp;        switchFrame(new LoginFrame(authService, this));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Opens sign up frame in the user interface.
+&nbsp;     */
+&nbsp;    public void openSignUpFrame() {
+<b class="fc">&nbsp;        switchFrame(new org.example.presentation.gui.SignUpFrame(this));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Opens forgot password frame in the user interface.
+&nbsp;     */
+&nbsp;    public void openForgotPasswordFrame() {
+<b class="fc">&nbsp;        switchFrame(new org.example.presentation.gui.ForgotPasswordFrame(this));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Registers a user through registration service.
+&nbsp;     *
+&nbsp;     * @param username unique username for login identity
+&nbsp;     * @param email email address used for login or matching
+&nbsp;     * @param password password text entered by the user
+&nbsp;     * @param confirmPassword password confirmation text entered by the user
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    public SignUpStatus registerUser(String username, String email, String password, String confirmPassword) {
+<b class="fc">&nbsp;        return userRegistrationService.registerUser(username, email, password, confirmPassword);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Registers a user with email and password.
+&nbsp;     *
+&nbsp;     * @param email email address used for login or matching
+&nbsp;     * @param password password text entered by the user
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    public SignUpStatus signUp(String email, String password) {
+<b class="fc">&nbsp;        return userRegistrationService.signUp(email, password);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Requests a password reset code for a user.
+&nbsp;     *
+&nbsp;     * @param usernameOrEmail username or email used for identity
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    public ForgotPasswordStatus requestPasswordReset(String usernameOrEmail) {
+<b class="fc">&nbsp;        return passwordRecoveryService.requestReset(usernameOrEmail);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Resets password after validating reset data.
+&nbsp;     *
+&nbsp;     * @param usernameOrEmail username or email used for identity
+&nbsp;     * @param resetCode reset verification code
+&nbsp;     * @param newPassword password text entered by the user
+&nbsp;     * @param confirmPassword password confirmation text entered by the user
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    public ForgotPasswordStatus resetPassword(
+&nbsp;            String usernameOrEmail,
+&nbsp;            String resetCode,
+&nbsp;            String newPassword,
+&nbsp;            String confirmPassword
+&nbsp;    ) {
+<b class="fc">&nbsp;        return passwordRecoveryService.resetPassword(usernameOrEmail, resetCode, newPassword, confirmPassword);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Resets password directly with email and new password.
+&nbsp;     *
+&nbsp;     * @param email email address used for login or matching
+&nbsp;     * @param newPassword password text entered by the user
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    public ForgotPasswordStatus resetPassword(String email, String newPassword) {
+<b class="fc">&nbsp;        return passwordRecoveryService.resetPassword(email, newPassword);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Stores session data after a successful login and opens the dashboard.
+&nbsp;     *
+&nbsp;     * @param result value for result
+&nbsp;     */
+&nbsp;    public void handleSuccessfulLogin(AuthenticationAttemptResult result) {
+<b class="pc">&nbsp;        if (result == null || !result.isSuccess() || result.getAuthenticatedUser() == null) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Successful authentication result is required&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        sessionManager.login(result.getAuthenticatedUser());</b>
+<b class="fc">&nbsp;        openDashboard(result);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Opens dashboard in the user interface.
+&nbsp;     *
+&nbsp;     * @param result value for result
+&nbsp;     */
+&nbsp;    public void openDashboard(AuthenticationAttemptResult result) {
+<b class="pc">&nbsp;        if (result == null || !result.isSuccess()) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Successful authentication result is required&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        SystemUser user = result.getAuthenticatedUser();</b>
+<b class="pc">&nbsp;        if (user == null) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Authenticated user is missing&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (user.getRole() == UserRole.ADMIN) {</b>
+<b class="fc">&nbsp;            switchFrame(new AdminDashboardFrame(user, this));</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            switchFrame(new UserDashboardFrame(user, this));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Logs out the current session and returns to the login screen.
+&nbsp;     */
+&nbsp;    public void logoutAndOpenLogin() {
+<b class="fc">&nbsp;        sessionManager.logoutAndNotify();</b>
+<b class="fc">&nbsp;        openLoginFrame();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the appointment service.
+&nbsp;     *
+&nbsp;     * @return requested value from this object
+&nbsp;     */
+&nbsp;    public AppointmentService getAppointmentService() {
+<b class="fc">&nbsp;        return appointmentService;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the appointment booking service.
+&nbsp;     *
+&nbsp;     * @return requested value from this object
+&nbsp;     */
+&nbsp;    public AppointmentBookingService getAppointmentBookingService() {
+<b class="fc">&nbsp;        return appointmentBookingService;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Closes the current frame and shows the next one.
+&nbsp;     *
+&nbsp;     * @param newFrame window frame used by the screen
+&nbsp;     */
+&nbsp;    private void switchFrame(JFrame newFrame) {
+<b class="fc">&nbsp;        if (currentFrame != null) {</b>
+<b class="fc">&nbsp;            currentFrame.dispose();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        currentFrame = newFrame;</b>
+<b class="fc">&nbsp;        currentFrame.setLocationRelativeTo(null);</b>
+<b class="fc">&nbsp;        currentFrame.setVisible(true);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

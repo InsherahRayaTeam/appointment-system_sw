@@ -1,0 +1,229 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > LoginAttemptTracker</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.service</a>
+</div>
+
+<h1>Coverage Summary for Class: LoginAttemptTracker (org.example.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">LoginAttemptTracker</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (8/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (18/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (24/24)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.service;
+&nbsp;
+&nbsp;import java.time.Clock;
+&nbsp;import java.time.Duration;
+&nbsp;import java.time.Instant;
+&nbsp;
+&nbsp;/**
+&nbsp; * Tracks failed login attempts and temporary account lock time.
+&nbsp; */
+&nbsp;public class LoginAttemptTracker {
+&nbsp;
+&nbsp;    private final int maxFailedAttempts;
+&nbsp;    private final Duration lockDuration;
+&nbsp;    private final Clock clock;
+&nbsp;
+&nbsp;    private int failedAttempts;
+&nbsp;    private Instant lockedUntil;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new login attempt tracker object with the given values.
+&nbsp;     *
+&nbsp;     * @param maxFailedAttempts value for max failed attempts
+&nbsp;     * @param lockDuration appointment duration in minutes
+&nbsp;     */
+&nbsp;    public LoginAttemptTracker(int maxFailedAttempts, Duration lockDuration) {
+<b class="fc">&nbsp;        this(maxFailedAttempts, lockDuration, Clock.systemUTC());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new login attempt tracker object with the given values.
+&nbsp;     *
+&nbsp;     * @param maxFailedAttempts value for max failed attempts
+&nbsp;     * @param lockDuration appointment duration in minutes
+&nbsp;     * @param clock value for clock
+&nbsp;     */
+<b class="fc">&nbsp;    LoginAttemptTracker(int maxFailedAttempts, Duration lockDuration, Clock clock) {</b>
+<b class="fc">&nbsp;        if (maxFailedAttempts &lt; 1) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;maxFailedAttempts must be at least 1&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (lockDuration == null || lockDuration.isNegative() || lockDuration.isZero()) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;lockDuration must be positive&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (clock == null) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;clock cannot be null&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        this.maxFailedAttempts = maxFailedAttempts;</b>
+<b class="fc">&nbsp;        this.lockDuration = lockDuration;</b>
+<b class="fc">&nbsp;        this.clock = clock;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Checks whether locked is true.
+&nbsp;     *
+&nbsp;     * @return true when the action is valid or successful, otherwise false
+&nbsp;     */
+&nbsp;    public boolean isLocked() {
+<b class="fc">&nbsp;        return lockedUntil != null &amp;&amp; Instant.now(clock).isBefore(lockedUntil);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the remaining lock seconds.
+&nbsp;     *
+&nbsp;     * @return numeric result from this method
+&nbsp;     */
+&nbsp;    public long getRemainingLockSeconds() {
+<b class="fc">&nbsp;        if (!isLocked()) {</b>
+<b class="fc">&nbsp;            return 0;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return Duration.between(Instant.now(clock), lockedUntil).toSeconds() + 1;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Records one failed login attempt.
+&nbsp;     */
+&nbsp;    public void recordFailure() {
+<b class="fc">&nbsp;        if (isLocked()) {</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        failedAttempts++;</b>
+<b class="fc">&nbsp;        if (failedAttempts &gt;= maxFailedAttempts) {</b>
+<b class="fc">&nbsp;            lockedUntil = Instant.now(clock).plus(lockDuration);</b>
+<b class="fc">&nbsp;            failedAttempts = 0;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Clears failure and lock state after a successful login.
+&nbsp;     */
+&nbsp;    public void recordSuccess() {
+<b class="fc">&nbsp;        failedAttempts = 0;</b>
+<b class="fc">&nbsp;        lockedUntil = null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the failed attempts.
+&nbsp;     *
+&nbsp;     * @return numeric result from this method
+&nbsp;     */
+&nbsp;    public int getFailedAttempts() {
+<b class="fc">&nbsp;        return failedAttempts;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the attempts remaining.
+&nbsp;     *
+&nbsp;     * @return numeric result from this method
+&nbsp;     */
+&nbsp;    public int getAttemptsRemaining() {
+<b class="fc">&nbsp;        return Math.max(0, maxFailedAttempts - failedAttempts);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

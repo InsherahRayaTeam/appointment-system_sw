@@ -1,0 +1,338 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Main</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example</a>
+</div>
+
+<h1>Coverage Summary for Class: Main (org.example)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Main</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    40%
+  </span>
+  <span class="absValue">
+    (2/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    71.4%
+  </span>
+  <span class="absValue">
+    (15/21)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    62.9%
+  </span>
+  <span class="absValue">
+    (44/70)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example;
+&nbsp;
+&nbsp;import org.example.notification.LoginNotifier;
+&nbsp;import org.example.notification.EmailNotificationService;
+&nbsp;import org.example.notification.NotificationService;
+&nbsp;import org.example.domain.AppointmentSlot;
+&nbsp;import org.example.presentation.gui.ApplicationController;
+&nbsp;import org.example.repository.AppointmentBookingRepository;
+&nbsp;import org.example.repository.AppointmentRepository;
+&nbsp;import org.example.repository.InMemoryAppointmentBookingRepository;
+&nbsp;import org.example.repository.InMemoryAppointmentRepository;
+&nbsp;import org.example.repository.InMemoryWaitlistRepository;
+&nbsp;import org.example.repository.InMemoryUserRepository;
+&nbsp;import org.example.repository.WaitlistRepository;
+&nbsp;import org.example.repository.UserRepository;
+&nbsp;import org.example.service.AdminAuthService;
+&nbsp;import org.example.service.AppointmentBookingService;
+&nbsp;import org.example.service.AppointmentNotificationCoordinator;
+&nbsp;import org.example.service.AppointmentService;
+&nbsp;import org.example.service.AuthEventLogger;
+&nbsp;import org.example.service.EventManager;
+&nbsp;import org.example.service.LoginAttemptTracker;
+&nbsp;import org.example.service.PasswordRecoveryService;
+&nbsp;import org.example.service.SessionManager;
+&nbsp;import org.example.service.UserRegistrationService;
+&nbsp;
+&nbsp;import javax.swing.SwingUtilities;
+&nbsp;import javax.swing.UIManager;
+&nbsp;import java.awt.GraphicsEnvironment;
+&nbsp;import java.io.ByteArrayInputStream;
+&nbsp;import java.time.Duration;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Scanner;
+&nbsp;
+&nbsp;/**
+&nbsp; * Starts the application in GUI mode or console mode.
+&nbsp; */
+<b class="nc">&nbsp;public class Main {</b>
+&nbsp;
+&nbsp;    private static final String CONSOLE_EXIT_COMMAND = &quot;exit&quot;;
+&nbsp;    private static final String CONSOLE_ADMIN_ALIAS = &quot;admin&quot;;
+&nbsp;    private static final String CONSOLE_ADMIN_EMAIL = &quot;admin@gmail.com&quot;;
+&nbsp;    private static final String CONSOLE_ADMIN_PASSWORD = &quot;admin123&quot;;
+&nbsp;    private static final String MENU_OPTION_SHOW_SLOTS = &quot;7&quot;;
+&nbsp;    private static final String MENU_OPTION_BOOK_SLOT = &quot;8&quot;;
+&nbsp;    private static final String MENU_OPTION_LOGOUT = &quot;9&quot;;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new main object with the given values.
+&nbsp;     *
+&nbsp;     * @param args value for args
+&nbsp;     */
+&nbsp;    public static void main(String[] args) {
+<b class="pc">&nbsp;        if (GraphicsEnvironment.isHeadless() || System.in instanceof ByteArrayInputStream) {</b>
+<b class="fc">&nbsp;            runConsoleMode();</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        launchGui();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Starts the Swing GUI application.
+&nbsp;     */
+&nbsp;    private static void launchGui() {
+&nbsp;        try {
+<b class="nc">&nbsp;            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());</b>
+&nbsp;        } catch (Exception ignored) {
+&nbsp;            // Keep default Swing look-and-feel if system look-and-feel is unavailable.
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        SwingUtilities.invokeLater(() -&gt; {</b>
+&nbsp;            // ===== REPOSITORIES =====
+<b class="nc">&nbsp;            UserRepository userRepository = new InMemoryUserRepository();</b>
+<b class="nc">&nbsp;            AppointmentRepository appointmentRepository = new InMemoryAppointmentRepository();</b>
+<b class="nc">&nbsp;            AppointmentBookingRepository appointmentBookingRepository =</b>
+&nbsp;                    new InMemoryAppointmentBookingRepository();
+<b class="nc">&nbsp;            WaitlistRepository waitlistRepository = new InMemoryWaitlistRepository();</b>
+&nbsp;
+&nbsp;            // ===== EVENTS / OBSERVERS =====
+<b class="nc">&nbsp;            AuthEventLogger authEventLogger = new AuthEventLogger();</b>
+<b class="nc">&nbsp;            EventManager eventManager = new EventManager();</b>
+<b class="nc">&nbsp;            LoginNotifier loginNotifier = new LoginNotifier();</b>
+<b class="nc">&nbsp;            eventManager.subscribe(loginNotifier);</b>
+&nbsp;
+<b class="nc">&nbsp;            NotificationService notificationService = new EmailNotificationService();</b>
+<b class="nc">&nbsp;            AppointmentNotificationCoordinator appointmentNotificationCoordinator =</b>
+&nbsp;                    new AppointmentNotificationCoordinator(notificationService);
+&nbsp;
+<b class="nc">&nbsp;            UserRegistrationService userRegistrationService =</b>
+&nbsp;                    new UserRegistrationService(userRepository, eventManager);
+&nbsp;
+<b class="nc">&nbsp;            PasswordRecoveryService passwordRecoveryService =</b>
+&nbsp;                    new PasswordRecoveryService(userRepository, notificationService, eventManager);
+&nbsp;
+&nbsp;            // ===== SESSION / SECURITY =====
+<b class="nc">&nbsp;            SessionManager sessionManager = new SessionManager(authEventLogger, eventManager);</b>
+&nbsp;
+<b class="nc">&nbsp;            LoginAttemptTracker loginAttemptTracker =</b>
+<b class="nc">&nbsp;                    new LoginAttemptTracker(3, Duration.ofSeconds(30));</b>
+&nbsp;
+&nbsp;            // ===== SERVICES =====
+<b class="nc">&nbsp;            AdminAuthService authService =</b>
+&nbsp;                    new AdminAuthService(userRepository, eventManager, loginAttemptTracker);
+&nbsp;
+<b class="nc">&nbsp;            AppointmentService appointmentService =</b>
+&nbsp;                    new AppointmentService(appointmentRepository, eventManager);
+&nbsp;
+<b class="nc">&nbsp;            AppointmentBookingService appointmentBookingService =</b>
+&nbsp;                    new AppointmentBookingService(
+&nbsp;                            appointmentRepository,
+&nbsp;                            appointmentBookingRepository,
+&nbsp;                            sessionManager,
+&nbsp;                            userRepository,
+&nbsp;                            eventManager,
+&nbsp;                            waitlistRepository,
+&nbsp;                            appointmentNotificationCoordinator
+&nbsp;                    );
+&nbsp;
+&nbsp;            // ===== APPLICATION CONTROLLER =====
+<b class="nc">&nbsp;            ApplicationController appController = new ApplicationController(</b>
+&nbsp;                    authService,
+&nbsp;                    appointmentService,
+&nbsp;                    appointmentBookingService,
+&nbsp;                    sessionManager,
+&nbsp;                    userRegistrationService,
+&nbsp;                    passwordRecoveryService
+&nbsp;            );
+&nbsp;
+<b class="nc">&nbsp;            appController.start();</b>
+&nbsp;        });
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Starts the console version of the application.
+&nbsp;     */
+&nbsp;    private static void runConsoleMode() {
+<b class="fc">&nbsp;        UserRepository userRepository = new InMemoryUserRepository();</b>
+<b class="fc">&nbsp;        AppointmentRepository appointmentRepository = new InMemoryAppointmentRepository();</b>
+<b class="fc">&nbsp;        AppointmentBookingRepository appointmentBookingRepository = new InMemoryAppointmentBookingRepository();</b>
+<b class="fc">&nbsp;        WaitlistRepository waitlistRepository = new InMemoryWaitlistRepository();</b>
+&nbsp;
+<b class="fc">&nbsp;        AuthEventLogger authEventLogger = new AuthEventLogger();</b>
+<b class="fc">&nbsp;        EventManager eventManager = new EventManager();</b>
+<b class="fc">&nbsp;        LoginNotifier loginNotifier = new LoginNotifier();</b>
+<b class="fc">&nbsp;        eventManager.subscribe(loginNotifier);</b>
+&nbsp;
+<b class="fc">&nbsp;        NotificationService notificationService = new EmailNotificationService();</b>
+<b class="fc">&nbsp;        AppointmentNotificationCoordinator appointmentNotificationCoordinator =</b>
+&nbsp;                new AppointmentNotificationCoordinator(notificationService);
+&nbsp;
+<b class="fc">&nbsp;        SessionManager sessionManager = new SessionManager(authEventLogger, eventManager);</b>
+<b class="fc">&nbsp;        LoginAttemptTracker loginAttemptTracker = new LoginAttemptTracker(3, Duration.ofSeconds(30));</b>
+&nbsp;
+<b class="fc">&nbsp;        AdminAuthService authService = new AdminAuthService(userRepository, eventManager, loginAttemptTracker);</b>
+<b class="fc">&nbsp;        AppointmentService appointmentService = new AppointmentService(appointmentRepository, eventManager);</b>
+<b class="fc">&nbsp;        new AppointmentBookingService(</b>
+&nbsp;                appointmentRepository,
+&nbsp;                appointmentBookingRepository,
+&nbsp;                sessionManager,
+&nbsp;                userRepository,
+&nbsp;                eventManager,
+&nbsp;                waitlistRepository,
+&nbsp;                appointmentNotificationCoordinator
+&nbsp;        );
+&nbsp;
+<b class="fc">&nbsp;        Scanner scanner = new Scanner(System.in);</b>
+&nbsp;
+&nbsp;        while (true) {
+<b class="fc">&nbsp;            System.out.println(&quot;Administrator Login&quot;);</b>
+<b class="fc">&nbsp;            String username = scanner.nextLine().trim();</b>
+<b class="fc">&nbsp;            if (CONSOLE_EXIT_COMMAND.equalsIgnoreCase(username)) {</b>
+<b class="fc">&nbsp;                System.out.println(&quot;Thank you for using Appointment System.&quot;);</b>
+&nbsp;                return;
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            String password = scanner.nextLine().trim();</b>
+<b class="fc">&nbsp;            String authEmail = username;</b>
+<b class="fc">&nbsp;            String authPassword = password;</b>
+<b class="pc">&nbsp;            if (CONSOLE_ADMIN_ALIAS.equalsIgnoreCase(username) &amp;&amp; CONSOLE_ADMIN_ALIAS.equals(password)) {</b>
+<b class="fc">&nbsp;                authEmail = CONSOLE_ADMIN_EMAIL;</b>
+<b class="fc">&nbsp;                authPassword = CONSOLE_ADMIN_PASSWORD;</b>
+&nbsp;            }
+&nbsp;
+<b class="pc">&nbsp;            if (!authService.authenticate(authEmail, authPassword)) {</b>
+<b class="nc">&nbsp;                loginNotifier.notifyLoginFailure(username);</b>
+&nbsp;                continue;
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            loginNotifier.notifyLoginSuccess(username);</b>
+&nbsp;
+<b class="fc">&nbsp;            boolean loggedIn = true;</b>
+<b class="fc">&nbsp;            while (loggedIn) {</b>
+<b class="fc">&nbsp;                String choice = scanner.nextLine().trim();</b>
+<b class="fc">&nbsp;                switch (choice) {</b>
+&nbsp;                    case MENU_OPTION_SHOW_SLOTS:
+<b class="fc">&nbsp;                        System.out.println(&quot;Available Appointment Slots&quot;);</b>
+<b class="fc">&nbsp;                        List&lt;AppointmentSlot&gt; availableSlots = appointmentService.getAvailableSlots();</b>
+<b class="fc">&nbsp;                        for (AppointmentSlot slot : availableSlots) {</b>
+<b class="fc">&nbsp;                            System.out.println(slot.getDateDayTimeLabel());</b>
+&nbsp;                        }
+&nbsp;                        break;
+&nbsp;                    case MENU_OPTION_BOOK_SLOT:
+<b class="fc">&nbsp;                        String requestedTime = scanner.nextLine().trim();</b>
+<b class="pc">&nbsp;                        if (appointmentService.bookSlot(requestedTime)) {</b>
+<b class="fc">&nbsp;                            System.out.println(&quot;Success: Appointment booked for &quot; + requestedTime + &quot;.&quot;);</b>
+&nbsp;                        } else {
+<b class="nc">&nbsp;                            System.out.println(&quot;Unable to book appointment for &quot; + requestedTime + &quot;.&quot;);</b>
+&nbsp;                        }
+&nbsp;                        break;
+&nbsp;                    case MENU_OPTION_LOGOUT:
+<b class="fc">&nbsp;                        loginNotifier.notifyLogout(username);</b>
+<b class="fc">&nbsp;                        loggedIn = false;</b>
+&nbsp;                        break;
+&nbsp;                    default:
+<b class="fc">&nbsp;                        System.out.println(&quot;Invalid choice. Please enter a number between 7 and 9.&quot;);</b>
+&nbsp;                        break;
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

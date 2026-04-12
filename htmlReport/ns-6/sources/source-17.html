@@ -1,0 +1,298 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > SessionManager</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.service</a>
+</div>
+
+<h1>Coverage Summary for Class: SessionManager (org.example.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">SessionManager</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (14/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    87.5%
+  </span>
+  <span class="absValue">
+    (21/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (41/41)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.service;
+&nbsp;
+&nbsp;import org.example.domain.SystemUser;
+&nbsp;import org.example.domain.UserRole;
+&nbsp;
+&nbsp;import java.time.LocalDateTime;
+&nbsp;import java.util.Objects;
+&nbsp;
+&nbsp;/**
+&nbsp; * Stores login session details for the current user.
+&nbsp; */
+&nbsp;public class SessionManager {
+&nbsp;
+<b class="fc">&nbsp;    private boolean loggedIn = false;</b>
+&nbsp;    private SystemUser currentUser;
+&nbsp;    private String currentEmail;
+&nbsp;    private UserRole currentUserRole;
+&nbsp;    private LocalDateTime loginTime;
+&nbsp;    private final AuthEventLogger authEventLogger;
+&nbsp;    private final EventManager eventManager;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new session manager object with the given values.
+&nbsp;     *
+&nbsp;     * @param authEventLogger value for auth event logger
+&nbsp;     * @param eventManager manager object used for shared app state
+&nbsp;     */
+<b class="fc">&nbsp;    public SessionManager(AuthEventLogger authEventLogger, EventManager eventManager) {</b>
+<b class="fc">&nbsp;        this.authEventLogger = Objects.requireNonNull(</b>
+&nbsp;                authEventLogger,
+&nbsp;                &quot;authEventLogger cannot be null&quot;
+&nbsp;        );
+<b class="fc">&nbsp;        this.eventManager = Objects.requireNonNull(</b>
+&nbsp;                eventManager,
+&nbsp;                &quot;eventManager cannot be null&quot;
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Logs in a user email with the default USER role.
+&nbsp;     *
+&nbsp;     * @param email email address used for login or matching
+&nbsp;     */
+&nbsp;    public void login(String email) {
+<b class="fc">&nbsp;        login(email, UserRole.USER);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Logs in a user with a specific role.
+&nbsp;     *
+&nbsp;     * @param email email address used for login or matching
+&nbsp;     * @param role role value used for access control
+&nbsp;     */
+&nbsp;    public void login(String email, UserRole role) {
+<b class="fc">&nbsp;        if (email == null || email.trim().isEmpty()) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;email cannot be blank&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (role == null) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;role cannot be null&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        String normalizedEmail = email.trim().toLowerCase();</b>
+&nbsp;
+<b class="fc">&nbsp;        loggedIn = true;</b>
+<b class="fc">&nbsp;        currentUser = new SystemUser(normalizedEmail + &quot;-session&quot;, normalizedEmail, &quot;[SESSION]&quot;, role);</b>
+<b class="fc">&nbsp;        currentEmail = normalizedEmail;</b>
+<b class="fc">&nbsp;        currentUserRole = role;</b>
+<b class="fc">&nbsp;        loginTime = LocalDateTime.now();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Logs in using an existing user object.
+&nbsp;     *
+&nbsp;     * @param user user involved in this action
+&nbsp;     */
+&nbsp;    public void login(SystemUser user) {
+<b class="pc">&nbsp;        if (user == null || user.getEmail() == null || user.getEmail().trim().isEmpty()) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;user cannot be null or have blank email&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        UserRole role = user.getRole() == null ? UserRole.USER : user.getRole();</b>
+&nbsp;
+<b class="fc">&nbsp;        loggedIn = true;</b>
+<b class="fc">&nbsp;        currentUser = user;</b>
+<b class="fc">&nbsp;        currentEmail = user.getEmail().trim().toLowerCase();</b>
+<b class="fc">&nbsp;        currentUserRole = role;</b>
+<b class="fc">&nbsp;        loginTime = LocalDateTime.now();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Logs in a default admin session used by compatibility flows.
+&nbsp;     */
+&nbsp;    public void login() {
+<b class="fc">&nbsp;        login(&quot;admin@gmail.com&quot;, UserRole.ADMIN);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Clears all session values and logs out the current user.
+&nbsp;     */
+&nbsp;    public void logout() {
+<b class="fc">&nbsp;        loggedIn = false;</b>
+<b class="fc">&nbsp;        currentUser = null;</b>
+<b class="fc">&nbsp;        currentEmail = null;</b>
+<b class="fc">&nbsp;        currentUserRole = null;</b>
+<b class="fc">&nbsp;        loginTime = null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Logs out and sends a logout event message to observers.
+&nbsp;     */
+&nbsp;    public void logoutAndNotify() {
+<b class="fc">&nbsp;        String email = currentEmail;</b>
+<b class="fc">&nbsp;        logout();</b>
+&nbsp;
+<b class="fc">&nbsp;        authEventLogger.logLogout(email);</b>
+<b class="fc">&nbsp;        String displayUser = email == null ? &quot;&lt;unknown&gt;&quot; : email;</b>
+<b class="fc">&nbsp;        eventManager.notifyObservers(&quot;Goodbye, &quot; + displayUser + &quot;! You have been logged out.&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Checks whether logged in is true.
+&nbsp;     *
+&nbsp;     * @return true when the action is valid or successful, otherwise false
+&nbsp;     */
+&nbsp;    public boolean isLoggedIn() {
+<b class="fc">&nbsp;        return loggedIn;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the current email.
+&nbsp;     *
+&nbsp;     * @return text result from this method
+&nbsp;     */
+&nbsp;    public String getCurrentEmail() {
+<b class="fc">&nbsp;        return currentEmail;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the current user.
+&nbsp;     *
+&nbsp;     * @return requested value from this object
+&nbsp;     */
+&nbsp;    public SystemUser getCurrentUser() {
+<b class="fc">&nbsp;        return currentUser;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the login time.
+&nbsp;     *
+&nbsp;     * @return requested value from this object
+&nbsp;     */
+&nbsp;    public LocalDateTime getLoginTime() {
+<b class="fc">&nbsp;        return loginTime;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the current user role.
+&nbsp;     *
+&nbsp;     * @return requested value from this object
+&nbsp;     */
+&nbsp;    public UserRole getCurrentUserRole() {
+<b class="fc">&nbsp;        return currentUserRole;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Checks whether admin is true.
+&nbsp;     *
+&nbsp;     * @return true when the action is valid or successful, otherwise false
+&nbsp;     */
+&nbsp;    public boolean isAdmin() {
+<b class="fc">&nbsp;        return isLoggedIn() &amp;&amp; currentUserRole == UserRole.ADMIN;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Checks whether user is true.
+&nbsp;     *
+&nbsp;     * @return true when the action is valid or successful, otherwise false
+&nbsp;     */
+&nbsp;    public boolean isUser() {
+<b class="fc">&nbsp;        return isLoggedIn() &amp;&amp; currentUserRole == UserRole.USER;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

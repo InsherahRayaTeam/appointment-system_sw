@@ -1,0 +1,329 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AppointmentNotificationCoordinator</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.service</a>
+</div>
+
+<h1>Coverage Summary for Class: AppointmentNotificationCoordinator (org.example.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AppointmentNotificationCoordinator</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (14/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    85.7%
+  </span>
+  <span class="absValue">
+    (12/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    98.6%
+  </span>
+  <span class="absValue">
+    (70/71)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.service;
+&nbsp;
+&nbsp;import org.example.domain.Appointment;
+&nbsp;import org.example.domain.SystemUser;
+&nbsp;import org.example.notification.NotificationService;
+&nbsp;
+&nbsp;import java.time.LocalDateTime;
+&nbsp;import java.time.format.DateTimeFormatter;
+&nbsp;import java.util.Locale;
+&nbsp;import java.util.Objects;
+&nbsp;
+&nbsp;/**
+&nbsp; * Coordinates appointment notifications for business events.
+&nbsp; */
+&nbsp;public class AppointmentNotificationCoordinator {
+&nbsp;
+<b class="fc">&nbsp;    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(</b>
+&nbsp;            &quot;yyyy-MM-dd (EEEE) HH:mm&quot;,
+&nbsp;            Locale.ENGLISH
+&nbsp;    );
+&nbsp;
+&nbsp;    private final NotificationService notificationService;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new appointment notification coordinator object with the given values.
+&nbsp;     *
+&nbsp;     * @param notificationService service used to send notifications
+&nbsp;     */
+<b class="fc">&nbsp;    public AppointmentNotificationCoordinator(NotificationService notificationService) {</b>
+<b class="fc">&nbsp;        this.notificationService = Objects.requireNonNull(notificationService, &quot;notificationService cannot be null&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sends a pending notification for a newly booked appointment.
+&nbsp;     *
+&nbsp;     * @param appointment appointment involved in this action
+&nbsp;     */
+&nbsp;    public void sendPendingNotification(Appointment appointment) {
+<b class="fc">&nbsp;        SystemUser user = requireUser(appointment);</b>
+<b class="fc">&nbsp;        String appointmentDateTime = formatAppointmentDateTime(appointment);</b>
+<b class="fc">&nbsp;        String subject = &quot;Appointment Request Received&quot;;</b>
+<b class="fc">&nbsp;        String body = &quot;Your appointment request has been received and is pending review.&quot;</b>
+<b class="fc">&nbsp;                + &quot; Name: &quot; + displayBookedUserName(appointment)</b>
+&nbsp;                + &quot; Date/time: &quot; + appointmentDateTime;
+&nbsp;
+<b class="fc">&nbsp;        notificationService.send(user.getEmail(), subject, body);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sends an approved notification for an approved appointment.
+&nbsp;     *
+&nbsp;     * @param appointment appointment involved in this action
+&nbsp;     */
+&nbsp;    public void sendApprovedNotification(Appointment appointment) {
+<b class="fc">&nbsp;        SystemUser user = requireUser(appointment);</b>
+<b class="fc">&nbsp;        String appointmentDateTime = formatAppointmentDateTime(appointment);</b>
+<b class="fc">&nbsp;        String subject = &quot;Appointment Approved&quot;;</b>
+<b class="fc">&nbsp;        String body = &quot;Your appointment has been approved.&quot;</b>
+<b class="fc">&nbsp;                + &quot; Name: &quot; + displayBookedUserName(appointment)</b>
+&nbsp;                + &quot; Date/time: &quot; + appointmentDateTime;
+&nbsp;
+<b class="fc">&nbsp;        notificationService.send(user.getEmail(), subject, body);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sends a cancelled notification for a cancelled or rejected appointment.
+&nbsp;     *
+&nbsp;     * @param appointment appointment involved in this action
+&nbsp;     */
+&nbsp;    public void sendCancelledNotification(Appointment appointment) {
+<b class="fc">&nbsp;        SystemUser user = requireUser(appointment);</b>
+<b class="fc">&nbsp;        String appointmentDateTime = formatAppointmentDateTime(appointment);</b>
+<b class="fc">&nbsp;        String subject = &quot;Appointment Cancelled&quot;;</b>
+<b class="fc">&nbsp;        String body = &quot;Your appointment has been cancelled.&quot;</b>
+<b class="fc">&nbsp;                + &quot; Name: &quot; + displayBookedUserName(appointment)</b>
+&nbsp;                + &quot; Date/time: &quot; + appointmentDateTime;
+&nbsp;
+<b class="fc">&nbsp;        notificationService.send(user.getEmail(), subject, body);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sends a notification for a waitlisted appointment that has been promoted.
+&nbsp;     *
+&nbsp;     * @param appointment appointment involved in this action
+&nbsp;     */
+&nbsp;    public void sendWaitlistPromotionNotification(Appointment appointment) {
+<b class="fc">&nbsp;        SystemUser user = requireUser(appointment);</b>
+<b class="fc">&nbsp;        String appointmentDateTime = formatAppointmentDateTime(appointment);</b>
+<b class="fc">&nbsp;        String subject = &quot;Appointment Waitlist Promotion&quot;;</b>
+<b class="fc">&nbsp;        String body = &quot;Your waitlisted appointment has been promoted to a confirmed reservation.&quot;</b>
+<b class="fc">&nbsp;                + &quot; Name: &quot; + displayBookedUserName(appointment)</b>
+&nbsp;                + &quot; Date/time: &quot; + appointmentDateTime;
+&nbsp;
+<b class="fc">&nbsp;        notificationService.send(user.getEmail(), subject, body);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sends a modified notification for an updated appointment.
+&nbsp;     *
+&nbsp;     * @param appointment appointment involved in this action
+&nbsp;     */
+&nbsp;    public void sendModifiedNotification(Appointment appointment) {
+<b class="fc">&nbsp;        SystemUser user = requireUser(appointment);</b>
+<b class="fc">&nbsp;        String appointmentDateTime = formatAppointmentDateTime(appointment);</b>
+<b class="fc">&nbsp;        String subject = &quot;Appointment Updated&quot;;</b>
+<b class="fc">&nbsp;        String body = &quot;Your appointment details have been updated.&quot;</b>
+<b class="fc">&nbsp;                + &quot; Name: &quot; + displayBookedUserName(appointment)</b>
+&nbsp;                + &quot; Date/time: &quot; + appointmentDateTime;
+&nbsp;
+<b class="fc">&nbsp;        notificationService.send(user.getEmail(), subject, body);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sends a detailed reschedule notification with old/new appointment details.
+&nbsp;     *
+&nbsp;     * @param previousAppointment appointment before rescheduling
+&nbsp;     * @param updatedAppointment appointment after rescheduling
+&nbsp;     */
+&nbsp;    public void sendRescheduledNotification(Appointment previousAppointment, Appointment updatedAppointment) {
+<b class="fc">&nbsp;        SystemUser user = requireUser(updatedAppointment);</b>
+<b class="fc">&nbsp;        String oldDateTime = formatAppointmentDateTime(previousAppointment);</b>
+<b class="fc">&nbsp;        String newDateTime = formatAppointmentDateTime(updatedAppointment);</b>
+<b class="fc">&nbsp;        String appointmentId = updatedAppointment.getId() == null ? &quot;N/A&quot; : updatedAppointment.getId();</b>
+&nbsp;
+<b class="fc">&nbsp;        String subject = &quot;Appointment Rescheduled&quot;;</b>
+<b class="fc">&nbsp;        String body = &quot;Your appointment schedule has been changed by the administrator.&quot;</b>
+&nbsp;                + &quot; Appointment ID: &quot; + appointmentId
+<b class="fc">&nbsp;                + &quot; User: &quot; + displayBookedUserName(updatedAppointment)</b>
+&nbsp;                + &quot; Old date/time: &quot; + oldDateTime
+&nbsp;                + &quot; New date/day/time: &quot; + newDateTime
+&nbsp;                + &quot; If the new schedule does not suit you, you may cancel this reservation and book another slot.&quot;;
+&nbsp;
+<b class="fc">&nbsp;        notificationService.send(user.getEmail(), subject, body);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sends a notification for an attended appointment.
+&nbsp;     *
+&nbsp;     * @param appointment appointment involved in this action
+&nbsp;     */
+&nbsp;    @SuppressWarnings(&quot;unused&quot;)
+&nbsp;    public void sendAttendedNotification(Appointment appointment) {
+<b class="fc">&nbsp;        SystemUser user = requireUser(appointment);</b>
+<b class="fc">&nbsp;        String appointmentDateTime = formatAppointmentDateTime(appointment);</b>
+<b class="fc">&nbsp;        String subject = &quot;Appointment Marked as Attended&quot;;</b>
+<b class="fc">&nbsp;        String body = &quot;Your appointment has been marked as attended.&quot;</b>
+<b class="fc">&nbsp;                + &quot; Name: &quot; + displayBookedUserName(appointment)</b>
+&nbsp;                + &quot; Date/time: &quot; + appointmentDateTime;
+&nbsp;
+<b class="fc">&nbsp;        notificationService.send(user.getEmail(), subject, body);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sends a notification for a completed appointment.
+&nbsp;     *
+&nbsp;     * @param appointment appointment involved in this action
+&nbsp;     */
+&nbsp;    @SuppressWarnings(&quot;unused&quot;)
+&nbsp;    public void sendCompletedNotification(Appointment appointment) {
+<b class="fc">&nbsp;        SystemUser user = requireUser(appointment);</b>
+<b class="fc">&nbsp;        String appointmentDateTime = formatAppointmentDateTime(appointment);</b>
+<b class="fc">&nbsp;        String subject = &quot;Appointment Completed&quot;;</b>
+<b class="fc">&nbsp;        String body = &quot;Your appointment has been completed.&quot;</b>
+<b class="fc">&nbsp;                + &quot; Name: &quot; + displayBookedUserName(appointment)</b>
+&nbsp;                + &quot; Date/time: &quot; + appointmentDateTime;
+&nbsp;
+<b class="fc">&nbsp;        notificationService.send(user.getEmail(), subject, body);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sends a notification for a missed appointment.
+&nbsp;     *
+&nbsp;     * @param appointment appointment involved in this action
+&nbsp;     */
+&nbsp;    public void sendNotAttendedNotification(Appointment appointment) {
+<b class="fc">&nbsp;        SystemUser user = requireUser(appointment);</b>
+<b class="fc">&nbsp;        String appointmentDateTime = formatAppointmentDateTime(appointment);</b>
+<b class="fc">&nbsp;        String subject = &quot;Appointment Marked as Not Attended&quot;;</b>
+<b class="fc">&nbsp;        String body = &quot;Your appointment has been marked as not attended.&quot;</b>
+<b class="fc">&nbsp;                + &quot; Name: &quot; + displayBookedUserName(appointment)</b>
+&nbsp;                + &quot; Date/time: &quot; + appointmentDateTime
+&nbsp;                + &quot; Please contact the office if you need to reschedule.&quot;;
+&nbsp;
+<b class="fc">&nbsp;        notificationService.send(user.getEmail(), subject, body);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private SystemUser requireUser(Appointment appointment) {
+<b class="fc">&nbsp;        if (appointment == null) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Appointment cannot be null&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        SystemUser user = appointment.getUser();</b>
+<b class="fc">&nbsp;        if (user == null) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Appointment user cannot be null&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return user;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String formatAppointmentDateTime(Appointment appointment) {
+<b class="fc">&nbsp;        LocalDateTime startTime = appointment.getStartTime();</b>
+<b class="fc">&nbsp;        return startTime == null ? &quot;N/A&quot; : startTime.format(DATE_TIME_FORMATTER);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String displayBookedUserName(Appointment appointment) {
+<b class="pc">&nbsp;        if (appointment == null) {</b>
+<b class="nc">&nbsp;            return &quot;N/A&quot;;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        String bookedName = appointment.getCustomerName();</b>
+<b class="pc">&nbsp;        return bookedName == null || bookedName.trim().isEmpty() ? &quot;N/A&quot; : bookedName;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

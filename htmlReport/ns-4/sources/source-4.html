@@ -1,0 +1,834 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AppointmentBookingService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.presentation.gui</a>
+</div>
+
+<h1>Coverage Summary for Class: AppointmentBookingService (org.example.presentation.gui)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AppointmentBookingService</td>
+<td class="coverageStat">
+  <span class="percent">
+    57.1%
+  </span>
+  <span class="absValue">
+    (16/28)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    31.6%
+  </span>
+  <span class="absValue">
+    (48/152)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    44.2%
+  </span>
+  <span class="absValue">
+    (80/181)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">AppointmentBookingService$ReservationAccess</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    60%
+  </span>
+  <span class="absValue">
+    (18/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    31.6%
+  </span>
+  <span class="absValue">
+    (48/152)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    45.1%
+  </span>
+  <span class="absValue">
+    (83/184)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.presentation.gui;
+&nbsp;
+&nbsp;import org.example.domain.Appointment;
+&nbsp;import org.example.domain.AppointmentSlot;
+&nbsp;import org.example.domain.AppointmentStatus;
+&nbsp;import org.example.domain.AppointmentType;
+&nbsp;import org.example.domain.UserRole;
+&nbsp;import org.example.repository.AppointmentBookingRepository;
+&nbsp;import org.example.repository.AppointmentRepository;
+&nbsp;import org.example.repository.UserRepository;
+&nbsp;import org.example.service.*;
+&nbsp;
+&nbsp;import java.time.LocalDateTime;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.EnumMap;
+&nbsp;import java.util.EnumSet;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Objects;
+&nbsp;
+&nbsp;/**
+&nbsp; * Represents appointment booking service in the system.
+&nbsp; *
+&nbsp; * @author appointment-system
+&nbsp; * @version 1.0
+&nbsp; */
+&nbsp;public class AppointmentBookingService {
+&nbsp;
+&nbsp;    private final AppointmentRepository appointmentRepository;
+&nbsp;    private final AppointmentBookingRepository appointmentBookingRepository;
+&nbsp;    private final BookingRuleStrategy durationRule;
+&nbsp;    private final BookingRuleStrategy participantRule;
+&nbsp;    private final Map&lt;AppointmentType, AppointmentTypeRule&gt; appointmentTypeRules;
+&nbsp;    private final SessionManager sessionManager;
+&nbsp;    private final UserRepository userRepository;
+&nbsp;    private final EventManager eventManager;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new appointment booking service object with the given values.
+&nbsp;     *
+&nbsp;     * @param appointmentRepository repository used to read and save data
+&nbsp;     * @param appointmentBookingRepository repository used to read and save data
+&nbsp;     */
+&nbsp;    public AppointmentBookingService(
+&nbsp;            AppointmentRepository appointmentRepository,
+&nbsp;            AppointmentBookingRepository appointmentBookingRepository
+&nbsp;    ) {
+<b class="nc">&nbsp;        this(appointmentRepository, appointmentBookingRepository, null, null, null);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new appointment booking service object with the given values.
+&nbsp;     *
+&nbsp;     * @param appointmentRepository repository used to read and save data
+&nbsp;     * @param appointmentBookingRepository repository used to read and save data
+&nbsp;     * @param sessionManager manager object used for shared app state
+&nbsp;     * @param userRepository user repository used for authorization checks
+&nbsp;     * @param eventManager manager object used for observer notifications
+&nbsp;     */
+&nbsp;    public AppointmentBookingService(
+&nbsp;            AppointmentRepository appointmentRepository,
+&nbsp;            AppointmentBookingRepository appointmentBookingRepository,
+&nbsp;            SessionManager sessionManager,
+&nbsp;            UserRepository userRepository,
+&nbsp;            EventManager eventManager
+<b class="fc">&nbsp;    ) {</b>
+<b class="fc">&nbsp;        this.appointmentRepository = Objects.requireNonNull(</b>
+&nbsp;                appointmentRepository,
+&nbsp;                &quot;appointmentRepository cannot be null&quot;
+&nbsp;        );
+<b class="fc">&nbsp;        this.appointmentBookingRepository = Objects.requireNonNull(</b>
+&nbsp;                appointmentBookingRepository,
+&nbsp;                &quot;appointmentBookingRepository cannot be null&quot;
+&nbsp;        );
+<b class="fc">&nbsp;        this.durationRule = new DurationRule();</b>
+<b class="fc">&nbsp;        this.participantRule = new ParticipantRule();</b>
+<b class="fc">&nbsp;        this.appointmentTypeRules = buildTypeRuleMap(List.of(</b>
+&nbsp;                new NormalRule(),
+&nbsp;                new UrgentRule(),
+&nbsp;                new FollowUpRule(),
+&nbsp;                new AssessmentRule(),
+&nbsp;                new VirtualRule(),
+&nbsp;                new InPersonRule(),
+&nbsp;                new IndividualRule(),
+&nbsp;                new GroupRule()
+&nbsp;        ));
+<b class="fc">&nbsp;        this.sessionManager = sessionManager;</b>
+<b class="fc">&nbsp;        this.userRepository = userRepository;</b>
+<b class="fc">&nbsp;        this.eventManager = eventManager;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Books appointment when allowed.
+&nbsp;     *
+&nbsp;     * @param customerName value for customer name
+&nbsp;     * @param slotTime slot time text like 10:00
+&nbsp;     * @param durationMinutesInput appointment duration in minutes
+&nbsp;     * @param participantCountInput number of people for the appointment
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    public BookingStatus bookAppointment(
+&nbsp;            String customerName,
+&nbsp;            String slotTime,
+&nbsp;            String durationMinutesInput,
+&nbsp;            String participantCountInput
+&nbsp;    ) {
+<b class="nc">&nbsp;        return bookAppointment(</b>
+&nbsp;                customerName,
+&nbsp;                slotTime,
+&nbsp;                durationMinutesInput,
+&nbsp;                participantCountInput,
+&nbsp;                AppointmentType.NORMAL
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Books appointment when allowed.
+&nbsp;     *
+&nbsp;     * @param customerName value for customer name
+&nbsp;     * @param slotTime slot time text like 10:00
+&nbsp;     * @param durationMinutesInput appointment duration in minutes
+&nbsp;     * @param participantCountInput number of people for the appointment
+&nbsp;     * @param appointmentType value for appointment type
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    public BookingStatus bookAppointment(
+&nbsp;            String customerName,
+&nbsp;            String slotTime,
+&nbsp;            String durationMinutesInput,
+&nbsp;            String participantCountInput,
+&nbsp;            AppointmentType appointmentType
+&nbsp;    ) {
+<b class="nc">&nbsp;        if (customerName == null || customerName.trim().isEmpty()) {</b>
+<b class="nc">&nbsp;            return BookingStatus.BLANK_CUSTOMER_NAME;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (slotTime == null || slotTime.trim().isEmpty()) {</b>
+<b class="nc">&nbsp;            return BookingStatus.BLANK_SLOT_TIME;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Integer durationMinutes = parseInteger(durationMinutesInput);</b>
+<b class="nc">&nbsp;        if (durationMinutes == null) {</b>
+<b class="nc">&nbsp;            return BookingStatus.INVALID_DURATION;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Integer participantCount = parseInteger(participantCountInput);</b>
+<b class="nc">&nbsp;        if (participantCount == null) {</b>
+<b class="nc">&nbsp;            return BookingStatus.INVALID_PARTICIPANT_COUNT;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return bookAppointment(</b>
+&nbsp;                customerName,
+&nbsp;                slotTime,
+<b class="nc">&nbsp;                durationMinutes,</b>
+<b class="nc">&nbsp;                participantCount,</b>
+&nbsp;                appointmentType
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Books appointment when allowed.
+&nbsp;     *
+&nbsp;     * @param customerName value for customer name
+&nbsp;     * @param slotTime slot time text like 10:00
+&nbsp;     * @param durationMinutes appointment duration in minutes
+&nbsp;     * @param participantCount number of people for the appointment
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    public BookingStatus bookAppointment(
+&nbsp;            String customerName,
+&nbsp;            String slotTime,
+&nbsp;            int durationMinutes,
+&nbsp;            int participantCount
+&nbsp;    ) {
+<b class="nc">&nbsp;        return bookAppointment(</b>
+&nbsp;                customerName,
+&nbsp;                slotTime,
+&nbsp;                durationMinutes,
+&nbsp;                participantCount,
+&nbsp;                AppointmentType.NORMAL
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Books appointment when allowed.
+&nbsp;     *
+&nbsp;     * @param customerName value for customer name
+&nbsp;     * @param slotTime slot time text like 10:00
+&nbsp;     * @param durationMinutes appointment duration in minutes
+&nbsp;     * @param participantCount number of people for the appointment
+&nbsp;     * @param appointmentType value for appointment type
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    public BookingStatus bookAppointment(
+&nbsp;            String customerName,
+&nbsp;            String slotTime,
+&nbsp;            int durationMinutes,
+&nbsp;            int participantCount,
+&nbsp;            AppointmentType appointmentType
+&nbsp;    ) {
+<b class="pc">&nbsp;        if (customerName == null || customerName.trim().isEmpty()) {</b>
+<b class="nc">&nbsp;            return BookingStatus.BLANK_CUSTOMER_NAME;</b>
+&nbsp;        }
+<b class="pc">&nbsp;        if (slotTime == null || slotTime.trim().isEmpty()) {</b>
+<b class="nc">&nbsp;            return BookingStatus.BLANK_SLOT_TIME;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Appointment normalizedProbe = validationProbe(durationMinutes, participantCount);</b>
+<b class="fc">&nbsp;        AppointmentType normalizedType = normalizeType(appointmentType);</b>
+<b class="fc">&nbsp;        normalizedProbe.setType(normalizedType);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (!durationRule.isValid(normalizedProbe)) {</b>
+<b class="nc">&nbsp;            return BookingStatus.INVALID_DURATION;</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (!participantRule.isValid(normalizedProbe)) {</b>
+<b class="nc">&nbsp;            return BookingStatus.INVALID_PARTICIPANT_COUNT;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (!typeRulesAllow(normalizedProbe, normalizedType)) {</b>
+<b class="fc">&nbsp;            return BookingStatus.INVALID_APPOINTMENT_RULES;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        String normalizedCustomerName = customerName.trim();</b>
+<b class="fc">&nbsp;        String normalizedSlotTime = slotTime.trim();</b>
+<b class="fc">&nbsp;        boolean matchingSlotFound = false;</b>
+&nbsp;
+<b class="pc">&nbsp;        for (AppointmentSlot slot : appointmentRepository.findAll()) {</b>
+<b class="pc">&nbsp;            if (slot.getTime().equals(normalizedSlotTime)) {</b>
+<b class="fc">&nbsp;                matchingSlotFound = true;</b>
+&nbsp;
+<b class="pc">&nbsp;                if (!slot.isAvailable()) {</b>
+&nbsp;                    continue;
+&nbsp;                }
+&nbsp;
+<b class="fc">&nbsp;                slot.book();</b>
+&nbsp;
+<b class="fc">&nbsp;                appointmentBookingRepository.save(new Appointment(</b>
+&nbsp;                        normalizedCustomerName,
+&nbsp;                        normalizedSlotTime,
+&nbsp;                        durationMinutes,
+&nbsp;                        participantCount,
+&nbsp;                        AppointmentStatus.CONFIRMED,
+&nbsp;                        normalizedType
+&nbsp;                ));
+&nbsp;
+<b class="fc">&nbsp;                return BookingStatus.SUCCESS;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (matchingSlotFound) {</b>
+<b class="nc">&nbsp;            return BookingStatus.SLOT_ALREADY_BOOKED;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return BookingStatus.SLOT_NOT_FOUND;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the managed reservations.
+&nbsp;     *
+&nbsp;     * @return collection with the requested results
+&nbsp;     */
+&nbsp;    public List&lt;Appointment&gt; getManagedReservations() {
+<b class="nc">&nbsp;        if (!isCurrentUserAdmin()) {</b>
+<b class="nc">&nbsp;            return Collections.emptyList();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return appointmentBookingRepository.findAll();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Checks whether current user can manage reservations.
+&nbsp;     *
+&nbsp;     * @return true when the action is valid or successful, otherwise false
+&nbsp;     */
+&nbsp;    public boolean canCurrentUserManageReservations() {
+<b class="nc">&nbsp;        return isCurrentUserAdmin();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the reservations for customer.
+&nbsp;     *
+&nbsp;     * @param customerEmail email address used for login or matching
+&nbsp;     * @return collection with the requested results
+&nbsp;     */
+&nbsp;    public List&lt;Appointment&gt; getReservationsForCustomer(String customerEmail) {
+<b class="nc">&nbsp;        String normalizedCustomerEmail = normalize(customerEmail);</b>
+<b class="nc">&nbsp;        if (normalizedCustomerEmail == null || sessionManager == null || !sessionManager.isLoggedIn()) {</b>
+<b class="nc">&nbsp;            return Collections.emptyList();</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        String currentEmail = normalize(sessionManager.getCurrentEmail());</b>
+<b class="nc">&nbsp;        boolean isAdmin = sessionManager.isAdmin();</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!isAdmin &amp;&amp; !normalizedCustomerEmail.equalsIgnoreCase(currentEmail)) {</b>
+<b class="nc">&nbsp;            return Collections.emptyList();</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        List&lt;Appointment&gt; results = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        for (Appointment appointment : appointmentBookingRepository.findAll()) {</b>
+<b class="nc">&nbsp;            String bookingCustomer = normalize(appointment.getCustomerName());</b>
+<b class="nc">&nbsp;            if (normalizedCustomerEmail.equalsIgnoreCase(bookingCustomer)) {</b>
+<b class="nc">&nbsp;                results.add(appointment);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return results;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Cancels an appointment as admin.
+&nbsp;     *
+&nbsp;     * @param appointmentId unique id used to find the record
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    public BookingStatus cancelAppointment(String appointmentId) {
+<b class="fc">&nbsp;        return cancelReservationInternal(appointmentId, ReservationAccess.ADMIN_ANY);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Cancels the current user&#39;s own appointment.
+&nbsp;     *
+&nbsp;     * @param appointmentId unique id used to find the record
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    public BookingStatus cancelOwnAppointment(String appointmentId) {
+<b class="nc">&nbsp;        return cancelReservationInternal(appointmentId, ReservationAccess.OWN_ONLY);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Modifies an appointment as admin.
+&nbsp;     *
+&nbsp;     * @param appointmentId unique id used to find the record
+&nbsp;     * @param newSlotTime slot time text like 10:00
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    public BookingStatus modifyAppointment(String appointmentId, String newSlotTime) {
+<b class="fc">&nbsp;        return modifyReservationInternal(appointmentId, newSlotTime, ReservationAccess.ADMIN_ANY);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Modifies the current user&#39;s own appointment.
+&nbsp;     *
+&nbsp;     * @param appointmentId unique id used to find the record
+&nbsp;     * @param newSlotTime slot time text like 10:00
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    public BookingStatus modifyOwnAppointment(String appointmentId, String newSlotTime) {
+<b class="nc">&nbsp;        return modifyReservationInternal(appointmentId, newSlotTime, ReservationAccess.OWN_ONLY);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Cancels a reservation using the given access level.
+&nbsp;     *
+&nbsp;     * @param appointmentId unique id used to find the record
+&nbsp;     * @param access access mode used by the caller
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    private BookingStatus cancelReservationInternal(String appointmentId, ReservationAccess access) {
+<b class="fc">&nbsp;        Appointment appointment = resolveAuthorizedAppointment(appointmentId, access);</b>
+<b class="fc">&nbsp;        if (appointment == null) {</b>
+<b class="fc">&nbsp;            return resolveAuthorizationOrNotFoundStatus(appointmentId, access);</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {</b>
+<b class="fc">&nbsp;            return BookingStatus.APPOINTMENT_ALREADY_CANCELLED;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (!appointment.isFutureComparedTo(LocalDateTime.now())) {</b>
+<b class="nc">&nbsp;            return BookingStatus.APPOINTMENT_NOT_FUTURE;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        AppointmentSlot slot = findSlotByTime(appointment.getSlotTime());</b>
+<b class="nc">&nbsp;        if (slot != null) {</b>
+<b class="nc">&nbsp;            slot.release();</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Appointment updated = appointment.withStatus(AppointmentStatus.CANCELLED);</b>
+<b class="nc">&nbsp;        if (!appointmentBookingRepository.update(updated)) {</b>
+<b class="nc">&nbsp;            if (slot != null) {</b>
+<b class="nc">&nbsp;                slot.book();</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return BookingStatus.UPDATE_FAILED;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        notifyEvent(&quot;Reservation cancelled: &quot; + updated.getId());</b>
+<b class="nc">&nbsp;        return BookingStatus.SUCCESS;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Modifies a reservation using the given access level.
+&nbsp;     *
+&nbsp;     * @param appointmentId unique id used to find the record
+&nbsp;     * @param newSlotTime slot time text like 10:00
+&nbsp;     * @param access access mode used by the caller
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    private BookingStatus modifyReservationInternal(
+&nbsp;            String appointmentId,
+&nbsp;            String newSlotTime,
+&nbsp;            ReservationAccess access
+&nbsp;    ) {
+<b class="pc">&nbsp;        if (newSlotTime == null || newSlotTime.trim().isEmpty()) {</b>
+<b class="nc">&nbsp;            return BookingStatus.BLANK_SLOT_TIME;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Appointment appointment = resolveAuthorizedAppointment(appointmentId, access);</b>
+<b class="pc">&nbsp;        if (appointment == null) {</b>
+<b class="nc">&nbsp;            return resolveAuthorizationOrNotFoundStatus(appointmentId, access);</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {</b>
+<b class="nc">&nbsp;            return BookingStatus.APPOINTMENT_ALREADY_CANCELLED;</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (!appointment.isFutureComparedTo(LocalDateTime.now())) {</b>
+<b class="nc">&nbsp;            return BookingStatus.APPOINTMENT_NOT_FUTURE;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        String normalizedNewSlotTime = newSlotTime.trim();</b>
+<b class="fc">&nbsp;        AppointmentSlot targetSlot = findSlotByTime(normalizedNewSlotTime);</b>
+<b class="pc">&nbsp;        if (targetSlot == null) {</b>
+<b class="fc">&nbsp;            return BookingStatus.SLOT_NOT_FOUND;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (!targetSlot.isAvailable()) {</b>
+<b class="nc">&nbsp;            return BookingStatus.SLOT_ALREADY_BOOKED;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        AppointmentSlot currentSlot = findSlotByTime(appointment.getSlotTime());</b>
+<b class="nc">&nbsp;        if (currentSlot != null) {</b>
+<b class="nc">&nbsp;            currentSlot.release();</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        targetSlot.book();</b>
+<b class="nc">&nbsp;        Appointment updated = appointment.withSlotTimeAndStatus(</b>
+&nbsp;                normalizedNewSlotTime,
+&nbsp;                AppointmentStatus.MODIFIED
+&nbsp;        );
+&nbsp;
+<b class="nc">&nbsp;        if (!appointmentBookingRepository.update(updated)) {</b>
+<b class="nc">&nbsp;            targetSlot.release();</b>
+<b class="nc">&nbsp;            if (currentSlot != null) {</b>
+<b class="nc">&nbsp;                currentSlot.book();</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return BookingStatus.UPDATE_FAILED;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        notifyEvent(&quot;Reservation modified: &quot; + updated.getId() + &quot; -&gt; &quot; + normalizedNewSlotTime);</b>
+<b class="nc">&nbsp;        return BookingStatus.SUCCESS;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Resolves an appointment only if current caller is authorized.
+&nbsp;     *
+&nbsp;     * @param appointmentId unique id used to find the record
+&nbsp;     * @param access access mode used by the caller
+&nbsp;     * @return authorized appointment or null
+&nbsp;     */
+&nbsp;    private Appointment resolveAuthorizedAppointment(String appointmentId, ReservationAccess access) {
+<b class="fc">&nbsp;        if (!isSessionActive()) {</b>
+<b class="fc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (access == ReservationAccess.ADMIN_ANY &amp;&amp; !isCurrentUserAdmin()) {</b>
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Appointment appointment = appointmentBookingRepository.findById(normalize(appointmentId)).orElse(null);</b>
+<b class="fc">&nbsp;        if (appointment == null) {</b>
+<b class="fc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (access == ReservationAccess.OWN_ONLY &amp;&amp; !isOwnedByCurrentUser(appointment)) {</b>
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return appointment;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Resolves the appropriate status when authorization or lookup fails.
+&nbsp;     *
+&nbsp;     * @param appointmentId unique id used to find the record
+&nbsp;     * @param access access mode used by the caller
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    private BookingStatus resolveAuthorizationOrNotFoundStatus(String appointmentId, ReservationAccess access) {
+<b class="fc">&nbsp;        if (!isSessionActive()) {</b>
+<b class="fc">&nbsp;            return BookingStatus.UNAUTHORIZED;</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (access == ReservationAccess.ADMIN_ANY &amp;&amp; !isCurrentUserAdmin()) {</b>
+<b class="nc">&nbsp;            return BookingStatus.UNAUTHORIZED;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Appointment appointment = appointmentBookingRepository.findById(normalize(appointmentId)).orElse(null);</b>
+<b class="pc">&nbsp;        if (appointment == null) {</b>
+<b class="fc">&nbsp;            return BookingStatus.APPOINTMENT_NOT_FOUND;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (access == ReservationAccess.OWN_ONLY &amp;&amp; !isOwnedByCurrentUser(appointment)) {</b>
+<b class="nc">&nbsp;            return BookingStatus.UNAUTHORIZED;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return BookingStatus.APPOINTMENT_NOT_FOUND;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Finds slot by time using the given input.
+&nbsp;     *
+&nbsp;     * @param slotTime slot time text like 10:00
+&nbsp;     * @return slot if found, otherwise null
+&nbsp;     */
+&nbsp;    private AppointmentSlot findSlotByTime(String slotTime) {
+<b class="fc">&nbsp;        String normalizedSlotTime = normalize(slotTime);</b>
+<b class="pc">&nbsp;        if (normalizedSlotTime == null) {</b>
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        for (AppointmentSlot slot : appointmentRepository.findAll()) {</b>
+<b class="pc">&nbsp;            if (normalizedSlotTime.equals(slot.getTime())) {</b>
+<b class="nc">&nbsp;                return slot;</b>
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Checks whether current logged-in user is an administrator.
+&nbsp;     *
+&nbsp;     * @return true when the current user is admin, otherwise false
+&nbsp;     */
+&nbsp;    private boolean isCurrentUserAdmin() {
+<b class="pc">&nbsp;        if (sessionManager == null || !sessionManager.isLoggedIn()) {</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (sessionManager.isAdmin()) {</b>
+<b class="fc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (userRepository == null) {</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        String email = normalize(sessionManager.getCurrentEmail());</b>
+<b class="nc">&nbsp;        return email != null &amp;&amp; userRepository.findByEmail(email)</b>
+<b class="nc">&nbsp;                .map(user -&gt; user.getRole() == UserRole.ADMIN)</b>
+<b class="nc">&nbsp;                .orElse(false);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Checks whether a session is currently active.
+&nbsp;     *
+&nbsp;     * @return true when logged in, otherwise false
+&nbsp;     */
+&nbsp;    private boolean isSessionActive() {
+<b class="pc">&nbsp;        return sessionManager != null &amp;&amp; sessionManager.isLoggedIn();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Checks whether the given appointment belongs to the current user.
+&nbsp;     *
+&nbsp;     * @param appointment appointment to validate ownership for
+&nbsp;     * @return true when the current user owns the appointment, otherwise false
+&nbsp;     */
+&nbsp;    private boolean isOwnedByCurrentUser(Appointment appointment) {
+<b class="nc">&nbsp;        if (appointment == null || !isSessionActive()) {</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        String currentEmail = normalize(sessionManager.getCurrentEmail());</b>
+<b class="nc">&nbsp;        String ownerIdentity = normalize(appointment.getCustomerName());</b>
+<b class="nc">&nbsp;        return ownerIdentity != null &amp;&amp; ownerIdentity.equalsIgnoreCase(currentEmail);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sends event notification to registered observers.
+&nbsp;     *
+&nbsp;     * @param message message text to show or send
+&nbsp;     */
+&nbsp;    private void notifyEvent(String message) {
+<b class="nc">&nbsp;        if (eventManager != null &amp;&amp; message != null &amp;&amp; !message.trim().isEmpty()) {</b>
+<b class="nc">&nbsp;            eventManager.notifyObservers(message);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Normalizes text input by trimming it.
+&nbsp;     *
+&nbsp;     * @param value raw input
+&nbsp;     * @return trimmed value, or null if blank
+&nbsp;     */
+&nbsp;    private String normalize(String value) {
+<b class="pc">&nbsp;        if (value == null || value.trim().isEmpty()) {</b>
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return value.trim();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Converts text into integer.
+&nbsp;     *
+&nbsp;     * @param value raw input
+&nbsp;     * @return parsed integer, or null when invalid
+&nbsp;     */
+&nbsp;    private Integer parseInteger(String value) {
+<b class="nc">&nbsp;        if (value == null) {</b>
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            return Integer.parseInt(value.trim());</b>
+&nbsp;        } catch (NumberFormatException ex) {
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a temporary appointment used only for validation.
+&nbsp;     *
+&nbsp;     * @param durationMinutes appointment duration in minutes
+&nbsp;     * @param participantCount number of people for the appointment
+&nbsp;     * @return temporary appointment instance
+&nbsp;     */
+&nbsp;    private Appointment validationProbe(int durationMinutes, int participantCount) {
+<b class="fc">&nbsp;        return new Appointment(&quot;validation&quot;, LocalDateTime.now(), durationMinutes, participantCount);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Applies type-specific rules for an appointment.
+&nbsp;     *
+&nbsp;     * @param appointment appointment to validate
+&nbsp;     * @param appointmentType type to validate against
+&nbsp;     * @return true when the type rule accepts the appointment, otherwise false
+&nbsp;     */
+&nbsp;    private boolean typeRulesAllow(Appointment appointment, AppointmentType appointmentType) {
+<b class="fc">&nbsp;        AppointmentType normalizedType = normalizeType(appointmentType);</b>
+<b class="fc">&nbsp;        AppointmentTypeRule rule = appointmentTypeRules.get(normalizedType);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (rule == null) {</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return rule.isValid(appointment);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Normalizes null appointment types to NORMAL.
+&nbsp;     *
+&nbsp;     * @param appointmentType appointment type
+&nbsp;     * @return normalized appointment type
+&nbsp;     */
+&nbsp;    private AppointmentType normalizeType(AppointmentType appointmentType) {
+<b class="fc">&nbsp;        return appointmentType == null ? AppointmentType.NORMAL : appointmentType;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Builds a rule map for all supported appointment types.
+&nbsp;     *
+&nbsp;     * @param rules list of type rules
+&nbsp;     * @return immutable-ready enum map with one rule per type
+&nbsp;     */
+&nbsp;    private Map&lt;AppointmentType, AppointmentTypeRule&gt; buildTypeRuleMap(List&lt;AppointmentTypeRule&gt; rules) {
+<b class="fc">&nbsp;        Map&lt;AppointmentType, AppointmentTypeRule&gt; strategyMap = new EnumMap&lt;&gt;(AppointmentType.class);</b>
+&nbsp;
+<b class="fc">&nbsp;        for (AppointmentTypeRule rule : rules) {</b>
+<b class="fc">&nbsp;            strategyMap.put(rule.getSupportedType(), rule);</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (!strategyMap.keySet().containsAll(EnumSet.allOf(AppointmentType.class))) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;A validation rule must exist for each appointment type.&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return strategyMap;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Represents reservation access scope.
+&nbsp;     */
+<b class="fc">&nbsp;    private enum ReservationAccess {</b>
+<b class="fc">&nbsp;        ADMIN_ANY,</b>
+<b class="fc">&nbsp;        OWN_ONLY</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

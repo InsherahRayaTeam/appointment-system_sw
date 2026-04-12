@@ -1,0 +1,591 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > CalendarPanel</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.presentation.gui</a>
+</div>
+
+<h1>Coverage Summary for Class: CalendarPanel (org.example.presentation.gui)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CalendarPanel</td>
+<td class="coverageStat">
+  <span class="percent">
+    78.9%
+  </span>
+  <span class="absValue">
+    (15/19)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    63.2%
+  </span>
+  <span class="absValue">
+    (24/38)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    79.5%
+  </span>
+  <span class="absValue">
+    (136/171)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">CalendarPanel$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (1/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (1/2)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">CalendarPanel$2</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/3)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">CalendarPanel$AppointmentListItem</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    64%
+  </span>
+  <span class="absValue">
+    (16/25)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    52.2%
+  </span>
+  <span class="absValue">
+    (24/46)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75.3%
+  </span>
+  <span class="absValue">
+    (137/182)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.presentation.gui;
+&nbsp;
+&nbsp;import org.example.domain.Appointment;
+&nbsp;import org.example.domain.AppointmentStatus;
+&nbsp;import org.example.service.AppointmentService;
+&nbsp;
+&nbsp;import javax.swing.BorderFactory;
+&nbsp;import javax.swing.BoxLayout;
+&nbsp;import javax.swing.JButton;
+&nbsp;import javax.swing.JDialog;
+&nbsp;import javax.swing.JLabel;
+&nbsp;import javax.swing.JList;
+&nbsp;import javax.swing.JOptionPane;
+&nbsp;import javax.swing.JPanel;
+&nbsp;import javax.swing.JScrollPane;
+&nbsp;import javax.swing.ListSelectionModel;
+&nbsp;import javax.swing.SwingConstants;
+&nbsp;import java.awt.BorderLayout;
+&nbsp;import java.awt.Color;
+&nbsp;import java.awt.Dimension;
+&nbsp;import java.awt.FlowLayout;
+&nbsp;import java.awt.Font;
+&nbsp;import java.awt.GridLayout;
+&nbsp;import java.awt.event.MouseAdapter;
+&nbsp;import java.awt.event.MouseEvent;
+&nbsp;import java.time.DayOfWeek;
+&nbsp;import java.time.LocalDate;
+&nbsp;import java.time.LocalDateTime;
+&nbsp;import java.time.YearMonth;
+&nbsp;import java.time.format.DateTimeFormatter;
+&nbsp;import java.time.format.TextStyle;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.Comparator;
+&nbsp;import java.util.EnumMap;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Locale;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Objects;
+&nbsp;import java.util.function.Supplier;
+&nbsp;
+&nbsp;/**
+&nbsp; * Displays appointments in a monthly calendar view with day and appointment interactions.
+&nbsp; */
+&nbsp;public class CalendarPanel extends JPanel {
+&nbsp;
+&nbsp;    private static final int MAX_VISIBLE_APPOINTMENTS_PER_DAY = 3;
+<b class="fc">&nbsp;    private static final DateTimeFormatter MONTH_LABEL_FORMAT = DateTimeFormatter.ofPattern(&quot;MMMM yyyy&quot;);</b>
+<b class="fc">&nbsp;    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern(&quot;HH:mm&quot;);</b>
+<b class="fc">&nbsp;    private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;    private static final Color TODAY_COLOR = new Color(225, 240, 255);</b>
+<b class="fc">&nbsp;    private static final Color DEFAULT_DAY_COLOR = Color.WHITE;</b>
+<b class="fc">&nbsp;    private static final Color BOOKED_COLOR = new Color(46, 125, 50);</b>
+<b class="fc">&nbsp;    private static final Color CANCELLED_COLOR = new Color(198, 40, 40);</b>
+<b class="fc">&nbsp;    private static final Color PENDING_COLOR = new Color(245, 124, 0);</b>
+&nbsp;
+&nbsp;    private final Supplier&lt;List&lt;Appointment&gt;&gt; appointmentSupplier;
+&nbsp;    private final JLabel monthTitleLabel;
+&nbsp;    private final JPanel weekHeaderGrid;
+&nbsp;    private final JPanel dayGrid;
+&nbsp;
+&nbsp;    private YearMonth currentMonth;
+&nbsp;    private Map&lt;LocalDate, List&lt;Appointment&gt;&gt; appointmentsByDate;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new calendar panel object.
+&nbsp;     *
+&nbsp;     * @param appointmentService service used by the GUI layer
+&nbsp;     * @param appointmentSupplier supplier that returns appointments visible in this view
+&nbsp;     */
+<b class="fc">&nbsp;    public CalendarPanel(AppointmentService appointmentService, Supplier&lt;List&lt;Appointment&gt;&gt; appointmentSupplier) {</b>
+<b class="fc">&nbsp;        Objects.requireNonNull(appointmentService, &quot;appointmentService cannot be null&quot;);</b>
+<b class="fc">&nbsp;        this.appointmentSupplier = Objects.requireNonNull(appointmentSupplier, &quot;appointmentSupplier cannot be null&quot;);</b>
+<b class="fc">&nbsp;        this.currentMonth = YearMonth.now();</b>
+<b class="fc">&nbsp;        this.appointmentsByDate = new HashMap&lt;&gt;();</b>
+&nbsp;
+<b class="fc">&nbsp;        setLayout(new BorderLayout(10, 10));</b>
+<b class="fc">&nbsp;        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));</b>
+&nbsp;
+<b class="fc">&nbsp;        monthTitleLabel = new JLabel(&quot;&quot;, JLabel.CENTER);</b>
+<b class="fc">&nbsp;        monthTitleLabel.setFont(new Font(&quot;Arial&quot;, Font.BOLD, 18));</b>
+&nbsp;
+<b class="fc">&nbsp;        JButton previousButton = new JButton(&quot;Previous Month&quot;);</b>
+<b class="fc">&nbsp;        previousButton.addActionListener(e -&gt; {</b>
+<b class="nc">&nbsp;            currentMonth = currentMonth.minusMonths(1);</b>
+<b class="nc">&nbsp;            refreshCalendar();</b>
+&nbsp;        });
+&nbsp;
+<b class="fc">&nbsp;        JButton nextButton = new JButton(&quot;Next Month&quot;);</b>
+<b class="fc">&nbsp;        nextButton.addActionListener(e -&gt; {</b>
+<b class="fc">&nbsp;            currentMonth = currentMonth.plusMonths(1);</b>
+<b class="fc">&nbsp;            refreshCalendar();</b>
+&nbsp;        });
+&nbsp;
+<b class="fc">&nbsp;        JPanel headerPanel = new JPanel(new BorderLayout());</b>
+<b class="fc">&nbsp;        JPanel navButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));</b>
+<b class="fc">&nbsp;        navButtons.add(previousButton);</b>
+<b class="fc">&nbsp;        navButtons.add(nextButton);</b>
+<b class="fc">&nbsp;        headerPanel.add(monthTitleLabel, BorderLayout.CENTER);</b>
+<b class="fc">&nbsp;        headerPanel.add(navButtons, BorderLayout.EAST);</b>
+<b class="fc">&nbsp;        add(headerPanel, BorderLayout.NORTH);</b>
+&nbsp;
+<b class="fc">&nbsp;        weekHeaderGrid = new JPanel(new GridLayout(1, 7, 6, 0));</b>
+<b class="fc">&nbsp;        dayGrid = new JPanel(new GridLayout(6, 7, 6, 6));</b>
+&nbsp;
+<b class="fc">&nbsp;        JPanel calendarContainer = new JPanel(new BorderLayout(0, 6));</b>
+<b class="fc">&nbsp;        calendarContainer.add(weekHeaderGrid, BorderLayout.NORTH);</b>
+<b class="fc">&nbsp;        calendarContainer.add(dayGrid, BorderLayout.CENTER);</b>
+<b class="fc">&nbsp;        add(new JScrollPane(calendarContainer), BorderLayout.CENTER);</b>
+&nbsp;
+<b class="fc">&nbsp;        addWeekHeaders();</b>
+&nbsp;
+<b class="fc">&nbsp;        refreshCalendar();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Reloads appointments and redraws the current calendar month.
+&nbsp;     */
+&nbsp;    public final void refreshCalendar() {
+<b class="fc">&nbsp;        appointmentsByDate = groupByDate(appointmentSupplier.get());</b>
+<b class="fc">&nbsp;        monthTitleLabel.setText(currentMonth.format(MONTH_LABEL_FORMAT));</b>
+<b class="fc">&nbsp;        rebuildMonthGrid();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Map&lt;LocalDate, List&lt;Appointment&gt;&gt; groupByDate(List&lt;Appointment&gt; appointments) {
+<b class="fc">&nbsp;        Map&lt;LocalDate, List&lt;Appointment&gt;&gt; grouped = new HashMap&lt;&gt;();</b>
+<b class="pc">&nbsp;        if (appointments == null) {</b>
+<b class="nc">&nbsp;            return grouped;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        for (Appointment appointment : appointments) {</b>
+<b class="pc">&nbsp;            if (appointment == null || appointment.getStartTime() == null) {</b>
+&nbsp;                continue;
+&nbsp;            }
+<b class="fc">&nbsp;            LocalDate day = appointment.getStartTime().toLocalDate();</b>
+<b class="fc">&nbsp;            grouped.computeIfAbsent(day, key -&gt; new ArrayList&lt;&gt;()).add(appointment);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        for (List&lt;Appointment&gt; dailyAppointments : grouped.values()) {</b>
+<b class="fc">&nbsp;            dailyAppointments.sort(Comparator.comparing(Appointment::getStartTime));</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return grouped;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void rebuildMonthGrid() {
+<b class="fc">&nbsp;        dayGrid.removeAll();</b>
+&nbsp;
+<b class="fc">&nbsp;        LocalDate firstDayOfMonth = currentMonth.atDay(1);</b>
+<b class="fc">&nbsp;        int firstColumnIndex = toSundayStartIndex(firstDayOfMonth.getDayOfWeek());</b>
+<b class="fc">&nbsp;        int daysInMonth = currentMonth.lengthOfMonth();</b>
+&nbsp;
+<b class="fc">&nbsp;        for (int i = 0; i &lt; firstColumnIndex; i++) {</b>
+<b class="fc">&nbsp;            dayGrid.add(createEmptyDayCell());</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        for (int day = 1; day &lt;= daysInMonth; day++) {</b>
+<b class="fc">&nbsp;            LocalDate cellDate = currentMonth.atDay(day);</b>
+<b class="fc">&nbsp;            dayGrid.add(buildDayCell(cellDate));</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        int targetCells = 42;</b>
+<b class="fc">&nbsp;        int currentCells = firstColumnIndex + daysInMonth;</b>
+<b class="fc">&nbsp;        for (int i = currentCells; i &lt; targetCells; i++) {</b>
+<b class="fc">&nbsp;            dayGrid.add(createEmptyDayCell());</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        dayGrid.revalidate();</b>
+<b class="fc">&nbsp;        dayGrid.repaint();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void addWeekHeaders() {
+<b class="fc">&nbsp;        weekHeaderGrid.removeAll();</b>
+<b class="fc">&nbsp;        DayOfWeek[] headers = {</b>
+&nbsp;                DayOfWeek.SUNDAY,
+&nbsp;                DayOfWeek.MONDAY,
+&nbsp;                DayOfWeek.TUESDAY,
+&nbsp;                DayOfWeek.WEDNESDAY,
+&nbsp;                DayOfWeek.THURSDAY,
+&nbsp;                DayOfWeek.FRIDAY,
+&nbsp;                DayOfWeek.SATURDAY
+&nbsp;        };
+&nbsp;
+<b class="fc">&nbsp;        for (DayOfWeek dayOfWeek : headers) {</b>
+<b class="fc">&nbsp;            JLabel label = new JLabel(dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ENGLISH), JLabel.CENTER);</b>
+<b class="fc">&nbsp;            label.setFont(new Font(&quot;Arial&quot;, Font.BOLD, 12));</b>
+<b class="fc">&nbsp;            label.setOpaque(true);</b>
+<b class="fc">&nbsp;            label.setBackground(new Color(245, 245, 245));</b>
+<b class="fc">&nbsp;            label.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));</b>
+<b class="fc">&nbsp;            weekHeaderGrid.add(label);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        weekHeaderGrid.revalidate();</b>
+<b class="fc">&nbsp;        weekHeaderGrid.repaint();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private JPanel buildDayCell(LocalDate date) {
+<b class="fc">&nbsp;        JPanel dayCell = new JPanel(new BorderLayout(4, 4));</b>
+<b class="fc">&nbsp;        dayCell.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));</b>
+<b class="fc">&nbsp;        dayCell.setBackground(LocalDate.now().equals(date) ? TODAY_COLOR : DEFAULT_DAY_COLOR);</b>
+<b class="fc">&nbsp;        dayCell.setPreferredSize(new Dimension(140, 110));</b>
+&nbsp;
+<b class="fc">&nbsp;        JPanel dayHeaderPanel = new JPanel(new BorderLayout());</b>
+<b class="fc">&nbsp;        dayHeaderPanel.setOpaque(false);</b>
+&nbsp;
+<b class="fc">&nbsp;        JLabel dayNumberLabel = new JLabel(String.valueOf(date.getDayOfMonth()), SwingConstants.RIGHT);</b>
+<b class="fc">&nbsp;        dayNumberLabel.setFont(new Font(&quot;Arial&quot;, Font.BOLD, 12));</b>
+<b class="fc">&nbsp;        dayNumberLabel.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 6));</b>
+<b class="fc">&nbsp;        dayHeaderPanel.add(dayNumberLabel, BorderLayout.EAST);</b>
+<b class="fc">&nbsp;        dayCell.add(dayHeaderPanel, BorderLayout.NORTH);</b>
+&nbsp;
+<b class="fc">&nbsp;        JPanel appointmentsPanel = new JPanel();</b>
+<b class="fc">&nbsp;        appointmentsPanel.setLayout(new BoxLayout(appointmentsPanel, BoxLayout.Y_AXIS));</b>
+<b class="fc">&nbsp;        appointmentsPanel.setOpaque(false);</b>
+<b class="fc">&nbsp;        appointmentsPanel.setBorder(BorderFactory.createEmptyBorder(0, 4, 4, 4));</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;Appointment&gt; dayAppointments = appointmentsByDate.getOrDefault(date, Collections.emptyList());</b>
+<b class="fc">&nbsp;        int visibleCount = Math.min(dayAppointments.size(), MAX_VISIBLE_APPOINTMENTS_PER_DAY);</b>
+<b class="fc">&nbsp;        for (int i = 0; i &lt; visibleCount; i++) {</b>
+<b class="fc">&nbsp;            appointmentsPanel.add(buildAppointmentButton(dayAppointments.get(i)));</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (dayAppointments.size() &gt; MAX_VISIBLE_APPOINTMENTS_PER_DAY) {</b>
+<b class="nc">&nbsp;            JLabel moreLabel = new JLabel(&quot;+&quot; + (dayAppointments.size() - MAX_VISIBLE_APPOINTMENTS_PER_DAY) + &quot; more&quot;);</b>
+<b class="nc">&nbsp;            moreLabel.setFont(new Font(&quot;Arial&quot;, Font.PLAIN, 11));</b>
+<b class="nc">&nbsp;            appointmentsPanel.add(moreLabel);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        dayCell.add(appointmentsPanel, BorderLayout.CENTER);</b>
+&nbsp;
+<b class="fc">&nbsp;        MouseAdapter clickListener = new MouseAdapter() {</b>
+&nbsp;            /**
+&nbsp;             * Opens the day details dialog when a day cell is clicked.
+&nbsp;             *
+&nbsp;             * @param e mouse click event from the calendar grid
+&nbsp;             */
+&nbsp;            @Override
+&nbsp;            public void mouseClicked(MouseEvent e) {
+<b class="nc">&nbsp;                showDayAppointmentsDialog(date, dayAppointments);</b>
+&nbsp;            }
+&nbsp;        };
+&nbsp;
+<b class="fc">&nbsp;        dayCell.addMouseListener(clickListener);</b>
+<b class="fc">&nbsp;        dayHeaderPanel.addMouseListener(clickListener);</b>
+<b class="fc">&nbsp;        dayNumberLabel.addMouseListener(clickListener);</b>
+<b class="fc">&nbsp;        appointmentsPanel.addMouseListener(clickListener);</b>
+&nbsp;
+<b class="fc">&nbsp;        return dayCell;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private JPanel createEmptyDayCell() {
+<b class="fc">&nbsp;        JPanel cell = new JPanel(new BorderLayout());</b>
+<b class="fc">&nbsp;        cell.setBorder(BorderFactory.createLineBorder(new Color(235, 235, 235)));</b>
+<b class="fc">&nbsp;        cell.setBackground(new Color(250, 250, 250));</b>
+<b class="fc">&nbsp;        return cell;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private JButton buildAppointmentButton(Appointment appointment) {
+<b class="fc">&nbsp;        LocalDateTime start = appointment.getStartTime();</b>
+<b class="pc">&nbsp;        String summary = start == null</b>
+<b class="nc">&nbsp;                ? &quot;Unknown - Booked&quot;</b>
+<b class="fc">&nbsp;                : TIME_FORMAT.format(start) + &quot; - &quot; + shortStatusLabel(appointment.getStatus());</b>
+&nbsp;
+<b class="fc">&nbsp;        JButton button = new JButton(summary);</b>
+<b class="fc">&nbsp;        button.setHorizontalAlignment(JButton.LEFT);</b>
+<b class="fc">&nbsp;        button.setBorderPainted(false);</b>
+<b class="fc">&nbsp;        button.setFocusPainted(false);</b>
+<b class="fc">&nbsp;        button.setContentAreaFilled(false);</b>
+<b class="fc">&nbsp;        button.setForeground(colorForStatus(appointment.getStatus()));</b>
+<b class="fc">&nbsp;        button.setFont(new Font(&quot;Arial&quot;, Font.PLAIN, 11));</b>
+<b class="fc">&nbsp;        button.setToolTipText(buildTooltip(appointment));</b>
+<b class="fc">&nbsp;        button.addActionListener(e -&gt; showAppointmentDetails(appointment));</b>
+<b class="fc">&nbsp;        return button;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void showDayAppointmentsDialog(LocalDate date, List&lt;Appointment&gt; dayAppointments) {
+<b class="nc">&nbsp;        List&lt;Appointment&gt; appointments = dayAppointments == null ? Collections.emptyList() : dayAppointments;</b>
+<b class="nc">&nbsp;        JDialog dialog = new JDialog(JOptionPane.getFrameForComponent(this), &quot;Appointments - &quot; + date, true);</b>
+<b class="nc">&nbsp;        dialog.setLayout(new BorderLayout(8, 8));</b>
+&nbsp;
+<b class="nc">&nbsp;        if (appointments.isEmpty()) {</b>
+<b class="nc">&nbsp;            dialog.add(new JLabel(&quot;No appointments for this day.&quot;, JLabel.CENTER), BorderLayout.CENTER);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            JList&lt;AppointmentListItem&gt; list = new JList&lt;&gt;(appointments.stream()</b>
+<b class="nc">&nbsp;                    .map(AppointmentListItem::new)</b>
+<b class="nc">&nbsp;                    .toArray(AppointmentListItem[]::new));</b>
+<b class="nc">&nbsp;            list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);</b>
+<b class="nc">&nbsp;            list.addMouseListener(new java.awt.event.MouseAdapter() {</b>
+&nbsp;                /**
+&nbsp;                 * Opens appointment details when the user double-clicks an item.
+&nbsp;                 *
+&nbsp;                 * @param e mouse click event from the appointments list
+&nbsp;                 */
+&nbsp;                @Override
+&nbsp;                public void mouseClicked(java.awt.event.MouseEvent e) {
+<b class="nc">&nbsp;                    if (e.getClickCount() &gt;= 2 &amp;&amp; list.getSelectedValue() != null) {</b>
+<b class="nc">&nbsp;                        showAppointmentDetails(list.getSelectedValue().appointment);</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            });
+&nbsp;
+<b class="nc">&nbsp;            JButton detailsButton = new JButton(&quot;Show Details&quot;);</b>
+<b class="nc">&nbsp;            detailsButton.addActionListener(e -&gt; {</b>
+<b class="nc">&nbsp;                AppointmentListItem selected = list.getSelectedValue();</b>
+<b class="nc">&nbsp;                if (selected != null) {</b>
+<b class="nc">&nbsp;                    showAppointmentDetails(selected.appointment);</b>
+&nbsp;                }
+&nbsp;            });
+&nbsp;
+<b class="nc">&nbsp;            JPanel south = new JPanel(new FlowLayout(FlowLayout.RIGHT));</b>
+<b class="nc">&nbsp;            south.add(detailsButton);</b>
+<b class="nc">&nbsp;            dialog.add(new JScrollPane(list), BorderLayout.CENTER);</b>
+<b class="nc">&nbsp;            dialog.add(south, BorderLayout.SOUTH);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        dialog.setSize(420, 300);</b>
+<b class="nc">&nbsp;        dialog.setLocationRelativeTo(this);</b>
+<b class="nc">&nbsp;        dialog.setVisible(true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void showAppointmentDetails(Appointment appointment) {
+<b class="nc">&nbsp;        String details = &quot;Date/Time: &quot; + safeDateTime(appointment.getStartTime())</b>
+<b class="nc">&nbsp;                + &quot;\nStatus: &quot; + shortStatusLabel(appointment.getStatus())</b>
+<b class="nc">&nbsp;                + &quot;\nType: &quot; + appointment.getType();</b>
+<b class="nc">&nbsp;        JOptionPane.showMessageDialog(this, details, &quot;Appointment Details&quot;, JOptionPane.INFORMATION_MESSAGE);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String buildTooltip(Appointment appointment) {
+<b class="fc">&nbsp;        return &quot;Date/Time: &quot; + safeDateTime(appointment.getStartTime())</b>
+<b class="fc">&nbsp;                + &quot; | Status: &quot; + shortStatusLabel(appointment.getStatus())</b>
+<b class="fc">&nbsp;                + &quot; | Type: &quot; + appointment.getType();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String safeDateTime(LocalDateTime dateTime) {
+<b class="pc">&nbsp;        return dateTime == null ? &quot;N/A&quot; : dateTime.format(DATE_TIME_FORMAT);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String shortStatusLabel(AppointmentStatus status) {
+<b class="pc">&nbsp;        if (status == null) {</b>
+<b class="nc">&nbsp;            return &quot;Booked&quot;;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return status.name();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Color colorForStatus(AppointmentStatus status) {
+<b class="pc">&nbsp;        if (status == null) {</b>
+<b class="nc">&nbsp;            return BOOKED_COLOR;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Map&lt;AppointmentStatus, Color&gt; colorMap = new EnumMap&lt;&gt;(AppointmentStatus.class);</b>
+<b class="fc">&nbsp;        colorMap.put(AppointmentStatus.CONFIRMED, BOOKED_COLOR);</b>
+<b class="fc">&nbsp;        colorMap.put(AppointmentStatus.CANCELLED, CANCELLED_COLOR);</b>
+<b class="fc">&nbsp;        colorMap.put(AppointmentStatus.WAITLISTED, PENDING_COLOR);</b>
+<b class="fc">&nbsp;        colorMap.put(AppointmentStatus.MODIFIED, PENDING_COLOR);</b>
+<b class="fc">&nbsp;        colorMap.put(AppointmentStatus.RESCHEDULED, PENDING_COLOR);</b>
+&nbsp;
+<b class="fc">&nbsp;        return colorMap.getOrDefault(status, BOOKED_COLOR);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private int toSundayStartIndex(DayOfWeek dayOfWeek) {
+<b class="fc">&nbsp;        int dayValue = dayOfWeek.getValue();</b>
+<b class="fc">&nbsp;        return dayValue % 7;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static final class AppointmentListItem {
+&nbsp;        private final Appointment appointment;
+&nbsp;
+<b class="nc">&nbsp;        private AppointmentListItem(Appointment appointment) {</b>
+<b class="nc">&nbsp;            this.appointment = appointment;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        /**
+&nbsp;         * Builds one readable line for the appointment list.
+&nbsp;         *
+&nbsp;         * @return formatted text with time and status
+&nbsp;         */
+&nbsp;        @Override
+&nbsp;        public String toString() {
+<b class="nc">&nbsp;            LocalDateTime start = appointment.getStartTime();</b>
+<b class="nc">&nbsp;            String time = start == null ? &quot;N/A&quot; : TIME_FORMAT.format(start);</b>
+<b class="nc">&nbsp;            String status = appointment.getStatus() == null ? &quot;Booked&quot; : appointment.getStatus().name();</b>
+<b class="nc">&nbsp;            return time + &quot; - &quot; + status;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+&nbsp;
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

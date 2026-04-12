@@ -1,0 +1,298 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > LoginFrame</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.presentation.gui</a>
+</div>
+
+<h1>Coverage Summary for Class: LoginFrame (org.example.presentation.gui)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">LoginFrame</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    70%
+  </span>
+  <span class="absValue">
+    (7/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    95.6%
+  </span>
+  <span class="absValue">
+    (65/68)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.presentation.gui;
+&nbsp;
+&nbsp;import org.example.service.AdminAuthService;
+&nbsp;import org.example.service.AuthenticationAttemptResult;
+&nbsp;import org.example.service.LoginStatus;
+&nbsp;import org.example.domain.Credentials;
+&nbsp;
+&nbsp;import javax.swing.BorderFactory;
+&nbsp;import javax.swing.JButton;
+&nbsp;import javax.swing.JFrame;
+&nbsp;import javax.swing.JLabel;
+&nbsp;import javax.swing.JOptionPane;
+&nbsp;import javax.swing.JPanel;
+&nbsp;import javax.swing.JPasswordField;
+&nbsp;import javax.swing.JTextField;
+&nbsp;import java.awt.BorderLayout;
+&nbsp;import java.awt.Color;
+&nbsp;import java.awt.Font;
+&nbsp;import java.awt.GridLayout;
+&nbsp;import java.util.Objects;
+&nbsp;
+&nbsp;/**
+&nbsp; * Represents login frame in the system.
+&nbsp; */
+&nbsp;public class LoginFrame extends JFrame {
+&nbsp;
+&nbsp;    private static final String LOGIN_SUCCESS_TITLE = GuiText.LOGIN_SUCCESS_TITLE;
+&nbsp;
+&nbsp;    private final AdminAuthService authService;
+&nbsp;    private final ApplicationController appController;
+&nbsp;
+&nbsp;    private JTextField emailField;
+&nbsp;    private JPasswordField passwordField;
+&nbsp;    private JLabel statusLabel;
+&nbsp;    private JButton loginButton;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new login frame object with the given values.
+&nbsp;     *
+&nbsp;     * @param authService service used to run business logic
+&nbsp;     * @param appController controller used for navigation and actions
+&nbsp;     */
+&nbsp;    public LoginFrame(
+&nbsp;            AdminAuthService authService,
+&nbsp;            ApplicationController appController
+<b class="fc">&nbsp;    ) {</b>
+<b class="fc">&nbsp;        this.authService = Objects.requireNonNull(authService, &quot;authService cannot be null&quot;);</b>
+<b class="fc">&nbsp;        this.appController = Objects.requireNonNull(appController, &quot;appController cannot be null&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        initializeUi();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Builds and wires the login screen UI.
+&nbsp;     */
+&nbsp;    private void initializeUi() {
+<b class="fc">&nbsp;        setTitle(GuiText.APP_LOGIN_TITLE);</b>
+<b class="fc">&nbsp;        setSize(420, 260);</b>
+<b class="fc">&nbsp;        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</b>
+<b class="fc">&nbsp;        setLayout(new BorderLayout());</b>
+&nbsp;
+<b class="fc">&nbsp;        JLabel titleLabel = new JLabel(GuiText.APP_LOGIN_HEADER, JLabel.CENTER);</b>
+<b class="fc">&nbsp;        titleLabel.setFont(new Font(&quot;Arial&quot;, Font.BOLD, 18));</b>
+<b class="fc">&nbsp;        titleLabel.setBorder(BorderFactory.createEmptyBorder(15, 10, 10, 10));</b>
+<b class="fc">&nbsp;        add(titleLabel, BorderLayout.NORTH);</b>
+&nbsp;
+<b class="fc">&nbsp;        JPanel formPanel = new JPanel(new GridLayout(3, 2, 10, 10));</b>
+<b class="fc">&nbsp;        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));</b>
+&nbsp;
+<b class="fc">&nbsp;        formPanel.add(new JLabel(GuiText.EMAIL_LABEL));</b>
+<b class="fc">&nbsp;        emailField = new JTextField();</b>
+<b class="fc">&nbsp;        formPanel.add(emailField);</b>
+&nbsp;
+<b class="fc">&nbsp;        formPanel.add(new JLabel(GuiText.PASSWORD_LABEL));</b>
+<b class="fc">&nbsp;        passwordField = new JPasswordField();</b>
+<b class="fc">&nbsp;        formPanel.add(passwordField);</b>
+&nbsp;
+<b class="fc">&nbsp;        formPanel.add(new JLabel(&quot;&quot;));</b>
+<b class="fc">&nbsp;        statusLabel = new JLabel(GuiText.EMPTY_STATUS_TEXT);</b>
+<b class="fc">&nbsp;        statusLabel.setForeground(new Color(170, 0, 0));</b>
+<b class="fc">&nbsp;        formPanel.add(statusLabel);</b>
+&nbsp;
+<b class="fc">&nbsp;        add(formPanel, BorderLayout.CENTER);</b>
+&nbsp;
+<b class="fc">&nbsp;        JPanel buttonPanel = new JPanel();</b>
+&nbsp;
+<b class="fc">&nbsp;        loginButton = new JButton(GuiText.LOGIN_BUTTON);</b>
+<b class="fc">&nbsp;        JButton signUpButton = new JButton(GuiText.SIGN_UP_BUTTON);</b>
+<b class="fc">&nbsp;        JButton forgotPasswordButton = new JButton(GuiText.FORGOT_PASSWORD_BUTTON);</b>
+<b class="fc">&nbsp;        JButton clearButton = new JButton(GuiText.CLEAR_BUTTON);</b>
+<b class="fc">&nbsp;        JButton exitButton = new JButton(GuiText.EXIT_BUTTON);</b>
+&nbsp;
+<b class="fc">&nbsp;        loginButton.addActionListener(e -&gt; onLogin());</b>
+<b class="fc">&nbsp;        signUpButton.addActionListener(e -&gt; appController.openSignUpFrame());</b>
+<b class="fc">&nbsp;        forgotPasswordButton.addActionListener(e -&gt; appController.openForgotPasswordFrame());</b>
+<b class="fc">&nbsp;        clearButton.addActionListener(e -&gt; onClear());</b>
+<b class="fc">&nbsp;        exitButton.addActionListener(e -&gt; System.exit(0));</b>
+&nbsp;
+<b class="fc">&nbsp;        buttonPanel.add(loginButton);</b>
+<b class="fc">&nbsp;        buttonPanel.add(signUpButton);</b>
+<b class="fc">&nbsp;        buttonPanel.add(forgotPasswordButton);</b>
+<b class="fc">&nbsp;        buttonPanel.add(clearButton);</b>
+<b class="fc">&nbsp;        buttonPanel.add(exitButton);</b>
+&nbsp;
+<b class="fc">&nbsp;        add(buttonPanel, BorderLayout.SOUTH);</b>
+&nbsp;
+<b class="fc">&nbsp;        getRootPane().setDefaultButton(loginButton);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Handles the login button click.
+&nbsp;     */
+&nbsp;    private void onLogin() {
+<b class="fc">&nbsp;        String email = emailField.getText();</b>
+<b class="fc">&nbsp;        String password = new String(passwordField.getPassword());</b>
+<b class="fc">&nbsp;        loginButton.setEnabled(false);</b>
+&nbsp;
+&nbsp;        AuthenticationAttemptResult result;
+&nbsp;        try {
+<b class="fc">&nbsp;            result = authService.authenticateWithPolicy(new Credentials(email, password));</b>
+&nbsp;        } catch (IllegalArgumentException ex) {
+<b class="fc">&nbsp;            showError(GuiText.EMAIL_AND_PASSWORD_REQUIRED);</b>
+<b class="fc">&nbsp;            loginButton.setEnabled(true);</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (result.isLocked()) {</b>
+<b class="nc">&nbsp;            showError(GuiText.ACCOUNT_LOCKED_PREFIX + result.getRemainingLockSeconds() + &quot; seconds.&quot;);</b>
+<b class="nc">&nbsp;            loginButton.setEnabled(true);</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (result.isSuccess()) {</b>
+<b class="fc">&nbsp;            JOptionPane.showMessageDialog(</b>
+&nbsp;                    this,
+<b class="fc">&nbsp;                    GuiText.LOGIN_SUCCESS_PREFIX + result.getAuthenticatedRole(),</b>
+&nbsp;                    LOGIN_SUCCESS_TITLE,
+&nbsp;                    JOptionPane.INFORMATION_MESSAGE
+&nbsp;            );
+<b class="fc">&nbsp;            appController.handleSuccessfulLogin(result);</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (result.getStatus() == LoginStatus.BLANK_INPUT) {</b>
+<b class="nc">&nbsp;            showError(GuiText.EMAIL_AND_PASSWORD_CANNOT_BE_BLANK);</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            showError(GuiText.INVALID_CREDENTIALS_PREFIX + result.getAttemptsRemaining());</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        loginButton.setEnabled(true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Clears input fields and resets the status message.
+&nbsp;     */
+&nbsp;    private void onClear() {
+<b class="fc">&nbsp;        emailField.setText(&quot;&quot;);</b>
+<b class="fc">&nbsp;        passwordField.setText(&quot;&quot;);</b>
+<b class="fc">&nbsp;        setStatusMessage(&quot; &quot;);</b>
+<b class="fc">&nbsp;        loginButton.setEnabled(true);</b>
+<b class="fc">&nbsp;        emailField.requestFocusInWindow();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Shows error to the user.
+&nbsp;     *
+&nbsp;     * @param message message text to show or send
+&nbsp;     */
+&nbsp;    private void showError(String message) {
+<b class="fc">&nbsp;        setStatusMessage(message);</b>
+<b class="fc">&nbsp;        JOptionPane.showMessageDialog(this, message, GuiText.LOGIN_ERROR_TITLE, JOptionPane.ERROR_MESSAGE);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Updates the status message.
+&nbsp;     *
+&nbsp;     * @param message message text to show or send
+&nbsp;     */
+&nbsp;    private void setStatusMessage(String message) {
+<b class="pc">&nbsp;        statusLabel.setText(message == null || message.trim().isEmpty() ? GuiText.EMPTY_STATUS_TEXT : message);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

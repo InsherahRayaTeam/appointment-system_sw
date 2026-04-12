@@ -1,0 +1,330 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > BookingPanel</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.presentation.gui</a>
+</div>
+
+<h1>Coverage Summary for Class: BookingPanel (org.example.presentation.gui)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">BookingPanel</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    68.8%
+  </span>
+  <span class="absValue">
+    (11/16)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    98.7%
+  </span>
+  <span class="absValue">
+    (76/77)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.presentation.gui;
+&nbsp;
+&nbsp;import org.example.domain.AppointmentSlot;
+&nbsp;import org.example.domain.AppointmentType;
+&nbsp;import org.example.domain.SystemUser;
+&nbsp;import org.example.service.AppointmentBookingService;
+&nbsp;import org.example.service.AppointmentService;
+&nbsp;import org.example.service.BookingStatus;
+&nbsp;
+&nbsp;import javax.swing.BorderFactory;
+&nbsp;import javax.swing.JButton;
+&nbsp;import javax.swing.JComboBox;
+&nbsp;import javax.swing.JLabel;
+&nbsp;import javax.swing.JOptionPane;
+&nbsp;import javax.swing.JPanel;
+&nbsp;import javax.swing.JTextField;
+&nbsp;import java.awt.BorderLayout;
+&nbsp;import java.awt.FlowLayout;
+&nbsp;import java.awt.GridLayout;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * Shows the form where a user books a new appointment.
+&nbsp; */
+&nbsp;public class BookingPanel extends JPanel {
+&nbsp;
+&nbsp;    private static final String REFRESH_SLOTS_BUTTON = &quot;Refresh Slots&quot;;
+&nbsp;    private static final String CLEAR_BUTTON = &quot;Clear&quot;;
+&nbsp;    private static final String BOOK_APPOINTMENT_BUTTON = &quot;Book Appointment&quot;;
+&nbsp;    private static final String NO_AVAILABLE_SLOTS_PLACEHOLDER = &quot;No available slots&quot;;
+&nbsp;    private static final String NO_SLOTS_AVAILABLE_MESSAGE = &quot;No slots are currently available.&quot;;
+&nbsp;    private static final String BOOKING_DIALOG_TITLE = &quot;Booking&quot;;
+&nbsp;    private static final String BOOKING_ERROR_TITLE = &quot;Booking Error&quot;;
+&nbsp;    private static final String BOOKED_FOR_NAME_LABEL = &quot;Booked For (name):&quot;;
+&nbsp;    private static final String PHONE_NUMBER_LABEL = &quot;Phone Number:&quot;;
+&nbsp;
+&nbsp;    private final SystemUser user;
+&nbsp;    private final AppointmentService appointmentService;
+&nbsp;    private final AppointmentBookingService appointmentBookingService;
+&nbsp;    private final Runnable onBookingSuccess;
+&nbsp;
+&nbsp;    private final JTextField bookedForNameField;
+&nbsp;    private final JTextField phoneNumberField;
+&nbsp;    private final JComboBox&lt;String&gt; slotComboBox;
+&nbsp;    private final JComboBox&lt;AppointmentType&gt; typeComboBox;
+&nbsp;    private final JTextField durationField;
+&nbsp;    private final JTextField participantCountField;
+&nbsp;    private final JButton bookButton;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new booking panel object with the given values.
+&nbsp;     *
+&nbsp;     * @param user user involved in this action
+&nbsp;     * @param appointmentService service used to run business logic
+&nbsp;     * @param appointmentBookingService service used to run business logic
+&nbsp;     * @param onBookingSuccess value for on booking success
+&nbsp;     */
+&nbsp;    public BookingPanel(
+&nbsp;            SystemUser user,
+&nbsp;            AppointmentService appointmentService,
+&nbsp;            AppointmentBookingService appointmentBookingService,
+&nbsp;            Runnable onBookingSuccess
+<b class="fc">&nbsp;    ) {</b>
+<b class="fc">&nbsp;        this.user = user;</b>
+<b class="fc">&nbsp;        this.appointmentService = appointmentService;</b>
+<b class="fc">&nbsp;        this.appointmentBookingService = appointmentBookingService;</b>
+<b class="fc">&nbsp;        this.onBookingSuccess = onBookingSuccess;</b>
+&nbsp;
+<b class="fc">&nbsp;        setLayout(new BorderLayout(10, 10));</b>
+<b class="fc">&nbsp;        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));</b>
+&nbsp;
+<b class="fc">&nbsp;        JPanel formPanel = new JPanel(new GridLayout(6, 2, 10, 10));</b>
+&nbsp;
+<b class="fc">&nbsp;        formPanel.add(new JLabel(BOOKED_FOR_NAME_LABEL));</b>
+<b class="fc">&nbsp;        bookedForNameField = new JTextField(user.getEmail());</b>
+<b class="fc">&nbsp;        formPanel.add(bookedForNameField);</b>
+&nbsp;
+<b class="fc">&nbsp;        formPanel.add(new JLabel(PHONE_NUMBER_LABEL));</b>
+<b class="fc">&nbsp;        phoneNumberField = new JTextField();</b>
+<b class="fc">&nbsp;        formPanel.add(phoneNumberField);</b>
+&nbsp;
+<b class="fc">&nbsp;        formPanel.add(new JLabel(&quot;Date/Day/Time:&quot;));</b>
+<b class="fc">&nbsp;        slotComboBox = new JComboBox&lt;&gt;();</b>
+<b class="fc">&nbsp;        formPanel.add(slotComboBox);</b>
+&nbsp;
+<b class="fc">&nbsp;        formPanel.add(new JLabel(&quot;Appointment Type:&quot;));</b>
+<b class="fc">&nbsp;        typeComboBox = new JComboBox&lt;&gt;(AppointmentType.values());</b>
+<b class="fc">&nbsp;        formPanel.add(typeComboBox);</b>
+&nbsp;
+<b class="fc">&nbsp;        formPanel.add(new JLabel(&quot;Duration (minutes):&quot;));</b>
+<b class="fc">&nbsp;        durationField = new JTextField(&quot;60&quot;);</b>
+<b class="fc">&nbsp;        formPanel.add(durationField);</b>
+&nbsp;
+<b class="fc">&nbsp;        formPanel.add(new JLabel(&quot;Participants:&quot;));</b>
+<b class="fc">&nbsp;        participantCountField = new JTextField(&quot;1&quot;);</b>
+<b class="fc">&nbsp;        formPanel.add(participantCountField);</b>
+&nbsp;
+<b class="fc">&nbsp;        add(formPanel, BorderLayout.CENTER);</b>
+&nbsp;
+<b class="fc">&nbsp;        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));</b>
+<b class="fc">&nbsp;        JButton refreshButton = new JButton(REFRESH_SLOTS_BUTTON);</b>
+<b class="fc">&nbsp;        JButton clearButton = new JButton(CLEAR_BUTTON);</b>
+<b class="fc">&nbsp;        bookButton = new JButton(BOOK_APPOINTMENT_BUTTON);</b>
+&nbsp;
+<b class="fc">&nbsp;        refreshButton.addActionListener(e -&gt; refreshData());</b>
+<b class="fc">&nbsp;        clearButton.addActionListener(e -&gt; clearInputs());</b>
+<b class="fc">&nbsp;        bookButton.addActionListener(e -&gt; onBookAppointment());</b>
+&nbsp;
+<b class="fc">&nbsp;        buttonPanel.add(refreshButton);</b>
+<b class="fc">&nbsp;        buttonPanel.add(clearButton);</b>
+<b class="fc">&nbsp;        buttonPanel.add(bookButton);</b>
+&nbsp;
+<b class="fc">&nbsp;        add(buttonPanel, BorderLayout.SOUTH);</b>
+&nbsp;
+<b class="fc">&nbsp;        refreshData();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Reloads and updates data.
+&nbsp;     */
+&nbsp;    public final void refreshData() {
+<b class="fc">&nbsp;        slotComboBox.removeAllItems();</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;AppointmentSlot&gt; slots = appointmentService.getAvailableSlots();</b>
+<b class="fc">&nbsp;        for (AppointmentSlot slot : slots) {</b>
+<b class="fc">&nbsp;            slotComboBox.addItem(slot.getDateDayTimeLabel());</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (slotComboBox.getItemCount() == 0) {</b>
+<b class="fc">&nbsp;            slotComboBox.addItem(NO_AVAILABLE_SLOTS_PLACEHOLDER);</b>
+<b class="fc">&nbsp;            slotComboBox.setEnabled(false);</b>
+<b class="fc">&nbsp;            bookButton.setEnabled(false);</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            slotComboBox.setEnabled(true);</b>
+<b class="fc">&nbsp;            bookButton.setEnabled(true);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Tries to book an appointment using the current form values.
+&nbsp;     */
+&nbsp;    private void onBookAppointment() {
+<b class="pc">&nbsp;        if (!slotComboBox.isEnabled()) {</b>
+<b class="nc">&nbsp;            JOptionPane.showMessageDialog(</b>
+&nbsp;                    this,
+&nbsp;                    NO_SLOTS_AVAILABLE_MESSAGE,
+&nbsp;                    BOOKING_DIALOG_TITLE,
+&nbsp;                    JOptionPane.WARNING_MESSAGE
+&nbsp;            );
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        BookingStatus status = appointmentBookingService.bookAppointment(</b>
+<b class="fc">&nbsp;                bookedForNameField.getText(),</b>
+<b class="fc">&nbsp;                phoneNumberField.getText(),</b>
+<b class="fc">&nbsp;                selectedSlot(),</b>
+<b class="fc">&nbsp;                durationField.getText(),</b>
+<b class="fc">&nbsp;                participantCountField.getText(),</b>
+<b class="fc">&nbsp;                selectedType()</b>
+&nbsp;        );
+&nbsp;
+<b class="fc">&nbsp;        if (GuiMessageHelper.isSuccessLike(status)) {</b>
+<b class="fc">&nbsp;            JOptionPane.showMessageDialog(null, &quot;Appointment booked successfully!&quot;);</b>
+<b class="fc">&nbsp;            clearInputs();</b>
+<b class="fc">&nbsp;            refreshData();</b>
+<b class="pc">&nbsp;            if (onBookingSuccess != null) {</b>
+<b class="fc">&nbsp;                onBookingSuccess.run();</b>
+&nbsp;            }
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        JOptionPane.showMessageDialog(</b>
+&nbsp;                this,
+<b class="fc">&nbsp;                GuiMessageHelper.toMessage(status),</b>
+&nbsp;                BOOKING_ERROR_TITLE,
+&nbsp;                JOptionPane.ERROR_MESSAGE
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the selected slot text from the combo box.
+&nbsp;     *
+&nbsp;     * @return selected slot text, or null when nothing is selected
+&nbsp;     */
+&nbsp;    private String selectedSlot() {
+<b class="fc">&nbsp;        Object selected = slotComboBox.getSelectedItem();</b>
+<b class="pc">&nbsp;        return selected == null ? null : selected.toString();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the selected appointment type.
+&nbsp;     *
+&nbsp;     * @return selected type, or NORMAL when the selection is invalid
+&nbsp;     */
+&nbsp;    private AppointmentType selectedType() {
+<b class="fc">&nbsp;        Object selected = typeComboBox.getSelectedItem();</b>
+<b class="pc">&nbsp;        return selected instanceof AppointmentType ? (AppointmentType) selected : AppointmentType.NORMAL;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Clears inputs.
+&nbsp;     */
+&nbsp;    private void clearInputs() {
+<b class="fc">&nbsp;        bookedForNameField.setText(user.getEmail());</b>
+<b class="fc">&nbsp;        phoneNumberField.setText(&quot;&quot;);</b>
+<b class="fc">&nbsp;        durationField.setText(&quot;60&quot;);</b>
+<b class="fc">&nbsp;        participantCountField.setText(&quot;1&quot;);</b>
+<b class="fc">&nbsp;        typeComboBox.setSelectedItem(AppointmentType.NORMAL);</b>
+<b class="pc">&nbsp;        if (slotComboBox.getItemCount() &gt; 0) {</b>
+<b class="fc">&nbsp;            slotComboBox.setSelectedIndex(0);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,315 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AdminAuthService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.service</a>
+</div>
+
+<h1>Coverage Summary for Class: AdminAuthService (org.example.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AdminAuthService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (10/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (24/32)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    97.9%
+  </span>
+  <span class="absValue">
+    (47/48)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.service;
+&nbsp;
+&nbsp;import org.example.domain.Credentials;
+&nbsp;import org.example.domain.SystemUser;
+&nbsp;import org.example.domain.UserRole;
+&nbsp;import org.example.repository.UserRepository;
+&nbsp;
+&nbsp;import java.util.Objects;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;/**
+&nbsp; * Handles user and admin login checks.
+&nbsp; */
+&nbsp;public class AdminAuthService {
+&nbsp;
+&nbsp;    private final UserRepository userRepository;
+&nbsp;    private final EventManager eventManager;
+&nbsp;    private final LoginAttemptTracker loginAttemptTracker;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new admin auth service object with the given values.
+&nbsp;     *
+&nbsp;     * @param userRepository user involved in this action
+&nbsp;     * @param eventManager manager object used for shared app state
+&nbsp;     * @param loginAttemptTracker value for login attempt tracker
+&nbsp;     */
+&nbsp;    public AdminAuthService(
+&nbsp;            UserRepository userRepository,
+&nbsp;            EventManager eventManager,
+&nbsp;            LoginAttemptTracker loginAttemptTracker
+<b class="fc">&nbsp;    ) {</b>
+<b class="fc">&nbsp;        this.userRepository = Objects.requireNonNull(</b>
+&nbsp;                userRepository,
+&nbsp;                &quot;userRepository cannot be null&quot;
+&nbsp;        );
+<b class="fc">&nbsp;        this.eventManager = Objects.requireNonNull(</b>
+&nbsp;                eventManager,
+&nbsp;                &quot;eventManager cannot be null&quot;
+&nbsp;        );
+<b class="fc">&nbsp;        this.loginAttemptTracker = Objects.requireNonNull(</b>
+&nbsp;                loginAttemptTracker,
+&nbsp;                &quot;loginAttemptTracker cannot be null&quot;
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Checks credentials and returns true when login is successful.
+&nbsp;     *
+&nbsp;     * @param email email address used for login or matching
+&nbsp;     * @param password password text entered by the user
+&nbsp;     *
+&nbsp;     * @return true when the action is valid or successful, otherwise false
+&nbsp;     */
+&nbsp;    public boolean authenticate(String email, String password) {
+<b class="pc">&nbsp;        return authenticateWithStatus(new Credentials(email, password)) == LoginStatus.SUCCESS;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Checks credentials and returns a login status value.
+&nbsp;     *
+&nbsp;     * @param credentials value for credentials
+&nbsp;     *
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    public LoginStatus authenticateWithStatus(Credentials credentials) {
+<b class="fc">&nbsp;        if (credentials == null) {</b>
+<b class="fc">&nbsp;            return LoginStatus.BLANK_INPUT;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        String email = credentials.getEmail();</b>
+<b class="fc">&nbsp;        String password = credentials.getPassword();</b>
+&nbsp;
+<b class="pc">&nbsp;        if (isBlank(email) || isBlank(password)) {</b>
+<b class="nc">&nbsp;            return LoginStatus.BLANK_INPUT;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Optional&lt;SystemUser&gt; user = resolveAuthenticatedUser(credentials);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (user.isPresent()) {</b>
+<b class="fc">&nbsp;            notifySuccessfulLogin(user.get());</b>
+<b class="fc">&nbsp;            return LoginStatus.SUCCESS;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        eventManager.notifyObservers(&quot;Failed login attempt&quot;);</b>
+<b class="fc">&nbsp;        return LoginStatus.INVALID_CREDENTIALS;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Checks email and password and returns a login status value.
+&nbsp;     *
+&nbsp;     * @param email email address used for login or matching
+&nbsp;     * @param password password text entered by the user
+&nbsp;     *
+&nbsp;     * @return status that explains the operation result
+&nbsp;     */
+&nbsp;    public LoginStatus authenticateWithStatus(String email, String password) {
+<b class="fc">&nbsp;        return authenticateWithStatus(new Credentials(email, password));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Checks credentials with lockout policy and returns detailed result data.
+&nbsp;     *
+&nbsp;     * @param credentials value for credentials
+&nbsp;     *
+&nbsp;     * @return result produced by this method
+&nbsp;     */
+&nbsp;    public AuthenticationAttemptResult authenticateWithPolicy(Credentials credentials) {
+<b class="fc">&nbsp;        if (loginAttemptTracker.isLocked()) {</b>
+<b class="fc">&nbsp;            return AuthenticationAttemptResult.locked(loginAttemptTracker.getRemainingLockSeconds());</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Optional&lt;SystemUser&gt; user = resolveAuthenticatedUser(credentials);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (user.isPresent()) {</b>
+<b class="fc">&nbsp;            notifySuccessfulLogin(user.get());</b>
+<b class="fc">&nbsp;            loginAttemptTracker.recordSuccess();</b>
+<b class="fc">&nbsp;            return AuthenticationAttemptResult.success(user.get());</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        LoginStatus status = credentials == null
+<b class="pc">&nbsp;                || isBlank(credentials.getEmail())</b>
+<b class="pc">&nbsp;                || isBlank(credentials.getPassword())</b>
+<b class="fc">&nbsp;                ? LoginStatus.BLANK_INPUT</b>
+<b class="fc">&nbsp;                : LoginStatus.INVALID_CREDENTIALS;</b>
+&nbsp;
+<b class="fc">&nbsp;        eventManager.notifyObservers(&quot;Failed login attempt&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        loginAttemptTracker.recordFailure();</b>
+&nbsp;
+<b class="fc">&nbsp;        if (loginAttemptTracker.isLocked()) {</b>
+<b class="fc">&nbsp;            return AuthenticationAttemptResult.locked(loginAttemptTracker.getRemainingLockSeconds());</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return AuthenticationAttemptResult.failure(status, loginAttemptTracker.getAttemptsRemaining());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Checks whether locked is true.
+&nbsp;     *
+&nbsp;     * @return true when the action is valid or successful, otherwise false
+&nbsp;     */
+&nbsp;    public boolean isLocked() {
+<b class="fc">&nbsp;        return loginAttemptTracker.isLocked();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Returns the remaining lock seconds.
+&nbsp;     *
+&nbsp;     * @return numeric result from this method
+&nbsp;     */
+&nbsp;    public long getRemainingLockSeconds() {
+<b class="fc">&nbsp;        return loginAttemptTracker.getRemainingLockSeconds();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;     /**
+&nbsp;     * Sends successful login to listeners.
+&nbsp;     *
+&nbsp;     * @param user user involved in this action
+&nbsp;     */
+&nbsp;    private void notifySuccessfulLogin(SystemUser user) {
+<b class="fc">&nbsp;        if (user.getRole() == UserRole.ADMIN) {</b>
+<b class="fc">&nbsp;            eventManager.notifyObservers(&quot;Admin logged in successfully&quot;);</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            eventManager.notifyObservers(&quot;User logged in successfully&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Checks whether blank is true.
+&nbsp;     *
+&nbsp;     * @param value value used by this method
+&nbsp;     *
+&nbsp;     * @return true when the action is valid or successful, otherwise false
+&nbsp;     */
+&nbsp;    private boolean isBlank(String value) {
+<b class="pc">&nbsp;        return value == null || value.trim().isEmpty();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Finds a user that matches the given credentials.
+&nbsp;     *
+&nbsp;     * @param credentials value for credentials
+&nbsp;     *
+&nbsp;     * @return optional value if data is found
+&nbsp;     */
+&nbsp;    private Optional&lt;SystemUser&gt; resolveAuthenticatedUser(Credentials credentials) {
+<b class="fc">&nbsp;        if (credentials == null</b>
+<b class="pc">&nbsp;                || isBlank(credentials.getEmail())</b>
+<b class="pc">&nbsp;                || isBlank(credentials.getPassword())) {</b>
+<b class="fc">&nbsp;            return Optional.empty();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        String email = credentials.getEmail().trim().toLowerCase();</b>
+<b class="fc">&nbsp;        String password = credentials.getPassword();</b>
+&nbsp;
+<b class="fc">&nbsp;        return userRepository.findByEmail(email)</b>
+<b class="fc">&nbsp;                .filter(user -&gt; user.getPassword().equals(password));</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

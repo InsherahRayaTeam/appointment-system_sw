@@ -1,0 +1,284 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ForgotPasswordFrame</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.presentation.gui</a>
+</div>
+
+<h1>Coverage Summary for Class: ForgotPasswordFrame (org.example.presentation.gui)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ForgotPasswordFrame</td>
+<td class="coverageStat">
+  <span class="percent">
+    83.3%
+  </span>
+  <span class="absValue">
+    (5/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    44.4%
+  </span>
+  <span class="absValue">
+    (4/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    83.1%
+  </span>
+  <span class="absValue">
+    (49/59)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">ForgotPasswordFrame$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    85.7%
+  </span>
+  <span class="absValue">
+    (6/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    44.4%
+  </span>
+  <span class="absValue">
+    (4/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    83.3%
+  </span>
+  <span class="absValue">
+    (50/60)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.presentation.gui;
+&nbsp;
+&nbsp;import org.example.service.ForgotPasswordStatus;
+&nbsp;
+&nbsp;import javax.swing.BorderFactory;
+&nbsp;import javax.swing.JButton;
+&nbsp;import javax.swing.JFrame;
+&nbsp;import javax.swing.JLabel;
+&nbsp;import javax.swing.JOptionPane;
+&nbsp;import javax.swing.JPanel;
+&nbsp;import javax.swing.JPasswordField;
+&nbsp;import javax.swing.JTextField;
+&nbsp;import java.awt.BorderLayout;
+&nbsp;import java.awt.Color;
+&nbsp;import java.awt.Font;
+&nbsp;import java.awt.GridLayout;
+&nbsp;import java.util.Objects;
+&nbsp;
+&nbsp;/**
+&nbsp; * Represents forgot password frame in the system.
+&nbsp; */
+&nbsp;public class ForgotPasswordFrame extends JFrame {
+&nbsp;
+&nbsp;    private final ApplicationController appController;
+&nbsp;
+&nbsp;    private JTextField identifierField;
+&nbsp;    private JPasswordField newPasswordField;
+&nbsp;    private JLabel statusLabel;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new forgot password frame object with the given values.
+&nbsp;     *
+&nbsp;     * @param appController controller used for navigation and actions
+&nbsp;     */
+<b class="fc">&nbsp;    public ForgotPasswordFrame(ApplicationController appController) {</b>
+<b class="fc">&nbsp;        this.appController = Objects.requireNonNull(appController, &quot;appController cannot be null&quot;);</b>
+<b class="fc">&nbsp;        initializeUi();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void initializeUi() {
+<b class="fc">&nbsp;        setTitle(&quot;Appointment System - Forgot Password&quot;);</b>
+<b class="fc">&nbsp;        setSize(500, 340);</b>
+<b class="fc">&nbsp;        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</b>
+<b class="fc">&nbsp;        setLayout(new BorderLayout());</b>
+&nbsp;
+<b class="fc">&nbsp;        JLabel titleLabel = new JLabel(&quot;Reset Your Password&quot;, JLabel.CENTER);</b>
+<b class="fc">&nbsp;        titleLabel.setFont(new Font(&quot;Arial&quot;, Font.BOLD, 18));</b>
+<b class="fc">&nbsp;        titleLabel.setBorder(BorderFactory.createEmptyBorder(15, 10, 10, 10));</b>
+<b class="fc">&nbsp;        add(titleLabel, BorderLayout.NORTH);</b>
+&nbsp;
+<b class="fc">&nbsp;        JPanel formPanel = new JPanel(new GridLayout(3, 2, 10, 10));</b>
+<b class="fc">&nbsp;        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));</b>
+&nbsp;
+<b class="fc">&nbsp;        formPanel.add(new JLabel(&quot;Username or Email:&quot;));</b>
+<b class="fc">&nbsp;        identifierField = new JTextField();</b>
+<b class="fc">&nbsp;        formPanel.add(identifierField);</b>
+&nbsp;
+<b class="fc">&nbsp;        formPanel.add(new JLabel(&quot;New Password:&quot;));</b>
+<b class="fc">&nbsp;        newPasswordField = new JPasswordField();</b>
+<b class="fc">&nbsp;        formPanel.add(newPasswordField);</b>
+&nbsp;
+<b class="fc">&nbsp;        formPanel.add(new JLabel(&quot;&quot;));</b>
+<b class="fc">&nbsp;        statusLabel = new JLabel(&quot; &quot;);</b>
+<b class="fc">&nbsp;        statusLabel.setForeground(new Color(170, 0, 0));</b>
+<b class="fc">&nbsp;        formPanel.add(statusLabel);</b>
+&nbsp;
+<b class="fc">&nbsp;        add(formPanel, BorderLayout.CENTER);</b>
+&nbsp;
+<b class="fc">&nbsp;        JPanel buttonPanel = new JPanel();</b>
+<b class="fc">&nbsp;        JButton resetButton = new JButton(&quot;Reset Password&quot;);</b>
+<b class="fc">&nbsp;        JButton clearButton = new JButton(&quot;Clear&quot;);</b>
+<b class="fc">&nbsp;        JButton backButton = new JButton(&quot;Back to Login&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        resetButton.addActionListener(e -&gt; onResetPassword());</b>
+<b class="fc">&nbsp;        clearButton.addActionListener(e -&gt; clearInputs());</b>
+<b class="fc">&nbsp;        backButton.addActionListener(e -&gt; appController.openLoginFrame());</b>
+&nbsp;
+<b class="fc">&nbsp;        buttonPanel.add(resetButton);</b>
+<b class="fc">&nbsp;        buttonPanel.add(clearButton);</b>
+<b class="fc">&nbsp;        buttonPanel.add(backButton);</b>
+&nbsp;
+<b class="fc">&nbsp;        add(buttonPanel, BorderLayout.SOUTH);</b>
+<b class="fc">&nbsp;        getRootPane().setDefaultButton(resetButton);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void onResetPassword() {
+<b class="fc">&nbsp;        ForgotPasswordStatus status = appController.resetPassword(</b>
+<b class="fc">&nbsp;                identifierField.getText(),</b>
+<b class="fc">&nbsp;                new String(newPasswordField.getPassword())</b>
+&nbsp;        );
+&nbsp;
+<b class="fc">&nbsp;        if (status == ForgotPasswordStatus.PASSWORD_RESET_SUCCESS) {</b>
+<b class="fc">&nbsp;            JOptionPane.showMessageDialog(</b>
+&nbsp;                    this,
+&nbsp;                    &quot;Password updated successfully. You can now log in.&quot;,
+&nbsp;                    &quot;Forgot Password&quot;,
+&nbsp;                    JOptionPane.INFORMATION_MESSAGE
+&nbsp;            );
+<b class="fc">&nbsp;            appController.openLoginFrame();</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        showError(status);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void clearInputs() {
+<b class="nc">&nbsp;        identifierField.setText(&quot;&quot;);</b>
+<b class="nc">&nbsp;        newPasswordField.setText(&quot;&quot;);</b>
+<b class="nc">&nbsp;        statusLabel.setText(&quot; &quot;);</b>
+<b class="nc">&nbsp;        identifierField.requestFocusInWindow();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void showError(ForgotPasswordStatus status) {
+<b class="fc">&nbsp;        String message = toMessage(status);</b>
+<b class="fc">&nbsp;        statusLabel.setText(message);</b>
+<b class="fc">&nbsp;        JOptionPane.showMessageDialog(this, message, &quot;Forgot Password Error&quot;, JOptionPane.ERROR_MESSAGE);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String toMessage(ForgotPasswordStatus status) {
+<b class="pc">&nbsp;        if (status == null) {</b>
+<b class="nc">&nbsp;            return &quot;Unable to process password reset.&quot;;</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        return switch (status) {</b>
+<b class="nc">&nbsp;            case BLANK_IDENTIFIER -&gt; &quot;Username or email is required.&quot;;</b>
+<b class="nc">&nbsp;            case UNKNOWN_USER -&gt; &quot;Account was not found.&quot;;</b>
+<b class="nc">&nbsp;            case BLANK_NEW_PASSWORD -&gt; &quot;New password is required.&quot;;</b>
+<b class="fc">&nbsp;            case WEAK_PASSWORD -&gt; &quot;Password must be at least 6 characters and include letters and numbers.&quot;;</b>
+<b class="nc">&nbsp;            case UPDATE_FAILED -&gt; &quot;Unable to update password. Please try again.&quot;;</b>
+<b class="nc">&nbsp;            default -&gt; &quot;Unable to process password reset.&quot;;</b>
+&nbsp;        };
+&nbsp;    }
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>

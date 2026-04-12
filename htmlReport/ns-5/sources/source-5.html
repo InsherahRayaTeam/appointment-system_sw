@@ -1,0 +1,113 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AppointmentRepository</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.repository</a>
+</div>
+
+<h1>Coverage Summary for Class: AppointmentRepository (org.example.repository)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">AppointmentRepository$MockitoMock$IXgNxTij</td>
+  </tr>
+  <tr>
+    <td class="name">AppointmentRepository$MockitoMock$IXgNxTij$auxiliary$AnnkpvPr</td>
+  </tr>
+  <tr>
+    <td class="name">AppointmentRepository$MockitoMock$IXgNxTij$auxiliary$Op4RIFE6</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.repository;
+&nbsp;
+&nbsp;import org.example.domain.AppointmentSlot;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * Defines the operations for appointment repository.
+&nbsp; */
+&nbsp;public interface AppointmentRepository {
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Finds all using the given input.
+&nbsp;     *
+&nbsp;     * @return collection with the requested results
+&nbsp;     */
+&nbsp;    List&lt;AppointmentSlot&gt; findAll();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Finds available using the given input.
+&nbsp;     *
+&nbsp;     * @return collection with the requested results
+&nbsp;     */
+&nbsp;    List&lt;AppointmentSlot&gt; findAvailable();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Adds a slot when it is valid and not duplicated.
+&nbsp;     *
+&nbsp;     * @param slot slot value used by this method
+&nbsp;     * @return true when the action is valid or successful, otherwise false
+&nbsp;     */
+&nbsp;    boolean addSlot(AppointmentSlot slot);
+&nbsp;}
+&nbsp;
+&nbsp;
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-12 18:15</div>
+</div>
+</body>
+</html>
