@@ -9,7 +9,7 @@
     <artifactId>appointment-system</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <properties>
+ <properties>
     <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -20,9 +20,8 @@
     <sonar.organization>insherahrayateam</sonar.organization>
     <sonar.projectKey>InsherahRayaTeam_appointment-system_sw</sonar.projectKey>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-    <sonar.coverage.jacoco.xmlReportPaths>
-        ${project.build.directory}/site/jacoco/jacoco.xml
-   <sonar.coverage.exclusions>src/main/java/org/example/presentation/gui/**/*,src/test/java/org/example/presentation/gui/**/*</sonar.coverage.exclusions>
+    <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+    <sonar.coverage.exclusions>**/Main.java,**/main.java,**/presentation/gui/**</sonar.coverage.exclusions>
 </properties>
 
     <dependencies>
