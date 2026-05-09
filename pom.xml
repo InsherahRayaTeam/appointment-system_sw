@@ -9,21 +9,30 @@
     <artifactId>appointment-system</artifactId>
     <version>1.0-SNAPSHOT</version>
 
- <properties>
-    <maven.compiler.release>17</maven.compiler.release>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <properties>
+        <maven.compiler.release>17</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <junit.version>5.10.2</junit.version>
-    <mockito.version>5.12.0</mockito.version>
-    <jacoco.version>0.8.12</jacoco.version>
+        <junit.version>5.10.2</junit.version>
+        <mockito.version>5.12.0</mockito.version>
+        <jacoco.version>0.8.12</jacoco.version>
 
-    <sonar.organization>insherahrayateam</sonar.organization>
-    <sonar.projectKey>InsherahRayaTeam_appointment-system_sw</sonar.projectKey>
-    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-    <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.organization>insherahrayateam</sonar.organization>
+        <sonar.projectKey>InsherahRayaTeam_appointment-system_sw</sonar.projectKey>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
 
-    <sonar.coverage.exclusions>**/Main.java,**/main.java,**/presentation/gui/**</sonar.coverage.exclusions>
-</properties>
+        <sonar.coverage.jacoco.xmlReportPaths>
+            ${project.build.directory}/site/jacoco/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
+
+        <!-- Exclude GUI and Main from SonarCloud coverage calculation -->
+        <sonar.coverage.exclusions>
+            **/Main.java,
+            **/main.java,
+            **/presentation/gui/**,
+            **/gui/**
+        </sonar.coverage.exclusions>
+    </properties>
 
     <dependencies>
         <!-- JUnit 5 -->
@@ -34,13 +43,14 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Jakarta Mail API -->
         <dependency>
             <groupId>jakarta.mail</groupId>
             <artifactId>jakarta.mail-api</artifactId>
             <version>2.1.3</version>
         </dependency>
 
-
+        <!-- Mail runtime implementation -->
         <dependency>
             <groupId>org.eclipse.angus</groupId>
             <artifactId>angus-mail</artifactId>
@@ -48,8 +58,7 @@
             <scope>runtime</scope>
         </dependency>
 
-
-        <!-- Mockito + JUnit 5 integration (lets you use @ExtendWith(MockitoExtension.class)) -->
+        <!-- Mockito + JUnit 5 integration -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
@@ -57,19 +66,18 @@
             <scope>test</scope>
         </dependency>
 
-            <dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-inline</artifactId>
-                <version>5.2.0</version>
-                <scope>test</scope>
-            </dependency>
-
+        <!-- Mockito inline mocking -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-inline</artifactId>
+            <version>5.2.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
-
-            <!-- Make sure JUnit 5 runs -->
+            <!-- Run JUnit 5 tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -80,59 +88,75 @@
             </plugin>
 
             <!-- JaCoCo code coverage plugin -->
-<plugin>
-    <groupId>org.jacoco</groupId>
-    <artifactId>jacoco-maven-plugin</artifactId>
-    <version>${jacoco.version}</version>
-    <executions>
-        <!-- Prepare JaCoCo agent before test execution -->
-        <execution>
-            <id>prepare-agent</id>
-            <goals>
-                <goal>prepare-agent</goal>
-            </goals>
-        </execution>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <configuration>
+                    <!-- Exclude GUI and Main from JaCoCo report -->
+                    <excludes>
+                        <exclude>**/Main.class</exclude>
+                        <exclude>**/main.class</exclude>
+                        <exclude>**/presentation/gui/**</exclude>
+                        <exclude>**/gui/**</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
 
-        <!-- Generate XML and HTML coverage reports during verify -->
-        <execution>
-            <id>report</id>
-            <phase>verify</phase>
-            <goals>
-                <goal>report</goal>
-            </goals>
-            <configuration>
-                <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
-                <formats>
-                    <format>XML</format>
-                    <format>HTML</format>
-                </formats>
-            </configuration>
-        </execution>
-    </executions>
-</plugin>
-
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
+                            <formats>
+                                <format>XML</format>
+                                <format>HTML</format>
+                            </formats>
+                            <excludes>
+                                <exclude>**/Main.class</exclude>
+                                <exclude>**/main.class</exclude>
+                                <exclude>**/presentation/gui/**</exclude>
+                                <exclude>**/gui/**</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
-         <profiles>
-    <profile>
-        <id>ci</id>
-        <build>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.2.5</version>
-                    <configuration>
-                        <useModulePath>false</useModulePath>
-                        <excludes>
-                            <exclude>**/presentation/gui/**/*Test.java</exclude>
-                            <exclude>**/presentation/gui/*Test.java</exclude>
-                        </excludes>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </build>
-    </profile>
-</profiles>
+    <profiles>
+        <!-- CI profile: do not run Swing GUI tests in GitHub Actions -->
+        <profile>
+            <id>ci</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.2.5</version>
+                        <configuration>
+                            <useModulePath>false</useModulePath>
+                            <excludes>
+                                <exclude>**/presentation/gui/**/*Test.java</exclude>
+                                <exclude>**/presentation/gui/*Test.java</exclude>
+                                <exclude>**/gui/**/*Test.java</exclude>
+                                <exclude>**/gui/*Test.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>
