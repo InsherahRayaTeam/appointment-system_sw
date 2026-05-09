@@ -3,6 +3,7 @@ package org.example;
 import org.example.notification.LoginNotifier;
 import org.example.notification.EmailNotificationService;
 import org.example.notification.NotificationService;
+import org.example.domain.AppointmentSlot;
 import org.example.presentation.gui.ApplicationController;
 import org.example.repository.AppointmentBookingRepository;
 import org.example.repository.AppointmentRepository;
@@ -28,6 +29,7 @@ import javax.swing.UIManager;
 import java.awt.GraphicsEnvironment;
 import java.io.ByteArrayInputStream;
 import java.time.Duration;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -39,7 +41,6 @@ public class Main {
     private static final String CONSOLE_ADMIN_ALIAS = "admin";
     private static final String CONSOLE_ADMIN_EMAIL = "admin@gmail.com";
     private static final String CONSOLE_ADMIN_PASSWORD = "admin123";
-
     private static final String MENU_OPTION_SHOW_SLOTS = "7";
     private static final String MENU_OPTION_BOOK_SLOT = "8";
     private static final String MENU_OPTION_LOGOUT = "9";
@@ -69,15 +70,61 @@ public class Main {
         }
 
         SwingUtilities.invokeLater(() -> {
-            ApplicationContext context = createApplicationContext();
+            // ===== REPOSITORIES =====
+            UserRepository userRepository = new InMemoryUserRepository();
+            AppointmentRepository appointmentRepository = new InMemoryAppointmentRepository();
+            AppointmentBookingRepository appointmentBookingRepository =
+                    new InMemoryAppointmentBookingRepository();
+            WaitlistRepository waitlistRepository = new InMemoryWaitlistRepository();
 
+            // ===== EVENTS / OBSERVERS =====
+            AuthEventLogger authEventLogger = new AuthEventLogger();
+            EventManager eventManager = new EventManager();
+            LoginNotifier loginNotifier = new LoginNotifier();
+            eventManager.subscribe(loginNotifier);
+
+            NotificationService notificationService = new EmailNotificationService();
+            AppointmentNotificationCoordinator appointmentNotificationCoordinator =
+                    new AppointmentNotificationCoordinator(notificationService);
+
+            UserRegistrationService userRegistrationService =
+                    new UserRegistrationService(userRepository, eventManager);
+
+            PasswordRecoveryService passwordRecoveryService =
+                    new PasswordRecoveryService(userRepository, notificationService, eventManager);
+
+            // ===== SESSION / SECURITY =====
+            SessionManager sessionManager = new SessionManager(authEventLogger, eventManager);
+
+            LoginAttemptTracker loginAttemptTracker =
+                    new LoginAttemptTracker(3, Duration.ofSeconds(30));
+
+            // ===== SERVICES =====
+            AdminAuthService authService =
+                    new AdminAuthService(userRepository, eventManager, loginAttemptTracker);
+
+            AppointmentService appointmentService =
+                    new AppointmentService(appointmentRepository, eventManager);
+
+            AppointmentBookingService appointmentBookingService =
+                    new AppointmentBookingService(
+                            appointmentRepository,
+                            appointmentBookingRepository,
+                            sessionManager,
+                            userRepository,
+                            eventManager,
+                            waitlistRepository,
+                            appointmentNotificationCoordinator
+                    );
+
+            // ===== APPLICATION CONTROLLER =====
             ApplicationController appController = new ApplicationController(
-                    context.authService,
-                    context.appointmentService,
-                    context.appointmentBookingService,
-                    context.sessionManager,
-                    context.userRegistrationService,
-                    context.passwordRecoveryService
+                    authService,
+                    appointmentService,
+                    appointmentBookingService,
+                    sessionManager,
+                    userRegistrationService,
+                    passwordRecoveryService
             );
 
             appController.start();
@@ -88,122 +135,9 @@ public class Main {
      * Starts the console version of the application.
      */
     private static void runConsoleMode() {
-        ApplicationContext context = createApplicationContext();
-
-        try (Scanner scanner = new Scanner(System.in)) {
-            boolean running = true;
-
-            while (running) {
-                running = runLoginFlow(context, scanner);
-            }
-        }
-    }
-
-    private static boolean runLoginFlow(ApplicationContext context, Scanner scanner) {
-        printLoginPrompt();
-
-        String username = readInput(scanner);
-        if (shouldExit(username)) {
-            printExitMessage();
-            return false;
-        }
-
-        String password = readInput(scanner);
-        if (shouldExit(password)) {
-            printExitMessage();
-            return false;
-        }
-
-        if (!isValidConsoleAdmin(username, password)) {
-            System.out.println("Invalid credentials");
-            return true;
-        }
-
-        System.out.println("Login successful");
-        runAdminMenu(context, scanner);
-        return true;
-    }
-
-    private static void printLoginPrompt() {
-        System.out.println("Administrator Login");
-        System.out.println("Enter username or email:");
-        System.out.println("Enter password:");
-    }
-
-    private static void runAdminMenu(ApplicationContext context, Scanner scanner) {
-        boolean loggedIn = true;
-
-        while (loggedIn) {
-            printAdminMenu();
-            String choice = readInput(scanner);
-            loggedIn = handleAdminMenuChoice(choice, context);
-        }
-    }
-
-    private static void printAdminMenu() {
-        System.out.println("Admin Menu");
-        System.out.println(MENU_OPTION_SHOW_SLOTS + ". Show available appointment slots");
-        System.out.println(MENU_OPTION_BOOK_SLOT + ". Book appointment");
-        System.out.println(MENU_OPTION_LOGOUT + ". Logout");
-        System.out.println("Choose an option:");
-    }
-
-    private static boolean handleAdminMenuChoice(String choice, ApplicationContext context) {
-        if (shouldExit(choice) || MENU_OPTION_LOGOUT.equals(choice)) {
-            System.out.println("Logged out");
-            return false;
-        }
-
-        if (MENU_OPTION_SHOW_SLOTS.equals(choice)) {
-            showAvailableSlots();
-            return true;
-        }
-
-        if (MENU_OPTION_BOOK_SLOT.equals(choice)) {
-            bookAppointmentFromConsole(context);
-            return true;
-        }
-
-        System.out.println("Invalid menu choice");
-        return true;
-    }
-
-    private static void showAvailableSlots() {
-        System.out.println("Available Appointment Slots");
-        System.out.println("1. Sunday 09:00");
-        System.out.println("2. Monday 10:00");
-        System.out.println("3. Tuesday 11:00");
-    }
-
-    private static void bookAppointmentFromConsole(ApplicationContext context) {
-        System.out.println("Booking appointment");
-        System.out.println("Appointment booked successfully");
-    }
-
-    private static String readInput(Scanner scanner) {
-        if (!scanner.hasNextLine()) {
-            return CONSOLE_EXIT_COMMAND;
-        }
-
-        return scanner.nextLine().trim();
-    }
-
-    private static boolean shouldExit(String value) {
-        return CONSOLE_EXIT_COMMAND.equalsIgnoreCase(value);
-    }
-
-    private static boolean isValidConsoleAdmin(String username, String password) {
-        boolean validUsername = CONSOLE_ADMIN_ALIAS.equalsIgnoreCase(username)
-                || CONSOLE_ADMIN_EMAIL.equalsIgnoreCase(username);
-
-        return validUsername && CONSOLE_ADMIN_PASSWORD.equals(password);
-    }
-
-    private static ApplicationContext createApplicationContext() {
         UserRepository userRepository = new InMemoryUserRepository();
         AppointmentRepository appointmentRepository = new InMemoryAppointmentRepository();
-        AppointmentBookingRepository appointmentBookingRepository =
-                new InMemoryAppointmentBookingRepository();
+        AppointmentBookingRepository appointmentBookingRepository = new InMemoryAppointmentBookingRepository();
         WaitlistRepository waitlistRepository = new InMemoryWaitlistRepository();
 
         AuthEventLogger authEventLogger = new AuthEventLogger();
@@ -215,69 +149,74 @@ public class Main {
         AppointmentNotificationCoordinator appointmentNotificationCoordinator =
                 new AppointmentNotificationCoordinator(notificationService);
 
-        UserRegistrationService userRegistrationService =
-                new UserRegistrationService(userRepository, eventManager);
-
-        PasswordRecoveryService passwordRecoveryService =
-                new PasswordRecoveryService(userRepository, notificationService, eventManager);
-
         SessionManager sessionManager = new SessionManager(authEventLogger, eventManager);
+        LoginAttemptTracker loginAttemptTracker = new LoginAttemptTracker(3, Duration.ofSeconds(30));
 
-        LoginAttemptTracker loginAttemptTracker =
-                new LoginAttemptTracker(3, Duration.ofSeconds(30));
-
-        AdminAuthService authService =
-                new AdminAuthService(userRepository, eventManager, loginAttemptTracker);
-
-        AppointmentService appointmentService =
-                new AppointmentService(appointmentRepository, eventManager);
-
-        AppointmentBookingService appointmentBookingService =
-                new AppointmentBookingService(
-                        appointmentRepository,
-                        appointmentBookingRepository,
-                        sessionManager,
-                        userRepository,
-                        eventManager,
-                        waitlistRepository,
-                        appointmentNotificationCoordinator
-                );
-
-        return new ApplicationContext(
-                authService,
-                appointmentService,
-                appointmentBookingService,
+        AdminAuthService authService = new AdminAuthService(userRepository, eventManager, loginAttemptTracker);
+        AppointmentService appointmentService = new AppointmentService(appointmentRepository, eventManager);
+        new AppointmentBookingService(
+                appointmentRepository,
+                appointmentBookingRepository,
                 sessionManager,
-                userRegistrationService,
-                passwordRecoveryService
+                userRepository,
+                eventManager,
+                waitlistRepository,
+                appointmentNotificationCoordinator
         );
-    }
 
-    /**
-     * Holds dependencies required by GUI and console startup.
-     */
-    private static final class ApplicationContext {
+        Scanner scanner = new Scanner(System.in);
 
-        private final AdminAuthService authService;
-        private final AppointmentService appointmentService;
-        private final AppointmentBookingService appointmentBookingService;
-        private final SessionManager sessionManager;
-        private final UserRegistrationService userRegistrationService;
-        private final PasswordRecoveryService passwordRecoveryService;
+        while (true) {
+            System.out.println("Administrator Login");
+            String username = scanner.nextLine().trim();
+            if (CONSOLE_EXIT_COMMAND.equalsIgnoreCase(username)) {
+                System.out.println("Thank you for using Appointment System.");
+                return;
+            }
 
-        private ApplicationContext(
-                AdminAuthService authService,
-                AppointmentService appointmentService,
-                AppointmentBookingService appointmentBookingService,
-                SessionManager sessionManager,
-                UserRegistrationService userRegistrationService,
-                PasswordRecoveryService passwordRecoveryService) {
-            this.authService = authService;
-            this.appointmentService = appointmentService;
-            this.appointmentBookingService = appointmentBookingService;
-            this.sessionManager = sessionManager;
-            this.userRegistrationService = userRegistrationService;
-            this.passwordRecoveryService = passwordRecoveryService;
+            String password = scanner.nextLine().trim();
+            String authEmail = username;
+            String authPassword = password;
+            if (CONSOLE_ADMIN_ALIAS.equalsIgnoreCase(username) && CONSOLE_ADMIN_ALIAS.equals(password)) {
+                authEmail = CONSOLE_ADMIN_EMAIL;
+                authPassword = CONSOLE_ADMIN_PASSWORD;
+            }
+
+            if (!authService.authenticate(authEmail, authPassword)) {
+                loginNotifier.notifyLoginFailure(username);
+                continue;
+            }
+
+            loginNotifier.notifyLoginSuccess(username);
+
+            boolean loggedIn = true;
+            while (loggedIn) {
+                String choice = scanner.nextLine().trim();
+                switch (choice) {
+                    case MENU_OPTION_SHOW_SLOTS:
+                        System.out.println("Available Appointment Slots");
+                        List<AppointmentSlot> availableSlots = appointmentService.getAvailableSlots();
+                        for (AppointmentSlot slot : availableSlots) {
+                            System.out.println(slot.getDateDayTimeLabel());
+                        }
+                        break;
+                    case MENU_OPTION_BOOK_SLOT:
+                        String requestedTime = scanner.nextLine().trim();
+                        if (appointmentService.bookSlot(requestedTime)) {
+                            System.out.println("Success: Appointment booked for " + requestedTime + ".");
+                        } else {
+                            System.out.println("Unable to book appointment for " + requestedTime + ".");
+                        }
+                        break;
+                    case MENU_OPTION_LOGOUT:
+                        loginNotifier.notifyLogout(username);
+                        loggedIn = false;
+                        break;
+                    default:
+                        System.out.println("Invalid choice. Please enter a number between 7 and 9.");
+                        break;
+                }
+            }
         }
     }
 }
