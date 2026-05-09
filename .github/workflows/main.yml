@@ -41,8 +41,9 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y xvfb
 
       - name: Build and generate JaCoCo coverage
+        timeout-minutes: 15
         run: |
-          xvfb-run -a mvn -B clean verify
+          xvfb-run -a mvn -B clean verify -Pci
 
       - name: Verify JaCoCo XML report exists
         run: |
