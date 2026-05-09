@@ -9,6 +9,8 @@ import org.example.service.AppointmentService;
 import org.example.service.BookingStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,6 +27,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@Timeout(10)
 class BookingPanelTest extends GuiTestSupport {
 
     @Mock
@@ -37,10 +40,26 @@ class BookingPanelTest extends GuiTestSupport {
     private Runnable onBookingSuccess;
 
     private SystemUser user;
+    private BookingPanel panel;
 
     @BeforeEach
     void setUp() {
         user = new SystemUser("user-1", "user@example.com", "secret", UserRole.USER);
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Dispose panel if it's a window, and ensure no Swing windows remain
+        if (panel != null) {
+            disposeIfWindow(panel);
+            panel = null;
+        }
+
+        // Dispose any remaining windows to avoid blocking the test runner
+        java.awt.Window[] windows = java.awt.Window.getWindows();
+        for (java.awt.Window w : windows) {
+            disposeIfWindow(w);
+        }
     }
 
     @Test
@@ -59,7 +78,7 @@ class BookingPanelTest extends GuiTestSupport {
         ))
                 .thenReturn(BookingStatus.SUCCESS);
 
-        BookingPanel panel = new BookingPanel(user, appointmentService, appointmentBookingService, onBookingSuccess);
+        panel = callOnEdt(() -> new BookingPanel(user, appointmentService, appointmentBookingService, onBookingSuccess, new TestDialogDisplayer()));
         JTextField bookedForNameField = getPrivateField(panel, "bookedForNameField", JTextField.class);
         JTextField phoneNumberField = getPrivateField(panel, "phoneNumberField", JTextField.class);
         JComboBox<?> slotComboBox = getPrivateField(panel, "slotComboBox", JComboBox.class);
@@ -109,7 +128,7 @@ class BookingPanelTest extends GuiTestSupport {
         ))
                 .thenReturn(BookingStatus.INVALID_DURATION);
 
-        BookingPanel panel = new BookingPanel(user, appointmentService, appointmentBookingService, onBookingSuccess);
+        panel = callOnEdt(() -> new BookingPanel(user, appointmentService, appointmentBookingService, onBookingSuccess, new TestDialogDisplayer()));
         JTextField bookedForNameField = getPrivateField(panel, "bookedForNameField", JTextField.class);
         JTextField phoneNumberField = getPrivateField(panel, "phoneNumberField", JTextField.class);
         JComboBox<?> slotComboBox = getPrivateField(panel, "slotComboBox", JComboBox.class);
@@ -150,7 +169,7 @@ class BookingPanelTest extends GuiTestSupport {
         // Arrange
         when(appointmentService.getAvailableSlots()).thenReturn(Collections.emptyList());
 
-        BookingPanel panel = new BookingPanel(user, appointmentService, appointmentBookingService, onBookingSuccess);
+        panel = callOnEdt(() -> new BookingPanel(user, appointmentService, appointmentBookingService, onBookingSuccess, new TestDialogDisplayer()));
         AbstractButton bookButton = findButton(panel, "Book Appointment");
 
         // Act
