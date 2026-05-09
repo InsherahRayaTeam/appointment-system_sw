@@ -12,8 +12,13 @@ jobs:
     name: Build and analyze
     runs-on: ubuntu-latest
 
+    env:
+      APP_ADMIN_PASSWORD: ${{ secrets.APP_ADMIN_PASSWORD }}
+      APP_USER_PASSWORD: ${{ secrets.APP_USER_PASSWORD }}
+
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
 
@@ -56,4 +61,5 @@ jobs:
         run: |
           mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
             -Dsonar.projectKey=InsherahRayaTeam_appointment-system_sw \
+            -Dsonar.organization=insherahrayateam \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
