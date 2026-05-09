@@ -89,32 +89,34 @@ private String resolvePassword(String configuredPassword, String envKey) {
         return configuredPassword.trim();
     }
 
-    throw new IllegalStateException("Missing required password environment variable: " + envKey);
+    return null;
 }
 
-    private void seedConfiguredRegularUsers(Properties p) {
+  private void seedConfiguredRegularUsers(Properties p) {
+    seedUser(
+            p.getProperty(USER_ID_KEY, DEFAULT_USER_ID),
+            p.getProperty(USER_EMAIL_KEY),
+            resolvePassword(p.getProperty(USER_PASSWORD_KEY), DEFAULT_USER_PASSWORD_ENV),
+            UserRole.USER
+    );
+
+    Set<String> propertyNames = p.stringPropertyNames();
+    for (String propertyName : propertyNames) {
+        if (!propertyName.matches("user\\d+\\.email")) {
+            continue;
+        }
+
+        String userPrefix = propertyName.substring(0, propertyName.length() - ".email".length());
+        String envKey = "APP_" + userPrefix.toUpperCase() + "_PASSWORD";
+
         seedUser(
-                p.getProperty(USER_ID_KEY, DEFAULT_USER_ID),
-                p.getProperty(USER_EMAIL_KEY),
-                p.getProperty(USER_PASSWORD_KEY),
+                p.getProperty(userPrefix + ".id"),
+                p.getProperty(userPrefix + ".email"),
+                resolvePassword(p.getProperty(userPrefix + ".password"), envKey),
                 UserRole.USER
         );
-
-        Set<String> propertyNames = p.stringPropertyNames();
-        for (String propertyName : propertyNames) {
-            if (!propertyName.matches("user\\d+\\.email")) {
-                continue;
-            }
-
-            String userPrefix = propertyName.substring(0, propertyName.length() - ".email".length());
-            seedUser(
-                    p.getProperty(userPrefix + ".id"),
-                    p.getProperty(userPrefix + ".email"),
-                    p.getProperty(userPrefix + ".password"),
-                    UserRole.USER
-            );
-        }
     }
+}
 
     private void seedUser(String id, String email, String password, UserRole role) {
         if (email == null || email.trim().isEmpty() || password == null || password.trim().isEmpty()) {
