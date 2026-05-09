@@ -15,6 +15,9 @@ jobs:
     env:
       APP_ADMIN_PASSWORD: ${{ secrets.APP_ADMIN_PASSWORD }}
       APP_USER_PASSWORD: ${{ secrets.APP_USER_PASSWORD }}
+      APP_USER1_PASSWORD: ${{ secrets.APP_USER1_PASSWORD }}
+      APP_USER2_PASSWORD: ${{ secrets.APP_USER2_PASSWORD }}
+
 
     steps:
       - name: Checkout code
@@ -63,3 +66,5 @@ jobs:
             -Dsonar.projectKey=InsherahRayaTeam_appointment-system_sw \
             -Dsonar.organization=insherahrayateam \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+
+            
