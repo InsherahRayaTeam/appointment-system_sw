@@ -13,7 +13,8 @@ import java.util.UUID;
  */
 public class Appointment {
 
-    private static final DateTimeFormatter SLOT_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter SLOT_DATE_TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     private final String id;
     private final LocalDateTime startTime;
@@ -39,41 +40,38 @@ public class Appointment {
      * @param participants number of people for the appointment
      */
     public Appointment(String id, LocalDateTime startTime, int duration, int participants) {
-        this(id, null, null, startTime, duration, participants, null, AppointmentType.NORMAL);
+        this(
+                id,
+                new AppointmentDetails(null, null, null, startTime, duration, participants),
+                null,
+                AppointmentType.NORMAL
+        );
     }
 
- 
-     /**
+    /**
      * Creates a new appointment object with the given values.
      *
      * @param id unique id used to find the record
-     * @param details appointment customer and scheduling details
+     * @param customerName value for customer name
+     * @param startTime time value used by this method
+     * @param duration appointment duration in minutes
+     * @param participants number of people for the appointment
      * @param status status value used for this operation
-     * @param type value for type
      */
     public Appointment(
             String id,
-            AppointmentDetails details,
-            AppointmentStatus status,
-            AppointmentType type
+            String customerName,
+            LocalDateTime startTime,
+            int duration,
+            int participants,
+            AppointmentStatus status
     ) {
-        this.id = id;
-        this.startTime = details.getStartTime();
-        this.duration = details.getDuration();
-        this.participants = details.getParticipants();
-        this.customerName = details.getCustomerName();
-        this.customerEmail = details.getCustomerEmail() == null || details.getCustomerEmail().trim().isEmpty()
-                ? details.getCustomerName()
-                : details.getCustomerEmail().trim().toLowerCase();
-        this.customerPhoneNumber = details.getCustomerPhoneNumber() == null
-                || details.getCustomerPhoneNumber().trim().isEmpty()
-                ? null
-                : details.getCustomerPhoneNumber().trim();
-        this.status = status;
-        this.type = type == null ? AppointmentType.NORMAL : type;
-        this.rating = 0;
-        this.feedbackComment = null;
-        this.feedbackSubmitted = false;
+        this(
+                id,
+                new AppointmentDetails(customerName, customerName, null, startTime, duration, participants),
+                status,
+                AppointmentType.NORMAL
+        );
     }
 
     /**
@@ -96,40 +94,11 @@ public class Appointment {
             int participants,
             AppointmentStatus status
     ) {
-        this(id, customerName, customerEmail, startTime, duration, participants, status, AppointmentType.NORMAL);
-    }
-
-    /**
-     * Creates a new appointment object with the given values.
-     *
-     * @param id unique id used to find the record
-     * @param customerName value for customer name
-     * @param startTime time value used by this method
-     * @param duration appointment duration in minutes
-     * @param participants number of people for the appointment
-     * @param status status value used for this operation
-     * @param type value for type
-     */
-    public Appointment(
-            String id,
-            String customerName,
-            String customerEmail,
-            LocalDateTime startTime,
-            int duration,
-            int participants,
-            AppointmentStatus status,
-            AppointmentType type
-    ) {
         this(
                 id,
-                customerName,
-                customerEmail,
-                null,
-                startTime,
-                duration,
-                participants,
+                new AppointmentDetails(customerName, customerEmail, null, startTime, duration, participants),
                 status,
-                type
+                AppointmentType.NORMAL
         );
     }
 
@@ -137,37 +106,23 @@ public class Appointment {
      * Creates a new appointment object with the given values.
      *
      * @param id unique id used to find the record
-     * @param customerName value for customer name
-     * @param customerEmail value for customer email
-     * @param customerPhoneNumber value for customer phone number
-     * @param startTime time value used by this method
-     * @param duration appointment duration in minutes
-     * @param participants number of people for the appointment
+     * @param details appointment customer and scheduling details
      * @param status status value used for this operation
-     * @param type value for type
+     * @param type value for appointment type
      */
     public Appointment(
             String id,
-            String customerName,
-            String customerEmail,
-            String customerPhoneNumber,
-            LocalDateTime startTime,
-            int duration,
-            int participants,
+            AppointmentDetails details,
             AppointmentStatus status,
             AppointmentType type
     ) {
         this.id = id;
-        this.startTime = startTime;
-        this.duration = duration;
-        this.participants = participants;
-        this.customerName = customerName;
-        this.customerEmail = customerEmail == null || customerEmail.trim().isEmpty()
-                ? customerName
-                : customerEmail.trim().toLowerCase();
-        this.customerPhoneNumber = customerPhoneNumber == null || customerPhoneNumber.trim().isEmpty()
-                ? null
-                : customerPhoneNumber.trim();
+        this.startTime = details.getStartTime();
+        this.duration = details.getDuration();
+        this.participants = details.getParticipants();
+        this.customerName = details.getCustomerName();
+        this.customerEmail = normalizeEmail(details.getCustomerEmail(), details.getCustomerName());
+        this.customerPhoneNumber = normalizePhoneNumber(details.getCustomerPhoneNumber());
         this.status = status;
         this.type = type == null ? AppointmentType.NORMAL : type;
         this.rating = 0;
@@ -187,11 +142,14 @@ public class Appointment {
     public Appointment(String customerName, String slotTime, int duration, int participants, AppointmentStatus status) {
         this(
                 UUID.randomUUID().toString(),
-                customerName,
-                customerName,
-                parseSlotTime(slotTime),
-                duration,
-                participants,
+                new AppointmentDetails(
+                        customerName,
+                        customerName,
+                        null,
+                        parseSlotTime(slotTime),
+                        duration,
+                        participants
+                ),
                 status,
                 AppointmentType.NORMAL
         );
@@ -205,7 +163,7 @@ public class Appointment {
      * @param duration appointment duration in minutes
      * @param participants number of people for the appointment
      * @param status status value used for this operation
-     * @param type value for type
+     * @param type value for appointment type
      */
     public Appointment(
             String customerName,
@@ -215,7 +173,12 @@ public class Appointment {
             AppointmentStatus status,
             AppointmentType type
     ) {
-        this(UUID.randomUUID().toString(), customerName, customerName, startTime, duration, participants, status, type);
+        this(
+                UUID.randomUUID().toString(),
+                new AppointmentDetails(customerName, customerName, null, startTime, duration, participants),
+                status,
+                type
+        );
     }
 
     /**
@@ -226,7 +189,7 @@ public class Appointment {
      * @param duration appointment duration in minutes
      * @param participants number of people for the appointment
      * @param status status value used for this operation
-     * @param type value for type
+     * @param type value for appointment type
      */
     public Appointment(
             String customerName,
@@ -236,7 +199,19 @@ public class Appointment {
             AppointmentStatus status,
             AppointmentType type
     ) {
-        this(UUID.randomUUID().toString(), customerName, customerName, parseSlotTime(slotTime), duration, participants, status, type);
+        this(
+                UUID.randomUUID().toString(),
+                new AppointmentDetails(
+                        customerName,
+                        customerName,
+                        null,
+                        parseSlotTime(slotTime),
+                        duration,
+                        participants
+                ),
+                status,
+                type
+        );
     }
 
     /**
@@ -260,7 +235,7 @@ public class Appointment {
      * @param duration appointment duration in minutes
      * @param participants number of people for the appointment
      * @param status status value used for this operation
-     * @param type value for type
+     * @param type value for appointment type
      */
     public Appointment(
             String customerName,
@@ -372,7 +347,6 @@ public class Appointment {
         return customerName;
     }
 
-
     /**
      * Returns the customer phone number.
      *
@@ -422,7 +396,6 @@ public class Appointment {
         this.type = type == null ? AppointmentType.NORMAL : type;
     }
 
-
     /**
      * Checks whether future compared to is true.
      *
@@ -444,12 +417,14 @@ public class Appointment {
     public Appointment withStatus(AppointmentStatus newStatus) {
         return copyFeedbackState(new Appointment(
                 id,
-                customerName,
-                customerEmail,
-                customerPhoneNumber,
-                startTime,
-                duration,
-                participants,
+                new AppointmentDetails(
+                        customerName,
+                        customerEmail,
+                        customerPhoneNumber,
+                        startTime,
+                        duration,
+                        participants
+                ),
                 newStatus,
                 type
         ));
@@ -464,12 +439,14 @@ public class Appointment {
     public Appointment withCustomerPhoneNumber(String newCustomerPhoneNumber) {
         return copyFeedbackState(new Appointment(
                 id,
-                customerName,
-                customerEmail,
-                newCustomerPhoneNumber,
-                startTime,
-                duration,
-                participants,
+                new AppointmentDetails(
+                        customerName,
+                        customerEmail,
+                        newCustomerPhoneNumber,
+                        startTime,
+                        duration,
+                        participants
+                ),
                 status,
                 type
         ));
@@ -485,12 +462,14 @@ public class Appointment {
     public Appointment withSlotTimeAndStatus(String slotTime, AppointmentStatus newStatus) {
         return copyFeedbackState(new Appointment(
                 id,
-                customerName,
-                customerEmail,
-                customerPhoneNumber,
-                parseSlotTime(slotTime),
-                duration,
-                participants,
+                new AppointmentDetails(
+                        customerName,
+                        customerEmail,
+                        customerPhoneNumber,
+                        parseSlotTime(slotTime),
+                        duration,
+                        participants
+                ),
                 newStatus,
                 type
         ));
@@ -506,12 +485,14 @@ public class Appointment {
     public Appointment withStartTimeAndStatus(LocalDateTime newStartTime, AppointmentStatus newStatus) {
         return copyFeedbackState(new Appointment(
                 id,
-                customerName,
-                customerEmail,
-                customerPhoneNumber,
-                newStartTime,
-                duration,
-                participants,
+                new AppointmentDetails(
+                        customerName,
+                        customerEmail,
+                        customerPhoneNumber,
+                        newStartTime,
+                        duration,
+                        participants
+                ),
                 newStatus,
                 type
         ));
@@ -606,6 +587,12 @@ public class Appointment {
         }
     }
 
+    /**
+     * Tries to parse a date-time value using supported formats.
+     *
+     * @param value raw date-time value
+     * @return parsed date-time or null
+     */
     private static LocalDateTime tryParseDateTime(String value) {
         try {
             return LocalDateTime.parse(value);
@@ -631,6 +618,12 @@ public class Appointment {
         return null;
     }
 
+    /**
+     * Copies feedback data into another appointment instance.
+     *
+     * @param copy appointment copy
+     * @return appointment copy with feedback state
+     */
     private Appointment copyFeedbackState(Appointment copy) {
         copy.setRating(rating);
         copy.setFeedbackComment(feedbackComment);
@@ -654,5 +647,30 @@ public class Appointment {
         } catch (IllegalArgumentException ex) {
             return null;
         }
+    }
+
+    /**
+     * Normalizes customer email.
+     *
+     * @param customerEmail customer email
+     * @param fallback fallback value
+     * @return normalized email
+     */
+    private static String normalizeEmail(String customerEmail, String fallback) {
+        return customerEmail == null || customerEmail.trim().isEmpty()
+                ? fallback
+                : customerEmail.trim().toLowerCase();
+    }
+
+    /**
+     * Normalizes customer phone number.
+     *
+     * @param phoneNumber phone number
+     * @return normalized phone number
+     */
+    private static String normalizePhoneNumber(String phoneNumber) {
+        return phoneNumber == null || phoneNumber.trim().isEmpty()
+                ? null
+                : phoneNumber.trim();
     }
 }

@@ -3,7 +3,7 @@ package org.example.domain;
 import java.time.LocalDateTime;
 
 /**
- * Groups appointment customer and scheduling details.
+ * Groups customer and scheduling details for an appointment.
  */
 public final class AppointmentDetails {
 
@@ -22,7 +22,7 @@ public final class AppointmentDetails {
      * @param customerPhoneNumber customer phone number
      * @param startTime appointment start time
      * @param duration appointment duration in minutes
-     * @param participants number of participants
+     * @param participants number of people for the appointment
      */
     public AppointmentDetails(
             String customerName,
@@ -40,26 +40,56 @@ public final class AppointmentDetails {
         this.participants = participants;
     }
 
+    /**
+     * Returns the customer name.
+     *
+     * @return customer name
+     */
     public String getCustomerName() {
         return customerName;
     }
 
+    /**
+     * Returns the customer email.
+     *
+     * @return customer email
+     */
     public String getCustomerEmail() {
         return customerEmail;
     }
 
+    /**
+     * Returns the customer phone number.
+     *
+     * @return customer phone number
+     */
     public String getCustomerPhoneNumber() {
         return customerPhoneNumber;
     }
 
+    /**
+     * Returns the appointment start time.
+     *
+     * @return appointment start time
+     */
     public LocalDateTime getStartTime() {
         return startTime;
     }
 
+    /**
+     * Returns the appointment duration.
+     *
+     * @return duration in minutes
+     */
     public int getDuration() {
         return duration;
     }
 
+    /**
+     * Returns the number of participants.
+     *
+     * @return number of participants
+     */
     public int getParticipants() {
         return participants;
     }
