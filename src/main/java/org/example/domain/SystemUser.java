@@ -18,21 +18,24 @@ public final class SystemUser {
      * @param role role value used for access control
      */
     public SystemUser(String email, String password, UserRole role) {
-        this(createIdFromEmail(email), email, password, role);
-    }
-
-    /**
-     * Creates an id from the user's email.
-     *
-     * @param email email address used to create the id
-     * @return generated user id
-     */
-    private static String createIdFromEmail(String email) {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Email cannot be null or blank");
         }
-        return email.trim().toLowerCase() + "-id";
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("Password cannot be null or blank");
+        }
+        if (role == null) {
+            throw new IllegalArgumentException("Role cannot be null");
+        }
+
+        String normalizedEmail = email.trim().toLowerCase();
+
+        this.id = normalizedEmail + "-id";
+        this.email = normalizedEmail;
+        this.password = password;
+        this.role = role;
     }
+
     /**
      * Creates a new system user object with the given values.
      *
