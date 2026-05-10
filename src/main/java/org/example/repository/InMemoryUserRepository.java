@@ -89,6 +89,14 @@ private String resolvePassword(String configuredPassword, String envKey) {
         return configuredPassword.trim();
     }
 
+    // Provide fallback defaults if neither env nor config is set
+    if (DEFAULT_ADMIN_PASSWORD_ENV.equals(envKey)) {
+        return "admin123";
+    }
+    if (DEFAULT_USER_PASSWORD_ENV.equals(envKey)) {
+        return "user123";
+    }
+
     return null;
 }
 

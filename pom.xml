@@ -73,6 +73,14 @@
             <version>5.2.0</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- Byte Buddy for Java 25+ compatibility -->
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>1.14.14</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -84,6 +92,8 @@
                 <version>3.2.5</version>
                 <configuration>
                     <useModulePath>false</useModulePath>
+                    <!-- Preserve any argLine set by other plugins (JaCoCo) and append our VM flag -->
+                    <argLine>@{argLine} -Dnet.bytebuddy.experimental=true</argLine>
                 </configuration>
             </plugin>
 
@@ -144,15 +154,17 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>3.2.5</version>
-                        <configuration>
-                            <useModulePath>false</useModulePath>
-                            <excludes>
-                                <exclude>**/presentation/gui/**/*Test.java</exclude>
-                                <exclude>**/presentation/gui/*Test.java</exclude>
-                                <exclude>**/gui/**/*Test.java</exclude>
-                                <exclude>**/gui/*Test.java</exclude>
-                            </excludes>
-                        </configuration>
+                            <configuration>
+                                <useModulePath>false</useModulePath>
+                                <!-- Preserve JaCoCo argLine and append Byte Buddy flag for CI runs -->
+                                <argLine>@{argLine} -Dnet.bytebuddy.experimental=true</argLine>
+                                <excludes>
+                                    <exclude>**/presentation/gui/**/*Test.java</exclude>
+                                    <exclude>**/presentation/gui/*Test.java</exclude>
+                                    <exclude>**/gui/**/*Test.java</exclude>
+                                    <exclude>**/gui/*Test.java</exclude>
+                                </excludes>
+                            </configuration>
                     </plugin>
                 </plugins>
             </build>
