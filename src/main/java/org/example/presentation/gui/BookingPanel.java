@@ -38,7 +38,7 @@ public class BookingPanel extends JPanel {
     private final AppointmentService appointmentService;
     private final AppointmentBookingService appointmentBookingService;
     private final Runnable onBookingSuccess;
-    private final DialogDisplayer dialogDisplayer;
+    private transient DialogDisplayer dialogDisplayer;
 
     private final JTextField bookedForNameField;
     private final JTextField phoneNumberField;
@@ -79,7 +79,7 @@ public class BookingPanel extends JPanel {
         this.appointmentService = appointmentService;
         this.appointmentBookingService = appointmentBookingService;
         this.onBookingSuccess = onBookingSuccess;
-        this.dialogDisplayer = dialogDisplayer;
+        this.dialogDisplayer = dialogDisplayer == null ? DefaultDialogDisplayer.INSTANCE : dialogDisplayer;
 
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -156,7 +156,7 @@ public class BookingPanel extends JPanel {
      */
     private void onBookAppointment() {
         if (!slotComboBox.isEnabled()) {
-            dialogDisplayer.showMessage(this, NO_SLOTS_AVAILABLE_MESSAGE, BOOKING_DIALOG_TITLE, javax.swing.JOptionPane.WARNING_MESSAGE);
+            dialogDisplayer().showMessage(this, NO_SLOTS_AVAILABLE_MESSAGE, BOOKING_DIALOG_TITLE, javax.swing.JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -170,7 +170,7 @@ public class BookingPanel extends JPanel {
         );
 
         if (GuiMessageHelper.isSuccessLike(status)) {
-            dialogDisplayer.showMessage(null, "Appointment booked successfully!");
+            dialogDisplayer().showMessage(null, "Appointment booked successfully!");
             clearInputs();
             refreshData();
             if (onBookingSuccess != null) {
@@ -179,7 +179,14 @@ public class BookingPanel extends JPanel {
             return;
         }
 
-        dialogDisplayer.showMessage(this, GuiMessageHelper.toMessage(status), BOOKING_ERROR_TITLE, javax.swing.JOptionPane.ERROR_MESSAGE);
+        dialogDisplayer().showMessage(this, GuiMessageHelper.toMessage(status), BOOKING_ERROR_TITLE, javax.swing.JOptionPane.ERROR_MESSAGE);
+    }
+
+    private DialogDisplayer dialogDisplayer() {
+        if (dialogDisplayer == null) {
+            dialogDisplayer = DefaultDialogDisplayer.INSTANCE;
+        }
+        return dialogDisplayer;
     }
 
     /**

@@ -37,6 +37,14 @@ public class AuthEventLoggerTest {
     }
 
     @Test
+    void logLoginSuccess_UsesSharedTimestampSeparator() {
+        logger.logLoginSuccess("alice");
+
+        String output = capturedOutput().trim();
+        assertTrue(output.matches("\\Q[AUTH] Login successful for user 'alice'\\E at \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"));
+    }
+
+    @Test
     void logLoginFailure_BlankUsername_ShowsBlankPlaceholder() {
         logger.logLoginFailure("   ");
 

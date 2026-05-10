@@ -18,6 +18,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import javax.swing.AbstractButton;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -178,6 +180,19 @@ class BookingPanelTest extends GuiTestSupport {
         // Assert
         verifyNoInteractions(appointmentBookingService);
         verifyNoInteractions(onBookingSuccess);
+    }
+
+    @Test
+    void dialogDisplayer_IsTransientAndDefaultsToProductionImplementation() throws Exception {
+        Field field = BookingPanel.class.getDeclaredField("dialogDisplayer");
+        assertTrue(Modifier.isTransient(field.getModifiers()));
+
+        when(appointmentService.getAvailableSlots()).thenReturn(Collections.emptyList());
+
+        panel = callOnEdt(() -> new BookingPanel(user, appointmentService, appointmentBookingService, onBookingSuccess, null));
+        DialogDisplayer dialogDisplayer = getPrivateField(panel, "dialogDisplayer", DialogDisplayer.class);
+
+        assertEquals(DefaultDialogDisplayer.INSTANCE, dialogDisplayer);
     }
 }
 

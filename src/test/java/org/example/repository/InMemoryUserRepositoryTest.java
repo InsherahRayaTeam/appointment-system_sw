@@ -51,6 +51,7 @@ class InMemoryUserRepositoryTest {
 
         assertTrue(result.isPresent());
         assertEquals("mlkschool10@gmail.com", result.get().getEmail());
+        assertEquals("user10pass", result.get().getPassword());
         assertEquals(UserRole.USER, result.get().getRole());
     }
 

@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 public class AuthEventLogger {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final String TIMESTAMP_SEPARATOR = " at ";
 
     /**
      * Logs a successful login event.
@@ -18,7 +19,7 @@ public class AuthEventLogger {
      * @param username user involved in this action
      */
     public void logLoginSuccess(String username) {
-        Console.println("[AUTH] Login successful for user '" + username + "' at " + now());
+        Console.println("[AUTH] Login successful for user '" + username + "'" + TIMESTAMP_SEPARATOR + now());
     }
 
     /**
@@ -28,7 +29,7 @@ public class AuthEventLogger {
      */
     public void logLoginFailure(String username) {
         String displayUser = (username == null || username.trim().isEmpty()) ? "<blank>" : username.trim();
-        Console.println("[AUTH] Login failed for user '" + displayUser + "' at " + now());
+        Console.println("[AUTH] Login failed for user '" + displayUser + "'" + TIMESTAMP_SEPARATOR + now());
     }
 
     /**
@@ -38,7 +39,7 @@ public class AuthEventLogger {
      */
     public void logLogout(String username) {
         String displayUser = username == null ? "<unknown>" : username;
-        Console.println("[AUTH] Logout for user '" + displayUser + "' at " + now());
+        Console.println("[AUTH] Logout for user '" + displayUser + "'" + TIMESTAMP_SEPARATOR + now());
     }
 
     /**
