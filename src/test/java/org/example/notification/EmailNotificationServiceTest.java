@@ -215,7 +215,7 @@ class EmailNotificationServiceTest {
                     () -> service.send("to@example.com", "Hello", "Message")
             );
 
-            assertTrue(ex.getMessage().contains("Failed to send appointment notification email to to@example.com."));
+            assertTrue(ex.getMessage().contains("Failed to send appointment notification email."));
             assertInstanceOf(MessagingException.class, ex.getCause());
             transportMock.verify(() -> Transport.send(any(Message.class)), times(1));
         }

@@ -4,6 +4,8 @@ import org.example.domain.SystemUser;
 import org.example.notification.NotificationService;
 import org.example.repository.UserRepository;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
@@ -81,7 +83,7 @@ public class PasswordRecoveryService {
                 "Use this reset code to update your password: " + resetCode
                         + " . If you did not request this, ignore this email."
         );
-        eventManager.notifyObservers("Password reset requested: " + user.getEmail());
+        eventManager.notifyObservers("Password reset requested");
         return ForgotPasswordStatus.RESET_REQUESTED;
     }
 
@@ -110,7 +112,7 @@ public class PasswordRecoveryService {
         }
 
         String storedCode = resetCodesByEmail.get(user.getEmail());
-        if (storedCode == null || resetCode == null || !storedCode.equals(resetCode.trim())) {
+        if (storedCode == null || resetCode == null || !sameSecret(storedCode, resetCode.trim())) {
             return ForgotPasswordStatus.INVALID_RESET_CODE;
         }
 
@@ -118,7 +120,7 @@ public class PasswordRecoveryService {
             return ForgotPasswordStatus.BLANK_NEW_PASSWORD;
         }
 
-        if (!newPassword.equals(confirmPassword)) {
+        if (!samePassword(newPassword, confirmPassword)) {
             return ForgotPasswordStatus.PASSWORD_MISMATCH;
         }
 
@@ -173,7 +175,7 @@ public class PasswordRecoveryService {
         }
 
         resetCodesByEmail.remove(user.getEmail());
-        eventManager.notifyObservers("Password reset completed: " + user.getEmail());
+        eventManager.notifyObservers("Password reset completed");
         return ForgotPasswordStatus.PASSWORD_RESET_SUCCESS;
     }
 
@@ -206,11 +208,25 @@ public class PasswordRecoveryService {
         return hasLetter && hasDigit;
     }
 
-private static final SecureRandom RANDOM = new SecureRandom();
+    private boolean samePassword(String password, String confirmPassword) {
+        if (confirmPassword == null) {
+            return false;
+        }
+        return sameSecret(password, confirmPassword);
+    }
 
-private static String generateCode() {
-    int value = 100000 + RANDOM.nextInt(900000);
-    return Integer.toString(value);
-}
+    private boolean sameSecret(String first, String second) {
+        return MessageDigest.isEqual(
+                first.getBytes(StandardCharsets.UTF_8),
+                second.getBytes(StandardCharsets.UTF_8)
+        );
+    }
+
+    private static final SecureRandom RANDOM = new SecureRandom();
+
+    private static String generateCode() {
+        int value = 100000 + RANDOM.nextInt(900000);
+        return Integer.toString(value);
+    }
 }
 

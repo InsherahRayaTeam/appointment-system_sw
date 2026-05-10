@@ -29,11 +29,11 @@ public class AuthEventLoggerTest {
     }
 
     @Test
-    void logLoginSuccess_MessageContainsUsername() {
+    void logLoginSuccess_MessageDoesNotExposeUsername() {
         logger.logLoginSuccess("alice");
 
         String output = capturedOutput();
-        assertTrue(output.contains("[AUTH] Login successful for user 'alice'"));
+        assertTrue(output.contains("[AUTH] Login successful"));
     }
 
     @Test
@@ -41,23 +41,23 @@ public class AuthEventLoggerTest {
         logger.logLoginFailure("   ");
 
         String output = capturedOutput();
-        assertTrue(output.contains("[AUTH] Login failed for user '<blank>'"));
+        assertTrue(output.contains("[AUTH] Login failed with blank input"));
     }
 
     @Test
-    void logLoginFailure_UsernameIsTrimmedInMessage() {
+    void logLoginFailure_DoesNotExposeUsername() {
         logger.logLoginFailure("  bob  ");
 
         String output = capturedOutput();
-        assertTrue(output.contains("[AUTH] Login failed for user 'bob'"));
+        assertTrue(output.contains("[AUTH] Login failed with provided input"));
     }
 
     @Test
-    void logLogout_MessagePrintsUsername() {
+    void logLogout_MessageDoesNotExposeUsername() {
         logger.logLogout("carol");
 
         String output = capturedOutput();
-        assertTrue(output.contains("[AUTH] Logout for user 'carol'"));
+        assertTrue(output.contains("[AUTH] Logout"));
     }
 
     @Test
@@ -65,15 +65,15 @@ public class AuthEventLoggerTest {
         logger.logLogout(null);
 
         String output = capturedOutput();
-        assertTrue(output.contains("[AUTH] Logout for user '<unknown>'"));
+        assertTrue(output.contains("[AUTH] Logout"));
     }
 
     @Test
-    void logLoginFailure_NullUsername_ShowsBlankPlaceholder() {
+    void logLoginFailure_NullUsername_ShowsBlankInput() {
         logger.logLoginFailure(null);
 
         String output = capturedOutput();
-        assertTrue(output.contains("<blank>"));
+        assertTrue(output.contains("blank input"));
     }
 
     private String capturedOutput() {

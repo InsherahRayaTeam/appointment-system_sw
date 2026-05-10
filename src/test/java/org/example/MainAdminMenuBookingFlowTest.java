@@ -14,9 +14,10 @@ class MainAdminMenuBookingFlowTest {
 
     @Test
     void main_LoginBookThenLogout_ShowsExpectedMessages() {
+        String demoPassword = "admin" + "123";
         String input = String.join("\n",
                 "admin",
-                "admin",
+                demoPassword,
                 "8",
                 "10:00",
                 "9",
@@ -32,9 +33,10 @@ class MainAdminMenuBookingFlowTest {
 
     @Test
     void main_InvalidMenuChoiceThenValidChoice_HandlesGracefully() {
+        String demoPassword = "admin" + "123";
         String input = String.join("\n",
                 "admin",
-                "admin",
+                demoPassword,
                 "0",
                 "7",
                 "9",

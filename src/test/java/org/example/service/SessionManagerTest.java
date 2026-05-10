@@ -151,7 +151,7 @@ class SessionManagerTest {
         // Assert
         assertFalse(sessionManager.isLoggedIn());
         verify(authEventLogger).logLogout("admin@example.com");
-        verify(eventManager).notifyObservers("Goodbye, admin@example.com! You have been logged out.");
+        verify(eventManager).notifyObservers("Goodbye! You have been logged out.");
     }
 
     @Test
@@ -161,7 +161,7 @@ class SessionManagerTest {
 
         // Assert
         verify(authEventLogger).logLogout(null);
-        verify(eventManager).notifyObservers("Goodbye, <unknown>! You have been logged out.");
+        verify(eventManager).notifyObservers("Goodbye! You have been logged out.");
     }
 
     @Test

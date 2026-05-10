@@ -30,8 +30,7 @@ public class LoginNotifier implements Observer {
      * @param username user involved in this action
      */
     public void notifyLoginFailure(String username) {
-        String displayUser = (username == null || username.trim().isEmpty()) ? "<blank>" : username.trim();
-        System.out.println("Failed login attempt for user '" + displayUser + "'.");
+        System.out.println("Failed login attempt.");
     }
 
     /**

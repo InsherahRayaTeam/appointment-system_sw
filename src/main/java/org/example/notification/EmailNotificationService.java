@@ -22,7 +22,7 @@ import java.util.Properties;
  * -Dmail.smtp.auth=true
  * -Dmail.smtp.starttls.enable=true
  * -Dapp.mail.username=your_email@gmail.com
- * -Dapp.mail.password=your_16_char_app_password
+ * -Dapp.mail.password=&lt;mail app password from a local secret source&gt;
  * -Dapp.mail.from=your_email@gmail.com
  * </pre>
  */
@@ -75,7 +75,7 @@ public class EmailNotificationService implements NotificationService {
             Transport.send(message);
         } catch (MessagingException ex) {
             throw new IllegalStateException(
-                    "Failed to send appointment notification email to " + recipient + ".",
+                    "Failed to send appointment notification email.",
                     ex
             );
         }

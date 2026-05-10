@@ -137,7 +137,7 @@ class UserRegistrationServiceTest {
         );
 
         assertEquals(SignUpStatus.SUCCESS, status);
-        verify(eventManager).notifyObservers("User registered successfully: new@example.com");
+        verify(eventManager).notifyObservers("User registered successfully");
         assertSame(SignUpStatus.SUCCESS, status);
     }
 

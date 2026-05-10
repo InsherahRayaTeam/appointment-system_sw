@@ -1,8 +1,11 @@
 package org.example.domain;
 
+import org.example.service.PasswordHasher;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SystemUserCompatibilityTest {
 
@@ -12,7 +15,8 @@ class SystemUserCompatibilityTest {
 
         assertEquals("admin@gmail.com-id", systemUser.getId());
         assertEquals("admin@gmail.com", systemUser.getEmail());
-        assertEquals("admin123", systemUser.getPassword());
+        assertNotEquals("admin123", systemUser.getPassword());
+        assertTrue(systemUser.passwordMatches("admin123"));
         assertEquals(UserRole.ADMIN, systemUser.getRole());
     }
 
@@ -31,10 +35,10 @@ class SystemUserCompatibilityTest {
     }
 
     @Test
-    void getPassword_ReturnsCorrectPassword() {
+    void getPassword_ReturnsEncodedPasswordHash() {
         SystemUser systemUser = new SystemUser("admin@gmail.com", "admin123", UserRole.ADMIN);
 
-        assertEquals("admin123", systemUser.getPassword());
+        assertTrue(PasswordHasher.isEncoded(systemUser.getPassword()));
     }
 
     @Test

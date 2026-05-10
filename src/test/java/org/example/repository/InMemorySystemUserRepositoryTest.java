@@ -25,7 +25,7 @@ class InMemorySystemUserRepositoryTest {
 
         assertTrue(result.isPresent());
         assertEquals("insherah2004@gmail.com", result.get().getEmail());
-        assertEquals("admin123", result.get().getPassword());
+        assertTrue(result.get().passwordMatches("admin123"));
         assertEquals(UserRole.ADMIN, result.get().getRole());
         assertEquals("admin-1", result.get().getId());
     }
@@ -36,7 +36,7 @@ class InMemorySystemUserRepositoryTest {
 
         assertTrue(result.isPresent());
         assertEquals("insherahdwikat@gmail.com", result.get().getEmail());
-        assertEquals("user123", result.get().getPassword());
+        assertTrue(result.get().passwordMatches("user123"));
         assertEquals(UserRole.USER, result.get().getRole());
         assertEquals("user-1", result.get().getId());
     }
@@ -73,6 +73,6 @@ class InMemorySystemUserRepositoryTest {
         assertTrue(result.isPresent());
         SystemUser admin = result.get();
         assertEquals("insherah2004@gmail.com", admin.getEmail());
-        assertEquals("admin123", admin.getPassword());
+        assertTrue(admin.passwordMatches("admin123"));
     }
 }

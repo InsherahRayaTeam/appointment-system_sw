@@ -16,7 +16,7 @@ public class AuthEventLogger {
      * @param username user involved in this action
      */
     public void logLoginSuccess(String username) {
-        System.out.println("[AUTH] Login successful for user '" + username + "' at " + now());
+        System.out.println("[AUTH] Login successful at " + now());
     }
 
     /**
@@ -25,8 +25,8 @@ public class AuthEventLogger {
      * @param username user involved in this action
      */
     public void logLoginFailure(String username) {
-        String displayUser = (username == null || username.trim().isEmpty()) ? "<blank>" : username.trim();
-        System.out.println("[AUTH] Login failed for user '" + displayUser + "' at " + now());
+        String inputStatus = (username == null || username.trim().isEmpty()) ? "blank input" : "provided input";
+        System.out.println("[AUTH] Login failed with " + inputStatus + " at " + now());
     }
 
     /**
@@ -35,8 +35,7 @@ public class AuthEventLogger {
      * @param username user involved in this action
      */
     public void logLogout(String username) {
-        String displayUser = username == null ? "<unknown>" : username;
-        System.out.println("[AUTH] Logout for user '" + displayUser + "' at " + now());
+        System.out.println("[AUTH] Logout at " + now());
     }
 
     /**

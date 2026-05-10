@@ -40,7 +40,6 @@ public class Main {
     private static final String CONSOLE_EXIT_COMMAND = "exit";
     private static final String CONSOLE_ADMIN_ALIAS = "admin";
     private static final String CONSOLE_ADMIN_EMAIL = "insherah2004@gmail.com";
-    private static final String CONSOLE_ADMIN_PASSWORD = "admin123";
     private static final String MENU_OPTION_SHOW_SLOTS = "7";
     private static final String MENU_OPTION_BOOK_SLOT = "8";
     private static final String MENU_OPTION_LOGOUT = "9";
@@ -191,15 +190,12 @@ public class Main {
             }
 
             String authEmail = username;
-            String authPassword = password;
 
-            if (CONSOLE_ADMIN_ALIAS.equalsIgnoreCase(username)
-                    && CONSOLE_ADMIN_ALIAS.equals(password)) {
+            if (CONSOLE_ADMIN_ALIAS.equalsIgnoreCase(username)) {
                 authEmail = CONSOLE_ADMIN_EMAIL;
-                authPassword = CONSOLE_ADMIN_PASSWORD;
             }
 
-            if (!authService.authenticate(authEmail, authPassword)) {
+            if (!authService.authenticate(authEmail, password)) {
                 loginNotifier.notifyLoginFailure(username);
                 continue;
             }

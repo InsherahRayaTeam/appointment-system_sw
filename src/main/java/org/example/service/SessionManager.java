@@ -113,8 +113,7 @@ public class SessionManager {
         logout();
 
         authEventLogger.logLogout(email);
-        String displayUser = email == null ? "<unknown>" : email;
-        eventManager.notifyObservers("Goodbye, " + displayUser + "! You have been logged out.");
+        eventManager.notifyObservers("Goodbye! You have been logged out.");
     }
 
     /**

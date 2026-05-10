@@ -2,6 +2,7 @@ package org.example.repository;
 
 import org.example.domain.SystemUser;
 import org.example.domain.UserRole;
+import org.example.service.PasswordHasher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +12,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -117,7 +119,8 @@ class InMemoryUserRepositoryTest {
         // Assert
         assertTrue(loaded.isPresent());
         assertEquals("admin-replacement", loaded.get().getId());
-        assertEquals("new-pass", loaded.get().getPassword());
+        assertNotEquals("new-pass", loaded.get().getPassword());
+        assertTrue(loaded.get().passwordMatches("new-pass"));
     }
 
     @Test
@@ -138,7 +141,8 @@ class InMemoryUserRepositoryTest {
 
         assertTrue(loaded.isPresent());
         assertEquals("new.admin@example.com-id", loaded.get().getId());
-        assertEquals("secure-pass", loaded.get().getPassword());
+        assertTrue(PasswordHasher.isEncoded(loaded.get().getPassword()));
+        assertTrue(loaded.get().passwordMatches("secure-pass"));
         assertEquals(UserRole.ADMIN, loaded.get().getRole());
     }
 
@@ -175,7 +179,9 @@ class InMemoryUserRepositoryTest {
         boolean updated = repository.updatePassword("user-1", "updated123");
 
         assertTrue(updated);
-        assertEquals("updated123", repository.findById("user-1").orElseThrow().getPassword());
+        SystemUser updatedUser = repository.findById("user-1").orElseThrow();
+        assertNotEquals("updated123", updatedUser.getPassword());
+        assertTrue(updatedUser.passwordMatches("updated123"));
     }
 
     @Test
@@ -192,7 +198,9 @@ class InMemoryUserRepositoryTest {
         boolean updated = repository.update(updatedUser);
 
         assertTrue(updated);
-        assertEquals("changed123", repository.findByEmail("insherahdwikat@gmail.com").orElseThrow().getPassword());
+        SystemUser loaded = repository.findByEmail("insherahdwikat@gmail.com").orElseThrow();
+        assertNotEquals("changed123", loaded.getPassword());
+        assertTrue(loaded.passwordMatches("changed123"));
     }
 
     @Test

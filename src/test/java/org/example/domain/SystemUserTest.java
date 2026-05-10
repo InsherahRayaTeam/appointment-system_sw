@@ -1,8 +1,10 @@
 package org.example.domain;
 
+import org.example.service.PasswordHasher;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -16,7 +18,9 @@ class SystemUserTest {
         // Assert
         assertEquals("admin@gmail.com-id", user.getId());
         assertEquals("admin@gmail.com", user.getEmail());
-        assertEquals("secret", user.getPassword());
+        assertNotEquals("secret", user.getPassword());
+        assertTrue(PasswordHasher.isEncoded(user.getPassword()));
+        assertTrue(user.passwordMatches("secret"));
         assertEquals(UserRole.ADMIN, user.getRole());
     }
 
@@ -28,7 +32,7 @@ class SystemUserTest {
         // Assert
         assertEquals("user-42", user.getId());
         assertEquals("user@example.com", user.getEmail());
-        assertEquals("pw", user.getPassword());
+        assertTrue(user.passwordMatches("pw"));
         assertEquals(UserRole.USER, user.getRole());
     }
 
@@ -90,12 +94,12 @@ class SystemUserTest {
     }
 
     @Test
-    void constructor_WithPasswordContainingSpaces_PreservesRawPassword() {
+    void constructor_WithPasswordContainingSpaces_HashesRawPassword() {
         // Arrange / Act
         SystemUser user = new SystemUser("id", "user@example.com", "  pw  ", UserRole.USER);
 
         // Assert
-        assertEquals("  pw  ", user.getPassword());
-        assertTrue(user.getPassword().startsWith(" "));
+        assertNotEquals("  pw  ", user.getPassword());
+        assertTrue(user.passwordMatches("  pw  "));
     }
 }

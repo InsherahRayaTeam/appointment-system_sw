@@ -4,6 +4,8 @@ import org.example.domain.SystemUser;
 import org.example.domain.UserRole;
 import org.example.repository.UserRepository;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -66,7 +68,7 @@ public class UserRegistrationService {
             return SignUpStatus.BLANK_PASSWORD;
         }
 
-        if (!password.equals(confirmPassword)) {
+        if (!samePassword(password, confirmPassword)) {
             return SignUpStatus.PASSWORD_MISMATCH;
         }
 
@@ -90,7 +92,7 @@ public class UserRegistrationService {
         );
 
         userRepository.save(user);
-        eventManager.notifyObservers("User registered successfully: " + normalizedEmail);
+        eventManager.notifyObservers("User registered successfully");
         return SignUpStatus.SUCCESS;
     }
 
@@ -132,7 +134,7 @@ public class UserRegistrationService {
         );
 
         userRepository.save(user);
-        eventManager.notifyObservers("User registered successfully: " + normalizedEmail);
+        eventManager.notifyObservers("User registered successfully");
         return SignUpStatus.SUCCESS;
     }
 
@@ -191,5 +193,12 @@ public class UserRegistrationService {
         }
 
         return hasLetter && hasDigit;
+    }
+
+    private boolean samePassword(String password, String confirmPassword) {
+        return MessageDigest.isEqual(
+                password.getBytes(StandardCharsets.UTF_8),
+                confirmPassword.getBytes(StandardCharsets.UTF_8)
+        );
     }
 }

@@ -1,5 +1,7 @@
 package org.example.domain;
 
+import org.example.service.PasswordHasher;
+
 /**
  * Represents system user in the system.
  */
@@ -7,7 +9,7 @@ public final class SystemUser {
 
     private final String id;
     private final String email;
-    private final String password;
+    private final String passwordHash;
     private final UserRole role;
 
     /**
@@ -32,7 +34,7 @@ public final class SystemUser {
 
         this.id = normalizedEmail + "-id";
         this.email = normalizedEmail;
-        this.password = password;
+        this.passwordHash = PasswordHasher.encode(password);
         this.role = role;
     }
 
@@ -60,7 +62,7 @@ public final class SystemUser {
 
         this.id = id.trim();
         this.email = email.trim().toLowerCase();
-        this.password = password;
+        this.passwordHash = PasswordHasher.encode(password);
         this.role = role;
     }
 
@@ -88,7 +90,26 @@ public final class SystemUser {
      * @return text result from this method
      */
     public String getPassword() {
-        return password;
+        return passwordHash;
+    }
+
+    /**
+     * Returns the encoded password hash.
+     *
+     * @return encoded password hash
+     */
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    /**
+     * Checks whether the supplied raw password matches the stored hash.
+     *
+     * @param rawPassword password text entered by the user
+     * @return true when the password matches
+     */
+    public boolean passwordMatches(String rawPassword) {
+        return PasswordHasher.matches(rawPassword, passwordHash);
     }
 
     /**

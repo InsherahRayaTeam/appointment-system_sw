@@ -45,14 +45,14 @@ public class LoginNotifierTest {
     void notifyLoginFailure_WithNullUsername_UsesBlankPlaceholder() {
         loginNotifier.notifyLoginFailure(null);
 
-        assertTrue(capturedOutput().contains("Failed login attempt for user '<blank>'."));
+        assertTrue(capturedOutput().contains("Failed login attempt."));
     }
 
     @Test
     void notifyLoginFailure_WithEmptyUsername_UsesBlankPlaceholder() {
         loginNotifier.notifyLoginFailure("");
 
-        assertTrue(capturedOutput().contains("Failed login attempt for user '<blank>'."));
+        assertTrue(capturedOutput().contains("Failed login attempt."));
     }
 
     @Test

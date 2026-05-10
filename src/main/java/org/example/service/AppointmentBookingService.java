@@ -1245,7 +1245,7 @@ public class AppointmentBookingService {
             try {
                 appointmentNotificationCoordinator.sendPendingNotification(appointment);
             } catch (Exception e) {
-                System.out.println("Email failed but booking continues: " + e.getMessage());
+                System.out.println("Email failed but booking continues.");
             }
         }
     }
@@ -1260,7 +1260,7 @@ public class AppointmentBookingService {
             try {
                 appointmentNotificationCoordinator.sendApprovedNotification(appointment);
             } catch (Exception e) {
-                System.out.println("Email failed but booking continues: " + e.getMessage());
+                System.out.println("Email failed but booking continues.");
             }
         }
     }
@@ -1275,7 +1275,7 @@ public class AppointmentBookingService {
             try {
                 appointmentNotificationCoordinator.sendCancelledNotification(appointment);
             } catch (Exception e) {
-                System.out.println("Email failed but booking continues: " + e.getMessage());
+                System.out.println("Email failed but booking continues.");
             }
         }
     }
@@ -1291,7 +1291,7 @@ public class AppointmentBookingService {
             try {
                 appointmentNotificationCoordinator.sendRescheduledNotification(previousAppointment, updatedAppointment);
             } catch (Exception e) {
-                System.out.println("Email failed but booking continues: " + e.getMessage());
+                System.out.println("Email failed but booking continues.");
             }
         }
     }

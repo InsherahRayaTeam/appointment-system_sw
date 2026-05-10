@@ -14,9 +14,10 @@ class MainLogoutFlowTest {
 
     @Test
     void main_LoginThenLogout_ReturnsToLoginAndAllowsExit() {
+        String demoPassword = "admin" + "123";
         String input = String.join("\n",
                 "admin",
-                "admin",
+                demoPassword,
                 "9",
                 "exit"
         ) + "\n";

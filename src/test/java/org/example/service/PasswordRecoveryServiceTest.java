@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.contains;
@@ -165,7 +166,9 @@ class PasswordRecoveryServiceTest {
 
         assertEquals(SignUpStatus.SUCCESS, signUpStatus);
         assertEquals(ForgotPasswordStatus.PASSWORD_RESET_SUCCESS, resetStatus);
-        assertEquals("new1234", repository.findByEmail("recover@example.com").orElseThrow().getPassword());
+        SystemUser recovered = repository.findByEmail("recover@example.com").orElseThrow();
+        assertNotEquals("new1234", recovered.getPassword());
+        assertTrue(recovered.passwordMatches("new1234"));
     }
 
     @Test

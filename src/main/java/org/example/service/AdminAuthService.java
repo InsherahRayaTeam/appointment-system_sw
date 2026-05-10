@@ -191,9 +191,7 @@ public class AdminAuthService {
         }
 
         String email = credentials.getEmail().trim().toLowerCase();
-        String password = credentials.getPassword();
-
         return userRepository.findByEmail(email)
-                .filter(user -> user.getPassword().equals(password));
+                .filter(user -> user.passwordMatches(credentials.getPassword()));
     }
 }

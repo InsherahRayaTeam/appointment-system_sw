@@ -1,5 +1,7 @@
 package org.example.domain;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Objects;
 
 /**
@@ -58,7 +60,14 @@ public class Credentials {
         if (email == null || password == null) {
             return false;
         }
-        return this.email.equals(email.trim().toLowerCase()) && this.password.equals(password);
+        return this.email.equals(email.trim().toLowerCase()) && sameSecret(this.password, password);
+    }
+
+    private boolean sameSecret(String first, String second) {
+        return MessageDigest.isEqual(
+                first.getBytes(StandardCharsets.UTF_8),
+                second.getBytes(StandardCharsets.UTF_8)
+        );
     }
 
     /**
