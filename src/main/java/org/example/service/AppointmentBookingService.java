@@ -27,7 +27,7 @@ import java.util.UUID;
 public class AppointmentBookingService {
 
     private static final String LEGACY_PHONE_PLACEHOLDER = "N/A";
-    private static final String PHONE_PATTERN = "^\\+?[0-9][0-9\\s-]{6,14}$";
+    private static final String PHONE_PATTERN = "^\\+?\\d[\\d\\s-]{6,14}$";
 
     private final AppointmentRepository appointmentRepository;
     private final AppointmentBookingRepository appointmentBookingRepository;
