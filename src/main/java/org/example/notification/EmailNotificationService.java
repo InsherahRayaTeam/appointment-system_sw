@@ -37,12 +37,6 @@ public class EmailNotificationService implements NotificationService {
     private static final String APP_MAIL_FROM = "app.mail.from";
 
     /**
-     * Creates a new email notification service object with the given values.
-     */
-    public EmailNotificationService() {
-    }
-
-    /**
      * Sends a notification to the given recipient.
      *
      * @param to recipient address
