@@ -168,13 +168,21 @@ public class Main {
 
         while (true) {
             System.out.println("Administrator Login");
-            String username = scanner.nextLine().trim();
+            String username = readTrimmedLine(scanner);
+            if (username == null) {
+                System.out.println("Thank you for using Appointment System.");
+                return;
+            }
             if (CONSOLE_EXIT_COMMAND.equalsIgnoreCase(username)) {
                 System.out.println("Thank you for using Appointment System.");
                 return;
             }
 
-            String password = scanner.nextLine().trim();
+            String password = readTrimmedLine(scanner);
+            if (password == null) {
+                System.out.println("Thank you for using Appointment System.");
+                return;
+            }
             String authEmail = username;
             String authPassword = password;
             if (CONSOLE_ADMIN_ALIAS.equalsIgnoreCase(username) && CONSOLE_ADMIN_ALIAS.equals(password)) {
@@ -191,7 +199,11 @@ public class Main {
 
             boolean loggedIn = true;
             while (loggedIn) {
-                String choice = scanner.nextLine().trim();
+                String choice = readTrimmedLine(scanner);
+                if (choice == null) {
+                    System.out.println("Thank you for using Appointment System.");
+                    return;
+                }
                 switch (choice) {
                     case MENU_OPTION_SHOW_SLOTS:
                         System.out.println("Available Appointment Slots");
@@ -201,7 +213,11 @@ public class Main {
                         }
                         break;
                     case MENU_OPTION_BOOK_SLOT:
-                        String requestedTime = scanner.nextLine().trim();
+                        String requestedTime = readTrimmedLine(scanner);
+                        if (requestedTime == null) {
+                            System.out.println("Thank you for using Appointment System.");
+                            return;
+                        }
                         if (appointmentService.bookSlot(requestedTime)) {
                             System.out.println("Success: Appointment booked for " + requestedTime + ".");
                         } else {
@@ -218,5 +234,16 @@ public class Main {
                 }
             }
         }
+    }
+
+    /**
+     * Reads one trimmed console line if input is available.
+     *
+     * @param scanner scanner connected to console input
+     *
+     * @return trimmed line, or null when input is exhausted
+     */
+    private static String readTrimmedLine(Scanner scanner) {
+        return scanner.hasNextLine() ? scanner.nextLine().trim() : null;
     }
 }

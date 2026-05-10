@@ -61,7 +61,7 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
         String normalizedId = appointmentId.trim();
 
         for (Appointment appointment : appointments) {
-            if (normalizedId.equals(appointment.getId())) {
+            if (normalizedId.equals(normalizeId(appointment.getId()))) {
                 return Optional.of(copyOf(appointment));
             }
         }
@@ -89,13 +89,29 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
         for (int i = 0; i < appointments.size(); i++) {
             Appointment current = appointments.get(i);
 
-            if (normalizedId.equals(current.getId())) {
+            if (normalizedId.equals(normalizeId(current.getId()))) {
                 appointments.set(i, copyOf(appointment));
                 return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * Normalizes appointment identifiers before matching or storing.
+     *
+     * @param appointmentId unique id used to find the record
+     *
+     * @return trimmed appointment id, or null when absent
+     */
+    private String normalizeId(String appointmentId) {
+        if (appointmentId == null) {
+            return null;
+        }
+
+        String normalizedId = appointmentId.trim();
+        return normalizedId.isEmpty() ? null : normalizedId;
     }
 
     /**
@@ -116,7 +132,7 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
         );
 
         Appointment copy = new Appointment(
-                appointment.getId(),
+                normalizeId(appointment.getId()),
                 details,
                 appointment.getStatus(),
                 appointment.getType() == null ? AppointmentType.NORMAL : appointment.getType()
