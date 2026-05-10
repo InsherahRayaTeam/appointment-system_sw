@@ -3,27 +3,29 @@ package org.example.repository;
 import org.example.domain.SystemUser;
 import org.example.domain.UserRole;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 
 /**
  * Represents in-memory user repository in the system.
  */
 public class InMemoryUserRepository implements UserRepository {
 
-    private static final String DEFAULT_ADMIN_ID = "admin-1";
-    private static final String DEFAULT_ADMIN_EMAIL = "insherah2004@gmail.com";
-    private static final String DEFAULT_ADMIN_PASSWORD = "admin123";
-
-    private static final String DEFAULT_USER_ID = "user-1";
-    private static final String DEFAULT_USER_EMAIL = "insherahdwikat@gmail.com";
-    private static final String DEFAULT_USER_PASSWORD = "user123";
-
-    private static final String PROPERTIES_USER_ID = "user-10";
-    private static final String PROPERTIES_USER_EMAIL = "mlkschool10@gmail.com";
-    private static final String PROPERTIES_USER_PASSWORD = "user10pass";
+    private static final String ADMIN_PROPERTIES_RESOURCE = "admin.properties";
+    private static final String ADMIN_ID_KEY = "admin.id";
+    private static final String ADMIN_EMAIL_KEY = "admin.email";
+    private static final String ADMIN_PASSWORD_KEY = "admin.password";
+    private static final String USER_ID_KEY = "user.id";
+    private static final String USER_EMAIL_KEY = "user.email";
+    private static final String USER_PASSWORD_KEY = "user.password";
+    private static final String USER10_ID_KEY = "user10.id";
+    private static final String USER10_EMAIL_KEY = "user10.email";
+    private static final String USER10_PASSWORD_KEY = "user10.password";
 
     private final List<SystemUser> users = new ArrayList<>();
 
@@ -177,9 +179,50 @@ public class InMemoryUserRepository implements UserRepository {
      * Seeds default admin and regular user accounts.
      */
     private void seedDefaultUsers() {
-        seedUser(DEFAULT_ADMIN_ID, DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD, UserRole.ADMIN);
-        seedUser(DEFAULT_USER_ID, DEFAULT_USER_EMAIL, DEFAULT_USER_PASSWORD, UserRole.USER);
-        seedUser(PROPERTIES_USER_ID, PROPERTIES_USER_EMAIL, PROPERTIES_USER_PASSWORD, UserRole.USER);
+        Properties properties = loadAdminProperties();
+
+        seedUser(properties, ADMIN_ID_KEY, ADMIN_EMAIL_KEY, ADMIN_PASSWORD_KEY, UserRole.ADMIN);
+        seedUser(properties, USER_ID_KEY, USER_EMAIL_KEY, USER_PASSWORD_KEY, UserRole.USER);
+        seedUser(properties, USER10_ID_KEY, USER10_EMAIL_KEY, USER10_PASSWORD_KEY, UserRole.USER);
+    }
+
+    /**
+     * Loads demo user credentials from the classpath.
+     *
+     * @return loaded properties, or empty properties when unavailable
+     */
+    private Properties loadAdminProperties() {
+        Properties properties = new Properties();
+
+        try (InputStream input = InMemoryUserRepository.class
+                .getClassLoader()
+                .getResourceAsStream(ADMIN_PROPERTIES_RESOURCE)) {
+            if (input != null) {
+                properties.load(input);
+            }
+        } catch (IOException exception) {
+            throw new IllegalStateException("Unable to load demo user credentials", exception);
+        }
+
+        return properties;
+    }
+
+    /**
+     * Seeds a user from property keys.
+     *
+     * @param properties credential properties
+     * @param idKey property key for id
+     * @param emailKey property key for email
+     * @param passwordKey property key for password
+     * @param role user role
+     */
+    private void seedUser(Properties properties, String idKey, String emailKey, String passwordKey, UserRole role) {
+        seedUser(
+                properties.getProperty(idKey),
+                properties.getProperty(emailKey),
+                properties.getProperty(passwordKey),
+                role
+        );
     }
 
     /**
