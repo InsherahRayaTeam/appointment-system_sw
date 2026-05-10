@@ -42,25 +42,38 @@ public class Appointment {
         this(id, null, null, startTime, duration, participants, null, AppointmentType.NORMAL);
     }
 
-    /**
+ 
+     /**
      * Creates a new appointment object with the given values.
      *
      * @param id unique id used to find the record
-     * @param customerName value for customer name
-     * @param startTime time value used by this method
-     * @param duration appointment duration in minutes
-     * @param participants number of people for the appointment
+     * @param details appointment customer and scheduling details
      * @param status status value used for this operation
+     * @param type value for type
      */
     public Appointment(
             String id,
-            String customerName,
-            LocalDateTime startTime,
-            int duration,
-            int participants,
-            AppointmentStatus status
+            AppointmentDetails details,
+            AppointmentStatus status,
+            AppointmentType type
     ) {
-        this(id, customerName, customerName, startTime, duration, participants, status, AppointmentType.NORMAL);
+        this.id = id;
+        this.startTime = details.getStartTime();
+        this.duration = details.getDuration();
+        this.participants = details.getParticipants();
+        this.customerName = details.getCustomerName();
+        this.customerEmail = details.getCustomerEmail() == null || details.getCustomerEmail().trim().isEmpty()
+                ? details.getCustomerName()
+                : details.getCustomerEmail().trim().toLowerCase();
+        this.customerPhoneNumber = details.getCustomerPhoneNumber() == null
+                || details.getCustomerPhoneNumber().trim().isEmpty()
+                ? null
+                : details.getCustomerPhoneNumber().trim();
+        this.status = status;
+        this.type = type == null ? AppointmentType.NORMAL : type;
+        this.rating = 0;
+        this.feedbackComment = null;
+        this.feedbackSubmitted = false;
     }
 
     /**
