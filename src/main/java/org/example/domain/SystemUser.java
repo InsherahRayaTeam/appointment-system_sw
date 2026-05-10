@@ -33,7 +33,6 @@ public final class SystemUser {
         }
         return email.trim().toLowerCase() + "-id";
     }
-
     /**
      * Creates a new system user object with the given values.
      *
