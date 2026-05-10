@@ -21,10 +21,10 @@ class InMemorySystemUserRepositoryTest {
 
     @Test
     void findByEmail_DefaultAdminEmail_ReturnsDefaultAdmin() {
-        Optional<SystemUser> result = repository.findByEmail("admin@gmail.com");
+        Optional<SystemUser> result = repository.findByEmail("insherah2004@gmail.com");
 
         assertTrue(result.isPresent());
-        assertEquals("admin@gmail.com", result.get().getEmail());
+        assertEquals("insherah2004@gmail.com", result.get().getEmail());
         assertEquals("admin123", result.get().getPassword());
         assertEquals(UserRole.ADMIN, result.get().getRole());
         assertEquals("admin-1", result.get().getId());
@@ -32,10 +32,10 @@ class InMemorySystemUserRepositoryTest {
 
     @Test
     void findByEmail_DefaultRegularUser_ReturnsSeededUser() {
-        Optional<SystemUser> result = repository.findByEmail("user@gmail.com");
+        Optional<SystemUser> result = repository.findByEmail("insherahdwikat@gmail.com");
 
         assertTrue(result.isPresent());
-        assertEquals("user@gmail.com", result.get().getEmail());
+        assertEquals("insherahdwikat@gmail.com", result.get().getEmail());
         assertEquals("user123", result.get().getPassword());
         assertEquals(UserRole.USER, result.get().getRole());
         assertEquals("user-1", result.get().getId());
@@ -62,17 +62,17 @@ class InMemorySystemUserRepositoryTest {
 
     @Test
     void findAll_DefaultSeeds_ContainsAdminAndUser() {
-        assertTrue(repository.findAll().stream().anyMatch(user -> "admin@gmail.com".equals(user.getEmail())));
-        assertTrue(repository.findAll().stream().anyMatch(user -> "user@gmail.com".equals(user.getEmail())));
+        assertTrue(repository.findAll().stream().anyMatch(user -> "insherah2004@gmail.com".equals(user.getEmail())));
+        assertTrue(repository.findAll().stream().anyMatch(user -> "insherahdwikat@gmail.com".equals(user.getEmail())));
     }
 
     @Test
     void repository_LoadsDefaultAdminWhenPropertiesFileMissing() {
-        Optional<SystemUser> result = repository.findByEmail("admin@gmail.com");
+        Optional<SystemUser> result = repository.findByEmail("insherah2004@gmail.com");
 
         assertTrue(result.isPresent());
         SystemUser admin = result.get();
-        assertEquals("admin@gmail.com", admin.getEmail());
+        assertEquals("insherah2004@gmail.com", admin.getEmail());
         assertEquals("admin123", admin.getPassword());
     }
 }

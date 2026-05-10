@@ -61,7 +61,7 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
         String normalizedId = appointmentId.trim();
 
         for (Appointment appointment : appointments) {
-            if (normalizedId.equals(appointment.getId())) {
+            if (normalizedId.equals(normalizeId(appointment.getId()))) {
                 return Optional.of(copyOf(appointment));
             }
         }
@@ -89,8 +89,8 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
         for (int i = 0; i < appointments.size(); i++) {
             Appointment current = appointments.get(i);
 
-            if (normalizedId.equals(current.getId())) {
-                appointments.set(i, copyOf(appointment));
+            if (normalizedId.equals(normalizeId(current.getId()))) {
+                appointments.set(i, copyOfWithId(appointment, normalizedId));
                 return true;
             }
         }
@@ -106,6 +106,18 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
      * @return copied appointment
      */
     private Appointment copyOf(Appointment appointment) {
+        return copyOfWithId(appointment, normalizeId(appointment.getId()));
+    }
+
+    /**
+     * Creates a defensive copy of an appointment using a specific id.
+     *
+     * @param appointment appointment to copy
+     * @param id id to store in the copied appointment
+     *
+     * @return copied appointment
+     */
+    private Appointment copyOfWithId(Appointment appointment, String id) {
         AppointmentDetails details = new AppointmentDetails(
                 appointment.getCustomerName(),
                 appointment.getUser() == null ? null : appointment.getUser().getEmail(),
@@ -116,7 +128,7 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
         );
 
         Appointment copy = new Appointment(
-                appointment.getId(),
+                id,
                 details,
                 appointment.getStatus(),
                 appointment.getType() == null ? AppointmentType.NORMAL : appointment.getType()
@@ -127,5 +139,16 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
         copy.setFeedbackSubmitted(appointment.isFeedbackSubmitted());
 
         return copy;
+    }
+
+    /**
+     * Normalizes appointment id.
+     *
+     * @param id appointment id
+     *
+     * @return trimmed id
+     */
+    private String normalizeId(String id) {
+        return id == null ? null : id.trim();
     }
 }

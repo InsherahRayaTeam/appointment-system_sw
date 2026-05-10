@@ -1,7 +1,9 @@
 package org.example.presentation.gui;
 
 import javax.swing.AbstractButton;
+import javax.swing.JDialog;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Window;
@@ -16,10 +18,30 @@ import java.util.concurrent.FutureTask;
 abstract class GuiTestSupport {
 
     protected static void runOnEdt(ThrowingRunnable action) {
-        callOnEdt(() -> {
+        if (SwingUtilities.isEventDispatchThread()) {
+            try {
+                action.run();
+                return;
+            } catch (Exception ex) {
+                throw rethrow(ex);
+            }
+        }
+
+        FutureTask<Void> task = new FutureTask<>(() -> {
             action.run();
             return null;
         });
+        try {
+            SwingUtilities.invokeAndWait(task);
+            task.get();
+        } catch (InvocationTargetException ex) {
+            throw rethrow(ex.getTargetException());
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError("Interrupted while waiting for Swing action", ex);
+        } catch (Exception ex) {
+            throw rethrow(ex);
+        }
     }
 
     protected static <T> T callOnEdt(Callable<T> action) {
@@ -57,14 +79,13 @@ abstract class GuiTestSupport {
 
     protected static AbstractButton findButton(Container root, String text) {
         for (Component component : root.getComponents()) {
-            if (component instanceof AbstractButton) {
-                AbstractButton button = (AbstractButton) component;
+            if (component instanceof AbstractButton button) {
                 if (text.equals(button.getText())) {
                     return button;
                 }
             }
-            if (component instanceof Container) {
-                AbstractButton nested = findButton((Container) component, text);
+            if (component instanceof Container container) {
+                AbstractButton nested = findButton(container, text);
                 if (nested != null) {
                     return nested;
                 }
@@ -77,7 +98,18 @@ abstract class GuiTestSupport {
         if (button == null) {
             throw new AssertionError("Button not found");
         }
-        runOnEdt(button::doClick);
+
+        Timer dialogCloser = new Timer(25, event -> closeModalDialogs());
+        dialogCloser.setRepeats(true);
+        try {
+            runOnEdt(() -> {
+                dialogCloser.start();
+                button.doClick();
+            });
+        } finally {
+            runOnEdt(dialogCloser::stop);
+            closeModalDialogs();
+        }
     }
 
     protected static void disposeIfWindow(Object candidate) {
@@ -94,6 +126,19 @@ abstract class GuiTestSupport {
             throw (Error) throwable;
         }
         return new RuntimeException(throwable);
+    }
+
+    private static void closeModalDialogs() {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            runOnEdt(GuiTestSupport::closeModalDialogs);
+            return;
+        }
+
+        for (Window window : Window.getWindows()) {
+            if (window instanceof JDialog && window.isShowing()) {
+                window.dispose();
+            }
+        }
     }
 
     @FunctionalInterface

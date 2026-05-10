@@ -26,22 +26,22 @@ class InMemoryUserRepositoryTest {
     @Test
     void findByEmail_DefaultSystemUser_IsPresentWithAdminRole() {
         // Arrange / Act
-        Optional<SystemUser> result = repository.findByEmail("admin@gmail.com");
+        Optional<SystemUser> result = repository.findByEmail("insherah2004@gmail.com");
 
         // Assert
         assertTrue(result.isPresent());
-        assertEquals("admin@gmail.com", result.get().getEmail());
+        assertEquals("insherah2004@gmail.com", result.get().getEmail());
         assertEquals(UserRole.ADMIN, result.get().getRole());
     }
 
     @Test
     void findByEmail_DefaultRegularUser_IsPresentWithUserRole() {
         // Arrange / Act
-        Optional<SystemUser> result = repository.findByEmail("user@gmail.com");
+        Optional<SystemUser> result = repository.findByEmail("insherahdwikat@gmail.com");
 
         // Assert
         assertTrue(result.isPresent());
-        assertEquals("user@gmail.com", result.get().getEmail());
+        assertEquals("insherahdwikat@gmail.com", result.get().getEmail());
         assertEquals(UserRole.USER, result.get().getRole());
     }
 
@@ -57,11 +57,11 @@ class InMemoryUserRepositoryTest {
     @Test
     void findByEmail_WithTrimmedUppercaseInput_UsesNormalizedLookup() {
         // Arrange / Act
-        Optional<SystemUser> result = repository.findByEmail("  ADMIN@GMAIL.COM  ");
+        Optional<SystemUser> result = repository.findByEmail("  INSHERAH2004@GMAIL.COM  ");
 
         // Assert
         assertTrue(result.isPresent());
-        assertEquals("admin@gmail.com", result.get().getEmail());
+        assertEquals("insherah2004@gmail.com", result.get().getEmail());
     }
 
     @Test
@@ -108,11 +108,11 @@ class InMemoryUserRepositoryTest {
     @Test
     void save_WithExistingEmail_OverwritesStoredRecord() {
         // Arrange
-        SystemUser replacement = new SystemUser("admin-replacement", "admin@gmail.com", "new-pass", UserRole.ADMIN);
+        SystemUser replacement = new SystemUser("admin-replacement", "insherah2004@gmail.com", "new-pass", UserRole.ADMIN);
 
         // Act
         repository.save(replacement);
-        Optional<SystemUser> loaded = repository.findByEmail("admin@gmail.com");
+        Optional<SystemUser> loaded = repository.findByEmail("insherah2004@gmail.com");
 
         // Assert
         assertTrue(loaded.isPresent());
@@ -126,8 +126,8 @@ class InMemoryUserRepositoryTest {
         repository.save(null);
 
         // Assert
-        assertTrue(repository.findByEmail("admin@gmail.com").isPresent());
-        assertTrue(repository.findByEmail("user@gmail.com").isPresent());
+        assertTrue(repository.findByEmail("insherah2004@gmail.com").isPresent());
+        assertTrue(repository.findByEmail("insherahdwikat@gmail.com").isPresent());
     }
 
     @Test
@@ -187,12 +187,12 @@ class InMemoryUserRepositoryTest {
 
     @Test
     void update_WithExistingEmail_ReplacesStoredUser() {
-        SystemUser updatedUser = new SystemUser("user-1", "user@gmail.com", "changed123", UserRole.USER);
+        SystemUser updatedUser = new SystemUser("user-1", "insherahdwikat@gmail.com", "changed123", UserRole.USER);
 
         boolean updated = repository.update(updatedUser);
 
         assertTrue(updated);
-        assertEquals("changed123", repository.findByEmail("user@gmail.com").orElseThrow().getPassword());
+        assertEquals("changed123", repository.findByEmail("insherahdwikat@gmail.com").orElseThrow().getPassword());
     }
 
     @Test

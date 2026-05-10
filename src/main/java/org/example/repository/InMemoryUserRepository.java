@@ -3,171 +3,54 @@ package org.example.repository;
 import org.example.domain.SystemUser;
 import org.example.domain.UserRole;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
 
 /**
- * Represents in memory user repository in the system.
+ * Represents in-memory user repository in the system.
  */
 public class InMemoryUserRepository implements UserRepository {
 
-    private static final String RESOURCE = "/admin.properties";
-    private static final String ADMIN_ID_KEY = "admin.id";
-    private static final String ADMIN_EMAIL_KEY = "admin.email";
-    private static final String ADMIN_PASSWORD_KEY = "admin.password";
-    private static final String USER_ID_KEY = "user.id";
-    private static final String USER_EMAIL_KEY = "user.email";
-    private static final String USER_PASSWORD_KEY = "user.password";
     private static final String DEFAULT_ADMIN_ID = "admin-1";
-    private static final String DEFAULT_ADMIN_EMAIL = "admin@gmail.com";
-   
-    private static final String DEFAULT_ADMIN_PASSWORD_ENV = "APP_ADMIN_PASSWORD";
+    private static final String DEFAULT_ADMIN_EMAIL = "insherah2004@gmail.com";
+    private static final String DEFAULT_ADMIN_PASSWORD = "admin123";
 
     private static final String DEFAULT_USER_ID = "user-1";
-    private static final String DEFAULT_USER_EMAIL = "user@gmail.com";
-    private static final String DEFAULT_USER_PASSWORD_ENV = "APP_USER_PASSWORD";
-    private final Map<String, SystemUser> usersByEmail = new HashMap<>();
+    private static final String DEFAULT_USER_EMAIL = "insherahdwikat@gmail.com";
+    private static final String DEFAULT_USER_PASSWORD = "user123";
+
+    private static final String PROPERTIES_USER_ID = "user-10";
+    private static final String PROPERTIES_USER_EMAIL = "mlkschool10@gmail.com";
+    private static final String PROPERTIES_USER_PASSWORD = "user10pass";
+
+    private final List<SystemUser> users = new ArrayList<>();
 
     /**
-     * Creates a new in memory user repository object with the given values.
+     * Creates repository with default users.
      */
     public InMemoryUserRepository() {
-        loadFromResource();
-    }
-
-private void loadFromResource() {
-    Properties p = new Properties();
-
-    try (InputStream in = InMemoryUserRepository.class.getResourceAsStream(RESOURCE)) {
-        if (in != null) {
-            p.load(in);
-            seedUser(
-                    p.getProperty(ADMIN_ID_KEY, DEFAULT_ADMIN_ID),
-                    p.getProperty(ADMIN_EMAIL_KEY, DEFAULT_ADMIN_EMAIL),
-                    resolvePassword(p.getProperty(ADMIN_PASSWORD_KEY), DEFAULT_ADMIN_PASSWORD_ENV),
-                    UserRole.ADMIN
-            );
-            seedConfiguredRegularUsers(p);
-        }
-    } catch (IOException e) {
-        // Fall back to environment variables if loading fails
-    }
-
-    if (!usersByEmail.containsKey(DEFAULT_ADMIN_EMAIL)) {
-        seedUser(
-                DEFAULT_ADMIN_ID,
-                DEFAULT_ADMIN_EMAIL,
-                resolvePassword(null, DEFAULT_ADMIN_PASSWORD_ENV),
-                UserRole.ADMIN
-        );
-    }
-
-    if (!usersByEmail.containsKey(DEFAULT_USER_EMAIL)) {
-        seedUser(
-                DEFAULT_USER_ID,
-                DEFAULT_USER_EMAIL,
-                resolvePassword(null, DEFAULT_USER_PASSWORD_ENV),
-                UserRole.USER
-        );
-    }
-}
-
-private String resolvePassword(String configuredPassword, String envKey) {
-    String envPassword = System.getenv(envKey);
-
-    if (envPassword != null && !envPassword.trim().isEmpty()) {
-        return envPassword.trim();
-    }
-
-    if (configuredPassword != null && !configuredPassword.trim().isEmpty()) {
-        return configuredPassword.trim();
-    }
-
-    return null;
-}
-
-  private void seedConfiguredRegularUsers(Properties p) {
-    seedUser(
-            p.getProperty(USER_ID_KEY, DEFAULT_USER_ID),
-            p.getProperty(USER_EMAIL_KEY),
-            resolvePassword(p.getProperty(USER_PASSWORD_KEY), DEFAULT_USER_PASSWORD_ENV),
-            UserRole.USER
-    );
-
-    Set<String> propertyNames = p.stringPropertyNames();
-    for (String propertyName : propertyNames) {
-        if (!propertyName.matches("user\\d+\\.email")) {
-            continue;
-        }
-
-        String userPrefix = propertyName.substring(0, propertyName.length() - ".email".length());
-        String envKey = "APP_" + userPrefix.toUpperCase() + "_PASSWORD";
-
-        seedUser(
-                p.getProperty(userPrefix + ".id"),
-                p.getProperty(userPrefix + ".email"),
-                resolvePassword(p.getProperty(userPrefix + ".password"), envKey),
-                UserRole.USER
-        );
-    }
-}
-
-    private void seedUser(String id, String email, String password, UserRole role) {
-        if (email == null || email.trim().isEmpty() || password == null || password.trim().isEmpty()) {
-            return;
-        }
-
-        String normalizedEmail = email.trim().toLowerCase();
-
-        usersByEmail.put(
-                normalizedEmail,
-                new SystemUser(
-                        (id == null || id.trim().isEmpty()) ? normalizedEmail + "-id" : id.trim(),
-                        normalizedEmail,
-                        password.trim(),
-                        role
-                )
-        );
+        seedDefaultUsers();
     }
 
     /**
-     * Finds by email using the given input.
+     * Finds user by email.
      *
-     * @param email email address used for login or matching
-     *
-     * @return optional value if data is found
+     * @param email email used for lookup
+     * @return optional user
      */
     @Override
     public Optional<SystemUser> findByEmail(String email) {
-        if (email == null) {
-            return Optional.empty();
-        }
-        return Optional.ofNullable(usersByEmail.get(email.trim().toLowerCase()));
-    }
+        String normalizedEmail = normalize(email);
 
-    /**
-     * Finds by id using the given input.
-     *
-     * @param id unique id used to find the record
-     *
-     * @return optional value if data is found
-     */
-    @Override
-    public Optional<SystemUser> findById(String id) {
-        if (id == null || id.trim().isEmpty()) {
+        if (normalizedEmail == null) {
             return Optional.empty();
         }
 
-        String normalizedId = id.trim();
-        for (SystemUser user : usersByEmail.values()) {
-            if (normalizedId.equalsIgnoreCase(user.getId())) {
-                return Optional.of(user);
+        for (SystemUser user : users) {
+            if (normalizedEmail.equals(normalize(user.getEmail()))) {
+                return Optional.of(copyOf(user));
             }
         }
 
@@ -175,77 +58,180 @@ private String resolvePassword(String configuredPassword, String envKey) {
     }
 
     /**
-     * Saves a user record.
+     * Finds user by id.
      *
-     * @param user user involved in this action
+     * @param id user id
+     * @return optional user
      */
     @Override
-    public void save(SystemUser user) {
-        if (user == null || user.getEmail() == null || user.getEmail().trim().isEmpty()) {
-            return;
+    public Optional<SystemUser> findById(String id) {
+        String normalizedId = normalize(id);
+
+        if (normalizedId == null) {
+            return Optional.empty();
         }
-        usersByEmail.put(user.getEmail().trim().toLowerCase(), user);
+
+        for (SystemUser user : users) {
+            if (normalizedId.equals(normalize(user.getId()))) {
+                return Optional.of(copyOf(user));
+            }
+        }
+
+        return Optional.empty();
     }
 
     /**
-     * Updates an existing user record.
+     * Returns all users.
      *
-     * @param user user entity with updated values
-     *
-     * @return true when the action is valid or successful, otherwise false
-     */
-    @Override
-    public boolean update(SystemUser user) {
-        if (user == null || user.getEmail() == null || user.getEmail().trim().isEmpty()) {
-            return false;
-        }
-
-        String normalizedEmail = user.getEmail().trim().toLowerCase();
-        if (!usersByEmail.containsKey(normalizedEmail)) {
-            return false;
-        }
-
-        usersByEmail.put(normalizedEmail, user);
-        return true;
-    }
-
-    /**
-     * Updates user password when record exists.
-     *
-     * @param userId unique id used to find the record
-     * @param newPassword password text entered by the user
-     *
-     * @return true when the action is valid or successful, otherwise false
-     */
-    @Override
-    public boolean updatePassword(String userId, String newPassword) {
-        if (userId == null || userId.trim().isEmpty() || newPassword == null || newPassword.trim().isEmpty()) {
-            return false;
-        }
-
-        Optional<SystemUser> existing = findById(userId);
-        if (existing.isEmpty()) {
-            return false;
-        }
-
-        SystemUser current = existing.get();
-        SystemUser updated = new SystemUser(
-                current.getId(),
-                current.getEmail(),
-                newPassword.trim(),
-                current.getRole()
-        );
-
-        return update(updated);
-    }
-
-    /**
-     * Finds all using the given input.
-     *
-     * @return collection with the requested results
+     * @return defensive copy of users
      */
     @Override
     public List<SystemUser> findAll() {
-        return List.copyOf(usersByEmail.values());
+        List<SystemUser> copies = new ArrayList<>();
+
+        for (SystemUser user : users) {
+            copies.add(copyOf(user));
+        }
+
+        return Collections.unmodifiableList(copies);
+    }
+
+    /**
+     * Saves user.
+     *
+     * @param user user to save
+     */
+    @Override
+    public void save(SystemUser user) {
+        if (user == null || normalize(user.getEmail()) == null) {
+            return;
+        }
+
+        if (findByEmail(user.getEmail()).isPresent()) {
+            update(user);
+            return;
+        }
+
+        users.add(copyOf(user));
+    }
+
+    /**
+     * Updates existing user by email.
+     *
+     * @param user replacement user
+     * @return true if updated
+     */
+    @Override
+    public boolean update(SystemUser user) {
+        if (user == null || normalize(user.getEmail()) == null) {
+            return false;
+        }
+
+        String normalizedEmail = normalize(user.getEmail());
+
+        for (int i = 0; i < users.size(); i++) {
+            SystemUser current = users.get(i);
+
+            if (normalizedEmail.equals(normalize(current.getEmail()))) {
+                users.set(i, copyOf(user));
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Updates password for an existing user.
+     *
+     * @param userId user id
+     * @param newPassword new password
+     * @return true if password changed
+     */
+    @Override
+    public boolean updatePassword(String userId, String newPassword) {
+        String normalizedId = normalize(userId);
+
+        if (normalizedId == null || newPassword == null || newPassword.trim().isEmpty()) {
+            return false;
+        }
+
+        for (int i = 0; i < users.size(); i++) {
+            SystemUser current = users.get(i);
+
+            if (normalizedId.equals(normalize(current.getId()))) {
+                users.set(i, new SystemUser(
+                        current.getId(),
+                        current.getEmail(),
+                        newPassword,
+                        current.getRole()
+                ));
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Seeds default admin and regular user accounts.
+     */
+    private void seedDefaultUsers() {
+        seedUser(DEFAULT_ADMIN_ID, DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD, UserRole.ADMIN);
+        seedUser(DEFAULT_USER_ID, DEFAULT_USER_EMAIL, DEFAULT_USER_PASSWORD, UserRole.USER);
+        seedUser(PROPERTIES_USER_ID, PROPERTIES_USER_EMAIL, PROPERTIES_USER_PASSWORD, UserRole.USER);
+    }
+
+    /**
+     * Seeds a user if all required values are present.
+     *
+     * @param id user id or blank to derive from email
+     * @param email user email
+     * @param password user password
+     * @param role user role
+     */
+    private void seedUser(String id, String email, String password, UserRole role) {
+        String normalizedEmail = normalize(email);
+
+        if (normalizedEmail == null
+                || password == null
+                || password.trim().isEmpty()
+                || role == null) {
+            return;
+        }
+
+        String normalizedId = normalize(id);
+        String userId = normalizedId == null ? normalizedEmail + "-id" : id.trim();
+
+        save(new SystemUser(userId, normalizedEmail, password, role));
+    }
+
+    /**
+     * Creates a defensive copy.
+     *
+     * @param user user to copy
+     * @return copied user
+     */
+    private SystemUser copyOf(SystemUser user) {
+        return new SystemUser(
+                user.getId(),
+                user.getEmail(),
+                user.getPassword(),
+                user.getRole()
+        );
+    }
+
+    /**
+     * Normalizes text for lookup.
+     *
+     * @param value raw value
+     * @return normalized value, or null when blank
+     */
+    private String normalize(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+
+        return value.trim().toLowerCase();
     }
 }
