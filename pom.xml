@@ -10,9 +10,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <argLine>
-
-        </argLine>
+        <!-- argLine is provided by JaCoCo's prepare-agent at build time; do not define an empty value here -->
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -28,12 +26,17 @@
             ${project.build.directory}/site/jacoco/jacoco.xml
         </sonar.coverage.jacoco.xmlReportPaths>
 
-        <!-- Exclude GUI and Main from SonarCloud coverage calculation -->
+        <!-- Exclude GUI and startup classes from SonarCloud coverage calculation -->
         <sonar.coverage.exclusions>
             **/Main.java,
             **/main.java,
             **/presentation/gui/**,
-            **/gui/**
+            **/gui/**,
+            **/*Frame.java,
+            **/*Panel.java,
+            **/*Dialog.java,
+            **/*View.java,
+            **/*Controller.java
         </sonar.coverage.exclusions>
     </properties>
 
@@ -96,7 +99,7 @@
                 <configuration>
                     <useModulePath>false</useModulePath>
                     <!-- Preserve any argLine set by other plugins (JaCoCo) and append our VM flag -->
-                    <argLine>${argLine} -Dnet.bytebuddy.experimental=true</argLine>
+                    <argLine>@{argLine} -Dnet.bytebuddy.experimental=true</argLine>
                 </configuration>
             </plugin>
 
@@ -106,12 +109,17 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
                 <configuration>
-                    <!-- Exclude GUI and Main from JaCoCo report -->
+                    <!-- Exclude GUI and startup classes from JaCoCo report -->
                     <excludes>
                         <exclude>**/Main.class</exclude>
                         <exclude>**/main.class</exclude>
                         <exclude>**/presentation/gui/**</exclude>
                         <exclude>**/gui/**</exclude>
+                        <exclude>**/*Frame.class</exclude>
+                        <exclude>**/*Panel.class</exclude>
+                        <exclude>**/*Dialog.class</exclude>
+                        <exclude>**/*View.class</exclude>
+                        <exclude>**/*Controller.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -139,6 +147,11 @@
                                 <exclude>**/main.class</exclude>
                                 <exclude>**/presentation/gui/**</exclude>
                                 <exclude>**/gui/**</exclude>
+                                <exclude>**/*Frame.class</exclude>
+                                <exclude>**/*Panel.class</exclude>
+                                <exclude>**/*Dialog.class</exclude>
+                                <exclude>**/*View.class</exclude>
+                                <exclude>**/*Controller.class</exclude>
                             </excludes>
                         </configuration>
                     </execution>
@@ -157,17 +170,17 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>3.2.5</version>
-                            <configuration>
-                                <useModulePath>false</useModulePath>
-                                <!-- Preserve JaCoCo argLine and append Byte Buddy flag for CI runs -->
-                                <argLine>${argLine} -Dnet.bytebuddy.experimental=true</argLine>
-                                <excludes>
-                                    <exclude>**/presentation/gui/**/*Test.java</exclude>
-                                    <exclude>**/presentation/gui/*Test.java</exclude>
-                                    <exclude>**/gui/**/*Test.java</exclude>
-                                    <exclude>**/gui/*Test.java</exclude>
-                                </excludes>
-                            </configuration>
+                        <configuration>
+                            <useModulePath>false</useModulePath>
+                            <!-- Preserve JaCoCo argLine and append Byte Buddy flag for CI runs -->
+                            <argLine>@{argLine} -Dnet.bytebuddy.experimental=true</argLine>
+                            <excludes>
+                                <exclude>**/presentation/gui/**/*Test.java</exclude>
+                                <exclude>**/presentation/gui/*Test.java</exclude>
+                                <exclude>**/gui/**/*Test.java</exclude>
+                                <exclude>**/gui/*Test.java</exclude>
+                            </excludes>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
