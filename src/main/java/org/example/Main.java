@@ -31,6 +31,7 @@ import java.io.ByteArrayInputStream;
 import java.time.Duration;
 import java.util.List;
 import java.util.Scanner;
+import org.example.util.Console;
 
 /**
  * Starts the application in GUI mode or console mode.
@@ -39,8 +40,10 @@ public class Main {
 
     private static final String CONSOLE_EXIT_COMMAND = "exit";
     private static final String CONSOLE_ADMIN_ALIAS = "admin";
-    private static final String CONSOLE_ADMIN_EMAIL = "admin@gmail.com";
-    private static final String CONSOLE_ADMIN_PASSWORD = "admin123";
+    // Demo credentials are read from DemoConfig so they can be overridden in CI or local runs
+    // (system properties: app.demo.admin.email / app.demo.admin.password)
+    private static final String CONSOLE_ADMIN_EMAIL = org.example.config.DemoConfig.getAdminEmail();
+    private static final String CONSOLE_ADMIN_PASSWORD = org.example.config.DemoConfig.getAdminPassword();
     private static final String MENU_OPTION_SHOW_SLOTS = "7";
     private static final String MENU_OPTION_BOOK_SLOT = "8";
     private static final String MENU_OPTION_LOGOUT = "9";
@@ -65,8 +68,10 @@ public class Main {
     private static void launchGui() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) {
-            // Keep default Swing look-and-feel if system look-and-feel is unavailable.
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
+            // Keep default Swing look-and-feel if the system look-and-feel is unavailable.
+            // Log the reason for debugging while preserving original behavior.
+            org.example.util.Console.println("Could not set system look-and-feel: " + ex.getMessage());
         }
 
         SwingUtilities.invokeLater(() -> {
@@ -166,11 +171,11 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
 
-        while (true) {
-            System.out.println("Administrator Login");
+            while (true) {
+            Console.println("Administrator Login");
             String username = scanner.nextLine().trim();
             if (CONSOLE_EXIT_COMMAND.equalsIgnoreCase(username)) {
-                System.out.println("Thank you for using Appointment System.");
+                Console.println("Thank you for using Appointment System.");
                 return;
             }
 
@@ -194,26 +199,26 @@ public class Main {
                 String choice = scanner.nextLine().trim();
                 switch (choice) {
                     case MENU_OPTION_SHOW_SLOTS:
-                        System.out.println("Available Appointment Slots");
+                        Console.println("Available Appointment Slots");
                         List<AppointmentSlot> availableSlots = appointmentService.getAvailableSlots();
                         for (AppointmentSlot slot : availableSlots) {
-                            System.out.println(slot.getDateDayTimeLabel());
+                            Console.println(slot.getDateDayTimeLabel());
                         }
                         break;
                     case MENU_OPTION_BOOK_SLOT:
                         String requestedTime = scanner.nextLine().trim();
                         if (appointmentService.bookSlot(requestedTime)) {
-                            System.out.println("Success: Appointment booked for " + requestedTime + ".");
+                            Console.println("Success: Appointment booked for " + requestedTime + ".");
                         } else {
-                            System.out.println("Unable to book appointment for " + requestedTime + ".");
+                            Console.println("Unable to book appointment for " + requestedTime + ".");
                         }
                         break;
                     case MENU_OPTION_LOGOUT:
                         loginNotifier.notifyLogout(username);
                         loggedIn = false;
                         break;
-                    default:
-                        System.out.println("Invalid choice. Please enter a number between 7 and 9.");
+                        default:
+                        Console.println("Invalid choice. Please enter a number between 7 and 9.");
                         break;
                 }
             }

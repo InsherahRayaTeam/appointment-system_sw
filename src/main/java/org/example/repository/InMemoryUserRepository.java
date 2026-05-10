@@ -32,6 +32,13 @@ public class InMemoryUserRepository implements UserRepository {
     private static final String DEFAULT_USER_ID = "user-1";
     private static final String DEFAULT_USER_EMAIL = "user@gmail.com";
     private static final String DEFAULT_USER_PASSWORD_ENV = "APP_USER_PASSWORD";
+    /**
+     * Demo-only fallback passwords used when neither environment variable nor properties provide a password.
+     * These exist to make local development and automated tests convenient. DO NOT use these in production.
+     * Prefer overriding via environment variables `APP_ADMIN_PASSWORD` and `APP_USER_PASSWORD`.
+     */
+    private static final String DEMO_FALLBACK_ADMIN_PASSWORD = "admin123";
+    private static final String DEMO_FALLBACK_USER_PASSWORD = "user123";
     private final Map<String, SystemUser> usersByEmail = new HashMap<>();
 
     /**
@@ -91,10 +98,10 @@ private String resolvePassword(String configuredPassword, String envKey) {
 
     // Provide fallback defaults if neither env nor config is set
     if (DEFAULT_ADMIN_PASSWORD_ENV.equals(envKey)) {
-        return "admin123";
+        return DEMO_FALLBACK_ADMIN_PASSWORD;
     }
     if (DEFAULT_USER_PASSWORD_ENV.equals(envKey)) {
-        return "user123";
+        return DEMO_FALLBACK_USER_PASSWORD;
     }
 
     return null;

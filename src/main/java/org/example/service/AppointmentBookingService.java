@@ -1244,8 +1244,8 @@ public class AppointmentBookingService {
         if (appointmentNotificationCoordinator != null && appointment != null) {
             try {
                 appointmentNotificationCoordinator.sendPendingNotification(appointment);
-            } catch (Exception e) {
-                System.out.println("Email failed but booking continues: " + e.getMessage());
+            } catch (RuntimeException e) {
+                org.example.util.Console.println("Email failed but booking continues: " + e.getMessage());
             }
         }
     }
@@ -1259,8 +1259,8 @@ public class AppointmentBookingService {
         if (appointmentNotificationCoordinator != null && appointment != null) {
             try {
                 appointmentNotificationCoordinator.sendApprovedNotification(appointment);
-            } catch (Exception e) {
-                System.out.println("Email failed but booking continues: " + e.getMessage());
+            } catch (RuntimeException e) {
+                org.example.util.Console.println("Email failed but booking continues: " + e.getMessage());
             }
         }
     }
@@ -1274,8 +1274,8 @@ public class AppointmentBookingService {
         if (appointmentNotificationCoordinator != null && appointment != null) {
             try {
                 appointmentNotificationCoordinator.sendCancelledNotification(appointment);
-            } catch (Exception e) {
-                System.out.println("Email failed but booking continues: " + e.getMessage());
+            } catch (RuntimeException e) {
+                org.example.util.Console.println("Email failed but booking continues: " + e.getMessage());
             }
         }
     }
@@ -1290,8 +1290,8 @@ public class AppointmentBookingService {
         if (appointmentNotificationCoordinator != null && previousAppointment != null && updatedAppointment != null) {
             try {
                 appointmentNotificationCoordinator.sendRescheduledNotification(previousAppointment, updatedAppointment);
-            } catch (Exception e) {
-                System.out.println("Email failed but booking continues: " + e.getMessage());
+            } catch (RuntimeException e) {
+                org.example.util.Console.println("Email failed but booking continues: " + e.getMessage());
             }
         }
     }

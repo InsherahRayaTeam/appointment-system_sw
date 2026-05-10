@@ -1,5 +1,7 @@
 package org.example.service;
 
+import org.example.util.Console;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -16,7 +18,7 @@ public class AuthEventLogger {
      * @param username user involved in this action
      */
     public void logLoginSuccess(String username) {
-        System.out.println("[AUTH] Login successful for user '" + username + "' at " + now());
+        Console.println("[AUTH] Login successful for user '" + username + "' at " + now());
     }
 
     /**
@@ -26,7 +28,7 @@ public class AuthEventLogger {
      */
     public void logLoginFailure(String username) {
         String displayUser = (username == null || username.trim().isEmpty()) ? "<blank>" : username.trim();
-        System.out.println("[AUTH] Login failed for user '" + displayUser + "' at " + now());
+        Console.println("[AUTH] Login failed for user '" + displayUser + "' at " + now());
     }
 
     /**
@@ -36,7 +38,7 @@ public class AuthEventLogger {
      */
     public void logLogout(String username) {
         String displayUser = username == null ? "<unknown>" : username;
-        System.out.println("[AUTH] Logout for user '" + displayUser + "' at " + now());
+        Console.println("[AUTH] Logout for user '" + displayUser + "' at " + now());
     }
 
     /**

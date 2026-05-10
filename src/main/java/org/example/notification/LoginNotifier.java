@@ -1,5 +1,7 @@
 package org.example.notification;
 
+import org.example.util.Console;
+
 /**
  * Prints login-related notifications to the console.
  */
@@ -12,7 +14,7 @@ public class LoginNotifier implements Observer {
      */
     @Override
     public void update(String message) {
-        System.out.println("Notification: " + message);
+        Console.println("Notification: " + message);
     }
 
     /**
@@ -21,7 +23,7 @@ public class LoginNotifier implements Observer {
      * @param username user involved in this action
      */
     public void notifyLoginSuccess(String username) {
-        System.out.println("Login successful.");
+        Console.println("Login successful.");
     }
 
     /**
@@ -31,7 +33,7 @@ public class LoginNotifier implements Observer {
      */
     public void notifyLoginFailure(String username) {
         String displayUser = (username == null || username.trim().isEmpty()) ? "<blank>" : username.trim();
-        System.out.println("Failed login attempt for user '" + displayUser + "'.");
+        Console.println("Failed login attempt for user '" + displayUser + "'.");
     }
 
     /**
@@ -40,6 +42,6 @@ public class LoginNotifier implements Observer {
      * @param username user involved in this action
      */
     public void notifyLogout(String username) {
-        System.out.println("You have been logged out successfully.");
+        Console.println("You have been logged out successfully.");
     }
 }

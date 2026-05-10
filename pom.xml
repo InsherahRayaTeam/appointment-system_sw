@@ -10,12 +10,15 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
+        <argLine>
+
+        </argLine>
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <junit.version>5.10.2</junit.version>
-        <mockito.version>5.12.0</mockito.version>
-        <jacoco.version>0.8.12</jacoco.version>
+        <mockito.version>5.2.0</mockito.version>
+        <jacoco.version>0.8.13</jacoco.version>
 
         <sonar.organization>insherahrayateam</sonar.organization>
         <sonar.projectKey>InsherahRayaTeam_appointment-system_sw</sonar.projectKey>
@@ -93,7 +96,7 @@
                 <configuration>
                     <useModulePath>false</useModulePath>
                     <!-- Preserve any argLine set by other plugins (JaCoCo) and append our VM flag -->
-                    <argLine>@{argLine} -Dnet.bytebuddy.experimental=true</argLine>
+                    <argLine>${argLine} -Dnet.bytebuddy.experimental=true</argLine>
                 </configuration>
             </plugin>
 
@@ -157,7 +160,7 @@
                             <configuration>
                                 <useModulePath>false</useModulePath>
                                 <!-- Preserve JaCoCo argLine and append Byte Buddy flag for CI runs -->
-                                <argLine>@{argLine} -Dnet.bytebuddy.experimental=true</argLine>
+                                <argLine>${argLine} -Dnet.bytebuddy.experimental=true</argLine>
                                 <excludes>
                                     <exclude>**/presentation/gui/**/*Test.java</exclude>
                                     <exclude>**/presentation/gui/*Test.java</exclude>
