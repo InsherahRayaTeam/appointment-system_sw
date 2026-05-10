@@ -206,10 +206,11 @@ public class PasswordRecoveryService {
         return hasLetter && hasDigit;
     }
 
-    private static String generateCode() {
-        SecureRandom random = new SecureRandom();
-        int value = 100000 + random.nextInt(900000);
-        return Integer.toString(value);
-    }
+private static final SecureRandom RANDOM = new SecureRandom();
+
+private static String generateCode() {
+    int value = 100000 + RANDOM.nextInt(900000);
+    return Integer.toString(value);
+}
 }
 

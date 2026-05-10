@@ -26,10 +26,12 @@ public class InMemoryUserRepository implements UserRepository {
     private static final String USER_PASSWORD_KEY = "user.password";
     private static final String DEFAULT_ADMIN_ID = "admin-1";
     private static final String DEFAULT_ADMIN_EMAIL = "admin@gmail.com";
-    private static final String DEFAULT_ADMIN_PASSWORD = "admin123";
+   
+    private static final String DEFAULT_ADMIN_PASSWORD_ENV = "APP_ADMIN_PASSWORD";
+
     private static final String DEFAULT_USER_ID = "user-1";
     private static final String DEFAULT_USER_EMAIL = "user@gmail.com";
-    private static final String DEFAULT_USER_PASSWORD = "user123";
+    private static final String DEFAULT_USER_PASSWORD_ENV = "APP_USER_PASSWORD";
     private final Map<String, SystemUser> usersByEmail = new HashMap<>();
 
     /**
@@ -39,62 +41,82 @@ public class InMemoryUserRepository implements UserRepository {
         loadFromResource();
     }
 
-    private void loadFromResource() {
-        Properties p = new Properties();
+private void loadFromResource() {
+    Properties p = new Properties();
 
-        try (InputStream in = InMemoryUserRepository.class.getResourceAsStream(RESOURCE)) {
-            if (in != null) {
-                p.load(in);
-                seedUser(
-                        p.getProperty(ADMIN_ID_KEY, DEFAULT_ADMIN_ID),
-                        p.getProperty(ADMIN_EMAIL_KEY),
-                        p.getProperty(ADMIN_PASSWORD_KEY),
-                        UserRole.ADMIN
-                );
-                seedConfiguredRegularUsers(p);
-            }
-        } catch (IOException e) {
-            // Fall back to defaults if loading fails
-        }
-
-        // Defaults when properties are missing or incomplete.
-        if (!usersByEmail.containsKey(DEFAULT_ADMIN_EMAIL)) {
-            usersByEmail.put(
-                    DEFAULT_ADMIN_EMAIL,
-                    new SystemUser(DEFAULT_ADMIN_ID, DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD, UserRole.ADMIN)
+    try (InputStream in = InMemoryUserRepository.class.getResourceAsStream(RESOURCE)) {
+        if (in != null) {
+            p.load(in);
+            seedUser(
+                    p.getProperty(ADMIN_ID_KEY, DEFAULT_ADMIN_ID),
+                    p.getProperty(ADMIN_EMAIL_KEY, DEFAULT_ADMIN_EMAIL),
+                    resolvePassword(p.getProperty(ADMIN_PASSWORD_KEY), DEFAULT_ADMIN_PASSWORD_ENV),
+                    UserRole.ADMIN
             );
+            seedConfiguredRegularUsers(p);
         }
-        if (!usersByEmail.containsKey(DEFAULT_USER_EMAIL)) {
-            usersByEmail.put(
-                    DEFAULT_USER_EMAIL,
-                    new SystemUser(DEFAULT_USER_ID, DEFAULT_USER_EMAIL, DEFAULT_USER_PASSWORD, UserRole.USER)
-            );
-        }
+    } catch (IOException e) {
+        // Fall back to environment variables if loading fails
     }
 
-    private void seedConfiguredRegularUsers(Properties p) {
+    if (!usersByEmail.containsKey(DEFAULT_ADMIN_EMAIL)) {
         seedUser(
-                p.getProperty(USER_ID_KEY, DEFAULT_USER_ID),
-                p.getProperty(USER_EMAIL_KEY),
-                p.getProperty(USER_PASSWORD_KEY),
+                DEFAULT_ADMIN_ID,
+                DEFAULT_ADMIN_EMAIL,
+                resolvePassword(null, DEFAULT_ADMIN_PASSWORD_ENV),
+                UserRole.ADMIN
+        );
+    }
+
+    if (!usersByEmail.containsKey(DEFAULT_USER_EMAIL)) {
+        seedUser(
+                DEFAULT_USER_ID,
+                DEFAULT_USER_EMAIL,
+                resolvePassword(null, DEFAULT_USER_PASSWORD_ENV),
                 UserRole.USER
         );
-
-        Set<String> propertyNames = p.stringPropertyNames();
-        for (String propertyName : propertyNames) {
-            if (!propertyName.matches("user\\d+\\.email")) {
-                continue;
-            }
-
-            String userPrefix = propertyName.substring(0, propertyName.length() - ".email".length());
-            seedUser(
-                    p.getProperty(userPrefix + ".id"),
-                    p.getProperty(userPrefix + ".email"),
-                    p.getProperty(userPrefix + ".password"),
-                    UserRole.USER
-            );
-        }
     }
+}
+
+private String resolvePassword(String configuredPassword, String envKey) {
+    String envPassword = System.getenv(envKey);
+
+    if (envPassword != null && !envPassword.trim().isEmpty()) {
+        return envPassword.trim();
+    }
+
+    if (configuredPassword != null && !configuredPassword.trim().isEmpty()) {
+        return configuredPassword.trim();
+    }
+
+    return null;
+}
+
+  private void seedConfiguredRegularUsers(Properties p) {
+    seedUser(
+            p.getProperty(USER_ID_KEY, DEFAULT_USER_ID),
+            p.getProperty(USER_EMAIL_KEY),
+            resolvePassword(p.getProperty(USER_PASSWORD_KEY), DEFAULT_USER_PASSWORD_ENV),
+            UserRole.USER
+    );
+
+    Set<String> propertyNames = p.stringPropertyNames();
+    for (String propertyName : propertyNames) {
+        if (!propertyName.matches("user\\d+\\.email")) {
+            continue;
+        }
+
+        String userPrefix = propertyName.substring(0, propertyName.length() - ".email".length());
+        String envKey = "APP_" + userPrefix.toUpperCase() + "_PASSWORD";
+
+        seedUser(
+                p.getProperty(userPrefix + ".id"),
+                p.getProperty(userPrefix + ".email"),
+                resolvePassword(p.getProperty(userPrefix + ".password"), envKey),
+                UserRole.USER
+        );
+    }
+}
 
     private void seedUser(String id, String email, String password, UserRole role) {
         if (email == null || email.trim().isEmpty() || password == null || password.trim().isEmpty()) {
