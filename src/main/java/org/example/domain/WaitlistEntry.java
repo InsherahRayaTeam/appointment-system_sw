@@ -74,7 +74,17 @@ public class WaitlistEntry {
             int participantCount,
             AppointmentType type
     ) {
-        this(UUID.randomUUID().toString(), customerName, customerEmail, customerPhoneNumber, slotDateTime, durationMinutes, participantCount, type, LocalDateTime.now());
+        this(
+                UUID.randomUUID().toString(),
+                customerName,
+                customerEmail,
+                customerPhoneNumber,
+                slotDateTime,
+                durationMinutes,
+                participantCount,
+                type,
+                LocalDateTime.now()
+        );
     }
 
     /**
@@ -186,26 +196,44 @@ public class WaitlistEntry {
      * @return appointment built from this waitlist entry
      */
     public Appointment toAppointment(AppointmentStatus status) {
-        return new Appointment(
-                id,
+        AppointmentDetails details = new AppointmentDetails(
                 customerName,
                 customerEmail,
                 customerPhoneNumber,
                 slotDateTime,
                 durationMinutes,
-                participantCount,
+                participantCount
+        );
+
+        return new Appointment(
+                id,
+                details,
                 status == null ? AppointmentStatus.CONFIRMED : status,
-                type
+                type == null ? AppointmentType.NORMAL : type
         );
     }
 
+    /**
+     * Normalizes text values.
+     *
+     * @param value text value
+     * @return trimmed value, or null when blank
+     */
     private String normalize(String value) {
         if (value == null || value.trim().isEmpty()) {
             return null;
         }
+
         return value.trim();
     }
 
+    /**
+     * Builds a stable customer identity from email or name.
+     *
+     * @param name customer name
+     * @param email customer email
+     * @return normalized identity
+     */
     private String customerIdentity(String name, String email) {
         String normalizedEmail = normalize(email);
         if (normalizedEmail != null) {
@@ -216,4 +244,3 @@ public class WaitlistEntry {
         return normalizedName == null ? null : normalizedName.toLowerCase();
     }
 }
-

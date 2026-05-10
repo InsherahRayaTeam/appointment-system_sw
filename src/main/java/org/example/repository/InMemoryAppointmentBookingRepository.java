@@ -1,6 +1,7 @@
 package org.example.repository;
 
 import org.example.domain.Appointment;
+import org.example.domain.AppointmentDetails;
 import org.example.domain.AppointmentType;
 
 import java.util.ArrayList;
@@ -21,25 +22,31 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
      */
     @Override
     public void save(Appointment appointment) {
+        if (appointment == null) {
+            return;
+        }
+
         appointments.add(copyOf(appointment));
     }
 
     /**
-     * Finds all using the given input.
+     * Finds all appointments.
      *
      * @return collection with the requested results
      */
     @Override
     public List<Appointment> findAll() {
         List<Appointment> copies = new ArrayList<>();
+
         for (Appointment appointment : appointments) {
             copies.add(copyOf(appointment));
         }
+
         return copies;
     }
 
     /**
-     * Finds by id using the given input.
+     * Finds appointment by id.
      *
      * @param appointmentId unique id used to find the record
      *
@@ -52,6 +59,7 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
         }
 
         String normalizedId = appointmentId.trim();
+
         for (Appointment appointment : appointments) {
             if (normalizedId.equals(appointment.getId())) {
                 return Optional.of(copyOf(appointment));
@@ -70,13 +78,18 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
      */
     @Override
     public boolean update(Appointment appointment) {
-        if (appointment == null || appointment.getId() == null || appointment.getId().trim().isEmpty()) {
+        if (appointment == null
+                || appointment.getId() == null
+                || appointment.getId().trim().isEmpty()) {
             return false;
         }
 
+        String normalizedId = appointment.getId().trim();
+
         for (int i = 0; i < appointments.size(); i++) {
             Appointment current = appointments.get(i);
-            if (appointment.getId().equals(current.getId())) {
+
+            if (normalizedId.equals(current.getId())) {
                 appointments.set(i, copyOf(appointment));
                 return true;
             }
@@ -85,22 +98,34 @@ public class InMemoryAppointmentBookingRepository implements AppointmentBookingR
         return false;
     }
 
+    /**
+     * Creates a defensive copy of an appointment.
+     *
+     * @param appointment appointment to copy
+     *
+     * @return copied appointment
+     */
     private Appointment copyOf(Appointment appointment) {
-        String customerEmail = appointment.getUser() == null ? null : appointment.getUser().getEmail();
-        Appointment copy = new Appointment(
-                appointment.getId(),
+        AppointmentDetails details = new AppointmentDetails(
                 appointment.getCustomerName(),
-                customerEmail,
+                appointment.getUser() == null ? null : appointment.getUser().getEmail(),
+                appointment.getCustomerPhoneNumber(),
                 appointment.getStartTime(),
                 appointment.getDurationMinutes(),
-                appointment.getParticipantCount(),
+                appointment.getParticipantCount()
+        );
+
+        Appointment copy = new Appointment(
+                appointment.getId(),
+                details,
                 appointment.getStatus(),
                 appointment.getType() == null ? AppointmentType.NORMAL : appointment.getType()
-        ).withCustomerPhoneNumber(appointment.getCustomerPhoneNumber());
+        );
+
         copy.setRating(appointment.getRating());
         copy.setFeedbackComment(appointment.getFeedbackComment());
         copy.setFeedbackSubmitted(appointment.isFeedbackSubmitted());
+
         return copy;
     }
 }
-

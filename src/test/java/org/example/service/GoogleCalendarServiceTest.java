@@ -1,6 +1,7 @@
 package org.example.service;
 
 import org.example.domain.Appointment;
+import org.example.domain.AppointmentDetails;
 import org.example.domain.AppointmentStatus;
 import org.example.domain.AppointmentType;
 import org.junit.jupiter.api.Test;
@@ -24,14 +25,19 @@ class GoogleCalendarServiceTest {
     @Test
     void buildGoogleCalendarEventUrl_includesPrefilledFields() {
         GoogleCalendarService service = new GoogleCalendarService();
-        Appointment appointment = new Appointment(
-                "res-1",
+
+        AppointmentDetails details = new AppointmentDetails(
                 "Alice",
                 "alice@example.com",
                 "+970500000000",
                 LocalDateTime.of(2032, 5, 10, 14, 30),
                 45,
-                3,
+                3
+        );
+
+        Appointment appointment = new Appointment(
+                "res-1",
+                details,
                 AppointmentStatus.CONFIRMED,
                 AppointmentType.GROUP
         );
@@ -46,4 +52,3 @@ class GoogleCalendarServiceTest {
         assertTrue(url.contains("Participants%3A+3"));
     }
 }
-

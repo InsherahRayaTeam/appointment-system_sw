@@ -1,6 +1,7 @@
 package org.example.service;
 
 import org.example.domain.Appointment;
+import org.example.domain.AppointmentDetails;
 import org.example.domain.AppointmentStatus;
 import org.example.domain.AppointmentType;
 import org.junit.jupiter.api.Test;
@@ -17,13 +18,18 @@ class AppointmentCalendarExportServiceTest {
 
     @Test
     void buildIcsContent_containsRequiredCalendarSectionsAndFields() {
-        Appointment appointment = new Appointment(
-                "res-123",
+        AppointmentDetails details = new AppointmentDetails(
                 "user@example.com",
                 "user@example.com",
+                null,
                 LocalDateTime.of(2030, 12, 12, 10, 0),
                 60,
-                1,
+                1
+        );
+
+        Appointment appointment = new Appointment(
+                "res-123",
+                details,
                 AppointmentStatus.CONFIRMED,
                 AppointmentType.VIRTUAL
         );
@@ -41,13 +47,18 @@ class AppointmentCalendarExportServiceTest {
 
     @Test
     void generateCalendarFile_writesIcsFileWithExpectedMarkers() throws IOException {
-        Appointment appointment = new Appointment(
-                "res-999",
+        AppointmentDetails details = new AppointmentDetails(
                 "user@example.com",
                 "user@example.com",
+                null,
                 LocalDateTime.of(2031, 1, 1, 9, 30),
                 30,
-                1,
+                1
+        );
+
+        Appointment appointment = new Appointment(
+                "res-999",
+                details,
                 AppointmentStatus.CONFIRMED,
                 AppointmentType.NORMAL
         );
@@ -62,4 +73,3 @@ class AppointmentCalendarExportServiceTest {
         assertTrue(fileContent.contains("END:VCALENDAR"));
     }
 }
-
