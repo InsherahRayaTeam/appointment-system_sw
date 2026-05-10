@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 /**
@@ -133,7 +132,7 @@ class AppointmentBookingServiceNotificationTest {
         Appointment appointment = futureAppointment(APPOINTMENT_ID_APPROVE);
         when(sessionManager.isLoggedIn()).thenReturn(true);
         when(sessionManager.isAdmin()).thenReturn(true);
-        when(appointmentBookingRepository.findById(eq(APPOINTMENT_ID_APPROVE))).thenReturn(Optional.of(appointment));
+        when(appointmentBookingRepository.findById(APPOINTMENT_ID_APPROVE)).thenReturn(Optional.of(appointment));
         when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
 
         BookingStatus result = appointmentBookingService.approveAppointment(APPOINTMENT_ID_APPROVE);
@@ -157,7 +156,7 @@ class AppointmentBookingServiceNotificationTest {
 
         when(sessionManager.isLoggedIn()).thenReturn(true);
         when(sessionManager.isAdmin()).thenReturn(true);
-        when(appointmentBookingRepository.findById(eq(APPOINTMENT_ID_CANCEL))).thenReturn(Optional.of(appointment));
+        when(appointmentBookingRepository.findById(APPOINTMENT_ID_CANCEL)).thenReturn(Optional.of(appointment));
         when(appointmentRepository.findAll()).thenReturn(List.of(slot));
         when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
 
@@ -183,7 +182,7 @@ class AppointmentBookingServiceNotificationTest {
 
         when(sessionManager.isLoggedIn()).thenReturn(true);
         when(sessionManager.isAdmin()).thenReturn(true);
-        when(appointmentBookingRepository.findById(eq(APPOINTMENT_ID_MODIFY))).thenReturn(Optional.of(appointment));
+        when(appointmentBookingRepository.findById(APPOINTMENT_ID_MODIFY)).thenReturn(Optional.of(appointment));
         when(appointmentRepository.findAll()).thenReturn(List.of(oldSlot, newSlot));
         when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
 
@@ -213,7 +212,7 @@ class AppointmentBookingServiceNotificationTest {
 
         when(sessionManager.isLoggedIn()).thenReturn(true);
         when(sessionManager.isAdmin()).thenReturn(true);
-        when(appointmentBookingRepository.findById(eq(APPOINTMENT_ID_MODIFY_FAIL))).thenReturn(Optional.of(appointment));
+        when(appointmentBookingRepository.findById(APPOINTMENT_ID_MODIFY_FAIL)).thenReturn(Optional.of(appointment));
         when(appointmentRepository.findAll()).thenReturn(List.of(oldSlot, newSlot));
         when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(false);
 
@@ -241,7 +240,7 @@ class AppointmentBookingServiceNotificationTest {
 
         when(sessionManager.isLoggedIn()).thenReturn(true);
         when(sessionManager.isAdmin()).thenReturn(true);
-        when(appointmentBookingRepository.findById(eq(APPOINTMENT_ID_ATTEND))).thenReturn(Optional.of(appointment));
+        when(appointmentBookingRepository.findById(APPOINTMENT_ID_ATTEND)).thenReturn(Optional.of(appointment));
         when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
 
         BookingStatus result = appointmentBookingService.markAppointmentAsAttended(APPOINTMENT_ID_ATTEND);
@@ -269,7 +268,7 @@ class AppointmentBookingServiceNotificationTest {
 
         when(sessionManager.isLoggedIn()).thenReturn(true);
         when(sessionManager.isAdmin()).thenReturn(true);
-        when(appointmentBookingRepository.findById(eq(APPOINTMENT_ID_COMPLETE))).thenReturn(Optional.of(appointment));
+        when(appointmentBookingRepository.findById(APPOINTMENT_ID_COMPLETE)).thenReturn(Optional.of(appointment));
         when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
 
         BookingStatus result = appointmentBookingService.markAppointmentAsCompleted(APPOINTMENT_ID_COMPLETE);
@@ -297,7 +296,7 @@ class AppointmentBookingServiceNotificationTest {
 
         when(sessionManager.isLoggedIn()).thenReturn(true);
         when(sessionManager.isAdmin()).thenReturn(true);
-        when(appointmentBookingRepository.findById(eq(APPOINTMENT_ID_NOT_ATTENDED))).thenReturn(Optional.of(appointment));
+        when(appointmentBookingRepository.findById(APPOINTMENT_ID_NOT_ATTENDED)).thenReturn(Optional.of(appointment));
         when(appointmentBookingRepository.update(any(Appointment.class))).thenReturn(true);
 
         BookingStatus result = appointmentBookingService.markAppointmentAsNotAttended(APPOINTMENT_ID_NOT_ATTENDED);
